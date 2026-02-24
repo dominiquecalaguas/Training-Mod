@@ -15,3 +15,5 @@ For DB migrations, we need to do the following:
 - make the DB schema changes in `drizzle/`
 - Run `npm run db:generate` and `npm run db:migrate`
 - Push the DB migrations folders
+
+Never do hard deletes for DB columns, this is to prevent downtime and broken functionality
