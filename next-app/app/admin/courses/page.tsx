@@ -195,11 +195,11 @@ export default async function AdminCoursesPage() {
       </section>
       <section className="rounded-xl border border-dashed border-zinc-300 bg-white/60 p-4">
         <h3 className="text-sm font-semibold text-zinc-900">
-          Seed \"Check-In Procedures\" course
+          Seed &quot;Check-In Procedures&quot; course
         </h3>
         <p className="mt-1 text-xs text-zinc-600">
-          Use this to create or update the \"Check-In Procedures\" training
-          course with its full set of lessons and content.
+          Use this to create or update the &quot;Check-In Procedures&quot;
+          training course with its full set of lessons and content.
         </p>
         <form action={seedCheckInProceduresCourse} className="mt-3">
           <button

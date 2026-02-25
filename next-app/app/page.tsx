@@ -5,7 +5,7 @@ import { CourseGrid } from "@/src/components/CourseGrid";
 import { DeviceTokenProvider } from "@/src/components/DeviceTokenProvider";
 
 export default async function Home() {
-  let allCourses: Awaited<ReturnType<typeof db.select>> = [];
+  let allCourses: (typeof courses.$inferSelect)[] = [];
   let loadError = false;
 
   try {
@@ -48,7 +48,7 @@ export default async function Home() {
               Unable to load courses right now. Please try again shortly.
             </p>
           )}
-          <CourseGrid courses={allCourses as any} />
+          <CourseGrid courses={allCourses} />
         </div>
       </main>
     </DeviceTokenProvider>

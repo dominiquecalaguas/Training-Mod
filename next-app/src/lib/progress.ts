@@ -1,6 +1,6 @@
 import { and, countDistinct, eq, sql } from "drizzle-orm";
 import { db } from "@/src/db/client";
-import { courses, lessons, progress } from "@/src/db/schema";
+import { lessons, progress } from "@/src/db/schema";
 
 export async function markLessonComplete(opts: {
   deviceToken: string;

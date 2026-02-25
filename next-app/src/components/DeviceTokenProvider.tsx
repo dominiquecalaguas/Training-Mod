@@ -24,7 +24,7 @@ export function DeviceTokenProvider({
 
   useEffect(() => {
     const t = getOrCreateDeviceToken();
-    setToken(t);
+    queueMicrotask(() => setToken(t));
   }, []);
 
   if (!token) {
