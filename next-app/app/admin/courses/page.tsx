@@ -10,6 +10,8 @@ import {
 } from "../actions";
 import { count } from "drizzle-orm";
 
+export const dynamic = "force-dynamic";
+
 type CourseRow = InferSelectModel<typeof courses>;
 type CountRow = { courseId: number; lessonCount: unknown };
 

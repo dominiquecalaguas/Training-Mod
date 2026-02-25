@@ -1,14 +1,15 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 import { asc, and, eq, lt, gt, desc } from "drizzle-orm";
 import { db } from "@/src/db/client";
 import { courses, lessons } from "@/src/db/schema";
 
 export async function createCourse(formData: FormData) {
-  const title = String(formData.get("title") || "");
-  const description = String(formData.get("description") || "");
-  const thumbnailUrl = String(formData.get("thumbnailUrl") || "");
+  const title = String(formData.get("title") || "").trim();
+  const description = String(formData.get("description") || "").trim();
+  const thumbnailUrl = String(formData.get("thumbnailUrl") || "").trim();
   const order = Number(formData.get("order") || "0");
 
   if (!title) return;
@@ -22,6 +23,7 @@ export async function createCourse(formData: FormData) {
 
   revalidatePath("/admin/courses");
   revalidatePath("/");
+  redirect("/admin/courses");
 }
 
 export async function updateCourse(formData: FormData) {
@@ -237,267 +239,137 @@ export async function seedCheckInProceduresCourse() {
   }[] = [
     {
       order: 1,
-      title: "Greeting & Identifying Visit Reason",
-      content: `### Objective
+      title: "Greeting",
+      content: `Use this greeting when the patient is here for an appointment:
 
-Give every patient a warm, consistent greeting and quickly understand why they are here today.
-
-### Steps
-
-1. **Initial greeting**
-   - Say: "Hi, welcome in! How can we help you today / are we checking in for today?"
-
-2. **Confirm visit reason**
-   - If they say they are **here for an appointment**, continue with identity confirmation.
-   - If they are here for something else (picking up glasses, dropping something off, etc.), follow the appropriate workflow for that visit type (outside this course).`,
+**"Hi, welcome in! How can we help you today / are we checking in for today?"**`,
     },
     {
       order: 2,
-      title: "Step 1 – Confirm Patient Identity",
-      content: `### Objective
+      title: "Step 1 – Ask for the Patient's Name",
+      content: `Ask for the patient’s name using one of these scripts:
 
-Confirm the patient’s identity using full name before opening or changing any chart.
-
-### Steps
-
-1. **Ask for the patient's name**
-   - Option 1: "Can I please have you confirm the first and last name?"
-   - Option 2: "Can you please confirm the first and last name of the patient who’s here for the appointment?"
-
-2. **Verify in the system**
-   - Use the name they provide to locate the correct patient in Crystal.
-   - Make sure you select the correct patient if there are similar names (check date of birth if needed).`,
+- **"Can I please have you confirm the first and last name?"**
+- or **"Can you please confirm the first and last name of the patient who’s here for the appointment?"**`,
     },
     {
       order: 3,
-      title: "Step 2 – Check-In In Crystal",
-      content: `### Objective
+      title: "Step 2 – Check Patient Into Crystal (New vs Existing)",
+      content: `### Check patient into Crystal
 
-Properly check the patient in using Crystal and determine whether they are a new or existing patient.
+- **Name → Status → Signed-In**
+- Sign the patient in, then check if they are **new** or **existing**.
 
-### Steps
+### Next steps
 
-1. **Sign the patient in**
-   - In Crystal, open the patient’s appointment.
-   - Change their status: **Name → Status → Signed-In**.
-
-2. **Determine if the patient is new or existing**
-   - Look at the chart to see if this is a **new patient** or an **existing patient**.
-   - Follow the appropriate workflow:
-     - New patient → see **New Patient Workflow** lesson.
-     - Existing patient → see **Existing Patient Workflow** lesson.`,
+- **Pt. is new** → See lesson **New Patient – Digital Forms & Dilation Waiver**, then **Step 3 – Glasses or Contacts (New Patients)**.
+- **Pt. is existing** → Go to **Step 3 – Glasses or Contacts (Existing Patients)**.`,
     },
     {
       order: 4,
-      title: "New Patient Workflow",
-      content: `### Objective
+      title: "New Patient – Digital Forms & Dilation Waiver",
+      content: `Say: **"I see here that you’re a new patient – were you able to fill out the digital forms we sent?"**
 
-Make sure new patients complete required forms and understand the dilation waiver before moving on.
+- **Yes:** Say **"Perfect!"** → Move onto next step (Step 3 – Glasses or Contacts for new patients).
 
-### Steps
+- **No:** Say **"No worries! I’m going to have you fill this out really quick"** → Hand them a clipboard and have them fill out the entrance form. Inform them of the **"Refusal to Dilate"** form using this script:
 
-1. **Confirm digital forms**
-   - Say: "I see here that you’re a new patient – were you able to fill out the digital forms we sent?"
+  **"The second sheet has a front and a back, and we already have your insurance information on file so don’t worry about this section. This waiver on the top is if you don’t want to get dilated today, if you want to speak more with the doctor before you fill it out that’s totally okay."**
 
-2. **If the patient completed digital forms**
-   - Say: "Perfect!"
-   - Move on to glasses/contacts questions (see **Step 3 – Glasses/Contacts Triage (New Patients)**).
-
-3. **If the patient did NOT complete digital forms**
-   - Say: "No worries! I’m going to have you fill this out really quick."
-   - Hand them a clipboard with the entrance forms.
-   - Explain the forms, including the dilation waiver:
-     - "The second sheet has a front and a back, and we already have your insurance information on file so don’t worry about this section."
-     - "This waiver on the top is if you don’t want to get dilated today, if you want to speak more with the doctor before you fill it out that’s totally okay."
-
-4. **After forms are handled**
-   - Once forms are completed or confirmed, proceed to **Step 3 – Glasses/Contacts Triage (New Patients)**.`,
+Then move onto the next step.`,
     },
     {
       order: 5,
-      title: "Existing Patient Workflow",
-      content: `### Objective
+      title: "Step 3 – Glasses or Contacts (New Patients)",
+      content: `Ask: **"Do you currently wear any glasses or contacts?"**
 
-Quickly confirm that an existing patient’s records are up to date before moving on.
+### Yes to glasses
 
-> Note: Specific rules for when existing patients need to update forms may be covered in another policy; follow that policy if documented.
+- **"Awesome! Is it okay if we take your glasses to check the prescription and clean them for you?"** (No cleaning if patient is late.)
+- Ask if they wear contacts as well.
+- Use lensometer to read prescription:
+  - Measure base curve (BC).
+  - Markings go by 0.25.
+  - Record from **right to left**.
+  - If BC is the same for both lenses, write **"OU"**.
+- Clean glasses using ultrasonic machine.
+- While glasses are cleaning, input data into Crystal:
+  - **Record → Refraction** → fill in **"Previous Glasses Correction"** field.
+  - Put **BC** in **Notes**.
 
-### Steps
+### Yes to contacts
 
-1. **Confirm any needed updates**
-   - Check whether any updated entrance forms or signatures are required based on your office policy.
+- **"Great! Were you able to bring your current prescription or a picture of your current contact lens boxes?"**
+- Ask if they wear glasses as well.
+- Input data into Crystal.
 
-2. **Ensure information is current in Crystal**
-   - Verify contact information, insurance (if needed), and any major changes.
+### No to either
 
-3. **Move on to glasses/contacts questions**
-   - Proceed to **Step 3 – Glasses/Contacts Triage (Existing Patients)** once basic information is confirmed.`,
+- **"Perfect! Let me just make sure your information is updated in our system, go ahead and have a seat and we’ll call you up shortly."**
+- Take patient straight to pretesting after making sure all records are updated in Crystal.`,
     },
     {
       order: 6,
-      title: "Step 3 – Glasses/Contacts Triage (New Patients)",
-      content: `### Objective
+      title: "Step 3 – Glasses or Contacts (Existing Patients)",
+      content: `Ask: **"Do you currently wear any glasses or contacts?"**
 
-Find out whether the new patient wears glasses or contacts and capture their current prescriptions in Crystal.
+### Yes to glasses
 
-### Steps
+- **"Awesome! Is it okay if we take your glasses to clean them for you and make sure the screws are tight?"** → **Obtain glasses** → **"Thank you! Did you get these with us or from somewhere else?"**
+  - **1a.** If frames are from us but lenses are from somewhere else, treat like new patient for lens data.
+  - **1b.** If patient is running late, **DO NOT** clean glasses.
+- While glasses are cleaning, input data into Crystal.
 
-1. **Ask about glasses and contacts**
-   - Say: "Do you currently wear any glasses or contacts?"
+### Yes to contacts
 
-2. **If the new patient wears glasses**
-   - Say: "Awesome! Is it okay if we take your glasses to check the prescription and clean them for you?"  
-     - **Do not clean** if the patient is running late.
-   - Ask if they also wear contacts.
-   - Use the lensometer to read the glasses prescription:
-     - Measure base curve (BC).
-     - Markings go by 0.25.
-     - Record from **right to left**.
-     - If BC is the same for both lenses, write **\"OU\"**.
-   - Clean the glasses using the ultrasonic machine (unless the patient is late).
-   - While the glasses are cleaning, input data into Crystal:
-     - Go to **Record → Refraction**.
-     - Fill in the **Previous Glasses Correction** field.
-     - Put **BC** in the **Notes** field.
+- **"Perfect! Go ahead and take a seat and the doctor will be with you shortly."**
+- No need to pretest.
 
-3. **If the new patient wears contacts**
-   - Say: "Great! Were you able to bring your current prescription or a picture of your current contact lens boxes?"
-   - Ask if they also wear glasses.
-   - Input their contact lens information into Crystal.
+### No to either
 
-4. **If the new patient does not wear glasses or contacts**
-   - Say: "Perfect! Let me just make sure your information is updated in our system, go ahead and have a seat and we’ll call you up shortly."
-   - Make sure all records are updated in Crystal.
-   - Take the patient straight to **pretesting** when ready.`,
+- **"Perfect! Let me just make sure your information is updated in our system, go ahead and have a seat and we’ll call you up shortly."**
+- Take patient straight to pretesting after making sure all records are updated in Crystal.`,
     },
     {
       order: 7,
-      title: "Step 3 – Glasses/Contacts Triage (Existing Patients)",
-      content: `### Objective
+      title: "Step 4 – Pretesting the Patient",
+      content: `### Before you start
 
-Handle existing patients’ glasses and contacts efficiently, including special edge cases.
-
-### Steps
-
-1. **If the existing patient wears glasses**
-   - Say: "Awesome! Is it okay if we take your glasses to clean them for you and make sure the screws are tight?"  
-     - **Obtain the glasses**.
-     - Then say: "Thank you! Did you get these with us or from somewhere else?"
-   - If **frames are from us but lenses are from somewhere else**, treat them like a new patient for lens data.
-   - If the patient is **running late**, **do not clean** the glasses.
-   - While the glasses are cleaning (if applicable), input or confirm data in Crystal.
-
-2. **If the existing patient wears contacts**
-   - Say: "Perfect! Go ahead and take a seat and the doctor will be with you shortly."
-   - No need to pretest solely because of contacts if not otherwise required.
-
-3. **If the existing patient does not wear glasses or contacts**
-   - Say: "Perfect! Let me just make sure your information is updated in our system, go ahead and have a seat and we’ll call you up shortly."
-   - Ensure all records are updated in Crystal.
-   - Take the patient straight to **pretesting** when ready.`,
-    },
-    {
-      order: 8,
-      title: "Step 4 – Pretesting Workflow",
-      content: `### Objective
-
-Complete auto-refraction and fundus photos when appropriate, with clear instructions to the patient.
-
-### When to pretest
-
-- When possible, input the patient’s information into the fundus machine **before** the appointment starts.
-- Fundus photos are **only for patients over 18**, unless the folder specifically says to take fundus photos.
+- When possible, input the patient’s info into the fundus machine **before** their appointment starts.
+- Fundus photos: **only for patients over 18**, unless the folder says to take fundus.
 
 ### Auto-refraction
 
-1. **Prepare the machine and patient**
-   - Clean the chin rest.
-   - Make sure the patient’s eye is level with the markings.
-   - Adjust the table height and have the patient scoot their chair in if needed.
-
-2. **Explain what they will see**
-   - Say: "You should be seeing an image of either a yellow house or a blurry circle in the middle, try your best to focus on the object in the center."
-
-3. **Take the measurements**
-   - Follow your standard procedure for capturing auto-refraction readings for each eye.
+- Clean chin rest; make sure eye is level to markings and table is at the right height; have pt. scoot their chair in if needed. Then take measurements.
+- Say: **"You should be seeing an image of either a yellow house or a blurry circle in the middle, try your best to focus on the object in the center."**
 
 ### Fundus photos
 
-1. **Prepare the machine and patient**
-   - Clean the chin rest.
-   - Make sure the patient’s eye is level with the markings.
-   - Adjust the table height and have the patient scoot their chair in if needed.
-
-2. **Explain the procedure**
-   - Say: "This machine is going to take a picture of the back of your eye. There’s going to be a bright flash so try your best not to blink, but I’m going to give you a countdown before I take the photo so you’re ready."
-
-3. **Capture the photos**
-   - Take clear images for both eyes, following your normal protocol.
+- Clean chin rest; make sure eye is level to markings and table is at the right height; have pt. scoot their chair in if needed. Then take photos.
+- Say: **"This machine is going to take a picture of the back of your eye. There’s going to be a bright flash so try your best not to blink, but I’m going to give you a countdown before I take the photo so you’re ready."**
 
 ### After pretesting
 
-1. **Release the patient to the waiting room**
-   - Say: "Alright you’re all set! Go ahead and have a seat in the waiting room and the doctor will be with you shortly!"
-
-2. **Proceed to documenting in Crystal**
-   - See **Documenting in Crystal Post-Pretest** for how to enter the results.`,
+- Say: **"Alright you’re all set! Go ahead and have a seat in the waiting room and the doctor will be with you shortly!"**
+- Then input data into Crystal (see next lesson).`,
     },
     {
-      order: 9,
-      title: "Documenting in Crystal Post-Pretest",
-      content: `### Objective
+      order: 8,
+      title: "Documenting in Crystal & Handoff to Doctor",
+      content: `### Input data into Crystal
 
-Accurately record pretesting data and medical history in Crystal so the doctor has complete information.
-
-### Entering auto-refraction and glasses data
-
-1. **Auto-refraction**
-   - Go to **Record → Refraction** in Crystal.
-   - Fill in the **Auto refraction** field with the data from the pretesting room.
-
-2. **Previous prescription**
-   - Click **Previous Rx**.
-   - If nothing pops up because the patient is new, that is okay.
-
-3. **Minimum data when busy**
-   - If the schedule is very busy, always make sure to at least input:
-     - The **auto-refraction** results.
-     - The **glasses prescription**.
+- **Record → Refraction** → fill in **"Auto refraction"** field with data from pretesting room. Click **"Previous Rx"** (if nothing pops up because they’re new, it’s okay).
+- If it’s busy, **always** at least input **auto-refraction** and **glasses prescription**.
 
 ### Medical History tab
 
-1. **Reason for visit**
-   - Fill in the **reason for visit**.
-   - Type **"Co"** and hit enter to auto-fill: "Complete eye exam to rule out all problems".
+- Fill in **"reason for visit"** → type **"Co"** and hit enter (auto-fills **"Complete eye exam to rule out all problems"**).
+- **Pt. is new:** Don’t fill out until entrance forms are filled. Then click **"All Previous"**, then **"All Normal"**, then fill in information from their entrance forms: year of last eye exam, review of ocular system & family ocular history, age of glasses, review of systems, smoking + alcohol status.
 
-2. **For new patients (after entrance forms are filled out)**
-   - Click **All Previous**, then **All Normal**, then update with any information from their entrance forms.
-   - Enter:
-     - Year of last eye exam.
-     - Review of ocular system and family ocular history.
-     - Age of glasses.
-     - Review of systems.
-     - Smoking and alcohol status.`,
-    },
-    {
-      order: 10,
-      title: "Handoff to Doctor",
-      content: `### Objective
+### Handoff
 
-Complete the check-in and pretesting workflow by handing the patient off cleanly to the doctor.
-
-### Steps
-
-1. **Prepare the folder**
-   - Place the patient’s folder in the **"checked in"** slot for the doctor.
-   - If the doctor’s door is open and appropriate, you can hand the folder directly to the doctor.
-
-2. **Close the chart so the doctor can access it**
-   - Make sure you **click out of the patient’s file** in Crystal.
-   - This frees the chart so the doctor can open it without any access issues.
-
-3. **Confirm the patient is waiting comfortably**
-   - Ensure the patient knows they can sit in the waiting room and that the doctor will be with them shortly.`,
+- Place folder in **"checked in"** slot for the doctor (or hand over if door is open).
+- **Make sure to click out of the patient’s file** so the doctor can access it.`,
     },
   ];
 
