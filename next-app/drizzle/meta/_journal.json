@@ -8,6 +8,20 @@
       "when": 1771974095656,
       "tag": "0000_condemned_baron_zemo",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1771976103291,
+      "tag": "0001_slim_daimon_hellstrom",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1771977120379,
+      "tag": "0002_happy_risque",
+      "breakpoints": true
     }
   ]
 }

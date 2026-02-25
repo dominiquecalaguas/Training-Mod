@@ -1,0 +1,2 @@
+CREATE INDEX "progress_device_idx" ON "progress" USING btree ("device_token");--> statement-breakpoint
+CREATE UNIQUE INDEX "progress_device_lesson_unique" ON "progress" USING btree ("device_token","lesson_id");

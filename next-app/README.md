@@ -12,8 +12,8 @@ They're in the `.env` file locally
 
 ### For Database Changes
 For DB migrations, we need to do the following:
-- make the DB schema changes in `drizzle/`
-- Run `npm run db:generate` and `npm run db:migrate`
-- Push the DB migrations folders
+- Make the DB schema changes in `src/db/schema/` (e.g. `users.ts`)
+- Run `npm run db:generate` (writes to `drizzle/`) and `npm run db:migrate`
+- Push the schema files and the `drizzle/` folder
 
 Never do hard deletes for DB columns, this is to prevent downtime and broken functionality

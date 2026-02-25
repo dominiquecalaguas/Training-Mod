@@ -20,7 +20,8 @@
 }
 
 body {
-  background: var(--background);
+  background: radial-gradient(circle at top left, #1f2937 0, #020617 45%, #020617 100%);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-geist-sans), system-ui, -apple-system, BlinkMacSystemFont,
+    "SF Pro Text", sans-serif;
 }
