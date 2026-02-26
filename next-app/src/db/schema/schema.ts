@@ -22,21 +22,27 @@ export const courses = pgTable("courses", {
     .defaultNow(),
 });
 
-export const lessons = pgTable("lessons", {
-  id: serial("id").primaryKey(),
-  courseId: integer("course_id")
-    .notNull()
-    .references(() => courses.id, { onDelete: "cascade" }),
-  title: text("title").notNull(),
-  content: text("content").notNull(),
-  order: integer("order").notNull(),
-  createdAt: timestamp("created_at", { withTimezone: true })
-    .notNull()
-    .defaultNow(),
-  updatedAt: timestamp("updated_at", { withTimezone: true })
-    .notNull()
-    .defaultNow(),
-});
+export const lessons = pgTable(
+  "lessons",
+  {
+    id: serial("id").primaryKey(),
+    courseId: integer("course_id")
+      .notNull()
+      .references(() => courses.id, { onDelete: "cascade" }),
+    title: text("title").notNull(),
+    content: text("content").notNull(),
+    order: integer("order").notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => ({
+    courseIdIdx: index("lessons_course_id_idx").on(table.courseId),
+  }),
+);
 
 export const progress = pgTable(
   "progress",

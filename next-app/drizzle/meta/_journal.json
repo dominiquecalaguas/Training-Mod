@@ -22,6 +22,13 @@
       "when": 1771977120379,
       "tag": "0002_happy_risque",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1772087360250,
+      "tag": "0003_chubby_terrax",
+      "breakpoints": true
     }
   ]
 }
