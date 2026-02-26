@@ -61,8 +61,8 @@ export function HistoryToolbarPlugin() {
         type="button"
         aria-label="Undo"
         size="icon"
-        className="!h-8 !w-8"
-        variant={"outline"}
+        className="!h-8 !w-8 border-zinc-300 bg-white text-zinc-700 hover:bg-zinc-100 hover:text-zinc-900"
+        variant="outline"
       >
         <UndoIcon className="size-4" />
       </Button>
@@ -74,9 +74,9 @@ export function HistoryToolbarPlugin() {
         title={IS_APPLE ? "Redo (⇧⌘Z)" : "Redo (Ctrl+Y)"}
         type="button"
         aria-label="Redo"
-        variant={"outline"}
+        variant="outline"
         size="icon"
-        className="!h-8 !w-8"
+        className="!h-8 !w-8 border-zinc-300 bg-white text-zinc-700 hover:bg-zinc-100 hover:text-zinc-900"
       >
         <RedoIcon className="size-4" />
       </Button>

@@ -1,5 +1,6 @@
 "use client"
 
+import { useRef } from "react"
 import {
   InitialConfigType,
   LexicalComposer,
@@ -17,6 +18,7 @@ const editorConfig: InitialConfigType = {
   namespace: "Editor",
   theme: editorTheme,
   nodes,
+  editable: true,
   onError: (error: Error) => {
     console.error(error)
   },
@@ -33,17 +35,25 @@ export function Editor({
   onChange?: (editorState: EditorState) => void
   onSerializedChange?: (editorSerializedState: SerializedEditorState) => void
 }) {
+  // Use initial serialized state only on first mount so parent state updates
+  // don't re-apply and block focus/typing
+  const initialSerializedRef = useRef<SerializedEditorState | undefined>(
+    editorSerializedState
+  )
+  const configRef = useRef<InitialConfigType | null>(null)
+  if (configRef.current === null) {
+    configRef.current = {
+      ...editorConfig,
+      ...(editorState ? { editorState } : {}),
+      ...(initialSerializedRef.current
+        ? { editorState: JSON.stringify(initialSerializedRef.current) }
+        : {}),
+    }
+  }
+
   return (
-    <div className="bg-background overflow-hidden rounded-lg border shadow">
-      <LexicalComposer
-        initialConfig={{
-          ...editorConfig,
-          ...(editorState ? { editorState } : {}),
-          ...(editorSerializedState
-            ? { editorState: JSON.stringify(editorSerializedState) }
-            : {}),
-        }}
-      >
+    <div className="rounded-lg border bg-white text-zinc-900 shadow">
+      <LexicalComposer initialConfig={configRef.current}>
         <TooltipProvider>
           <Plugins />
 

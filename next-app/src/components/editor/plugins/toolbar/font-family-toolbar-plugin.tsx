@@ -71,7 +71,7 @@ export function FontFamilyToolbarPlugin() {
         <TypeIcon className="size-4" />
         <span style={{ fontFamily }}>{fontFamily}</span>
       </SelectTrigger>
-      <SelectContent>
+      <SelectContent className="editor-toolbar-dropdown bg-white text-zinc-900 border-zinc-200">
         {FONT_FAMILY_OPTIONS.map((option) => (
           <SelectItem
             key={option}

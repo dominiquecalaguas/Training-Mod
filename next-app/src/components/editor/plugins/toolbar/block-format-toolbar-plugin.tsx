@@ -70,11 +70,18 @@ export function BlockFormatDropDown({
         setBlockType(value as keyof typeof blockTypeToBlockName)
       }}
     >
-      <SelectTrigger className="!h-8 w-min gap-1">
-        {blockTypeToBlockName[blockType].icon}
-        <span>{blockTypeToBlockName[blockType].label}</span>
+      <SelectTrigger
+        type="button"
+        className="!h-8 w-min min-w-[8rem] cursor-pointer gap-1"
+      >
+        {blockTypeToBlockName[blockType]?.icon}
+        <span>{blockTypeToBlockName[blockType]?.label ?? "Paragraph"}</span>
       </SelectTrigger>
-      <SelectContent>
+      <SelectContent
+        position="popper"
+        sideOffset={4}
+        className="editor-toolbar-dropdown z-[100] max-h-[var(--radix-select-content-available-height)] bg-white text-zinc-900 border-zinc-200"
+      >
         <SelectGroup>{children}</SelectGroup>
       </SelectContent>
     </Select>

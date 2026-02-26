@@ -84,7 +84,11 @@ export function FontBackgroundToolbarPlugin() {
       }}
     >
       <ColorPickerTrigger asChild>
-        <Button variant={"outline"} size={"icon-sm"}>
+        <Button
+          variant="outline"
+          size="icon-sm"
+          className="!h-8 !w-8 border-zinc-300 bg-white text-zinc-700 hover:bg-zinc-100 hover:text-zinc-900"
+        >
           <PaintBucketIcon className="size-4" />
         </Button>
       </ColorPickerTrigger>

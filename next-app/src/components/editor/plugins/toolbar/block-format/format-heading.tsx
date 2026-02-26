@@ -22,7 +22,10 @@ export function FormatHeading({ levels = [] }: { levels: HeadingTagType[] }) {
     <SelectItem
       key={level}
       value={level}
-      onPointerDown={() => formatHeading(level)}
+      onPointerDown={(e) => {
+        e.preventDefault()
+        formatHeading(level)
+      }}
     >
       <div className="flex items-center gap-1 font-normal">
         {blockTypeToBlockName[level].icon}

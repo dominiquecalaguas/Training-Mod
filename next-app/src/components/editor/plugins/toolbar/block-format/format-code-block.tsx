@@ -34,7 +34,13 @@ export function FormatCodeBlock() {
   }
 
   return (
-    <SelectItem value="code" onPointerDown={formatCode}>
+    <SelectItem
+      value="code"
+      onPointerDown={(e) => {
+        e.preventDefault()
+        formatCode()
+      }}
+    >
       <div className="flex items-center gap-1 font-normal">
         {blockTypeToBlockName[BLOCK_FORMAT_VALUE].icon}
         {blockTypeToBlockName[BLOCK_FORMAT_VALUE].label}

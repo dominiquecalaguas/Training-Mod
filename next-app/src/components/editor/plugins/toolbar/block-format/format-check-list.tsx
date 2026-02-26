@@ -21,7 +21,7 @@ export function FormatCheckList() {
   }
 
   const formatCheckList = () => {
-    if (blockType !== "number") {
+    if (blockType !== "check") {
       activeEditor.dispatchCommand(INSERT_CHECK_LIST_COMMAND, undefined)
     } else {
       formatParagraph()
@@ -29,7 +29,13 @@ export function FormatCheckList() {
   }
 
   return (
-    <SelectItem value={BLOCK_FORMAT_VALUE} onPointerDown={formatCheckList}>
+    <SelectItem
+      value={BLOCK_FORMAT_VALUE}
+      onPointerDown={(e) => {
+        e.preventDefault()
+        formatCheckList()
+      }}
+    >
       <div className="flex items-center gap-1 font-normal">
         {blockTypeToBlockName[BLOCK_FORMAT_VALUE].icon}
         {blockTypeToBlockName[BLOCK_FORMAT_VALUE].label}

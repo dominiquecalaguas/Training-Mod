@@ -21,7 +21,7 @@ export function BlockInsertPlugin({ children }: { children: React.ReactNode }) {
           <PlusIcon className="size-4" />
           <span>Insert</span>
         </SelectTrigger>
-        <SelectContent>
+        <SelectContent className="editor-toolbar-dropdown bg-white text-zinc-900 border-zinc-200">
           <SelectGroup>{children}</SelectGroup>
         </SelectContent>
       </Select>

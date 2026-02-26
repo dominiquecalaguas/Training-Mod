@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import type { SerializedEditorState } from "lexical";
+import { Loader2 } from "lucide-react";
 
 import { Editor } from "@/components/blocks/editor-x/editor";
 
@@ -36,6 +37,8 @@ const initialEditorValue = {
   },
 } as unknown as SerializedEditorState;
 
+const DEBOUNCE_MS = 300;
+
 export function NewCourseForm({
   action,
 }: {
@@ -44,22 +47,52 @@ export function NewCourseForm({
   const router = useRouter();
   const [descriptionState, setDescriptionState] =
     useState<SerializedEditorState | null>(initialEditorValue);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const submitTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const flushDescriptionToForm = useCallback(
+    (form: HTMLFormElement) => {
+      const hidden = form.querySelector<HTMLInputElement>(
+        'input[name="description"]',
+      );
+      if (hidden && descriptionState) {
+        hidden.value = JSON.stringify(descriptionState);
+      }
+    },
+    [descriptionState],
+  );
+
+  const handleSubmit = useCallback(
+    (e: React.FormEvent<HTMLFormElement>) => {
+      e.preventDefault();
+      const form = e.currentTarget;
+      flushDescriptionToForm(form);
+
+      if (submitTimeoutRef.current) {
+        clearTimeout(submitTimeoutRef.current);
+        submitTimeoutRef.current = null;
+      }
+
+      submitTimeoutRef.current = setTimeout(async () => {
+        submitTimeoutRef.current = null;
+        setIsSubmitting(true);
+        try {
+          const formData = new FormData(form);
+          await action(formData);
+        } finally {
+          setIsSubmitting(false);
+        }
+      }, DEBOUNCE_MS);
+    },
+    [action, flushDescriptionToForm],
+  );
 
   return (
     <div className="rounded-xl border border-zinc-200 bg-white p-6">
       <h2 className="text-lg font-semibold tracking-tight">New course</h2>
       <form
-        action={action}
         className="mt-4 grid gap-4 sm:grid-cols-2"
-        onSubmit={(e) => {
-          const form = e.currentTarget;
-          const hidden = form.querySelector<HTMLInputElement>(
-            'input[name="description"]',
-          );
-          if (hidden && descriptionState) {
-            hidden.value = JSON.stringify(descriptionState);
-          }
-        }}
+        onSubmit={handleSubmit}
       >
         <label className="text-xs font-medium text-zinc-700 sm:col-span-2">
           Title
@@ -98,14 +131,23 @@ export function NewCourseForm({
         <div className="sm:col-span-2 flex items-center gap-3">
           <button
             type="submit"
-            className="inline-flex items-center rounded-full bg-zinc-900 px-4 py-1.5 text-sm font-medium text-white hover:bg-zinc-800"
+            disabled={isSubmitting}
+            className="inline-flex items-center justify-center gap-2 rounded-full bg-zinc-900 px-4 py-1.5 text-sm font-medium text-white hover:bg-zinc-800 disabled:pointer-events-none disabled:opacity-70 min-w-[7rem]"
           >
-            Create course
+            {isSubmitting ? (
+              <>
+                <Loader2 className="size-4 animate-spin" />
+                Creating…
+              </>
+            ) : (
+              "Create course"
+            )}
           </button>
           <button
             type="button"
-            className="inline-flex items-center rounded-full border border-zinc-300 px-4 py-1.5 text-sm font-medium text-zinc-700 hover:bg-zinc-100"
+            className="inline-flex items-center rounded-full border border-zinc-300 px-4 py-1.5 text-sm font-medium text-zinc-700 hover:bg-zinc-100 disabled:pointer-events-none disabled:opacity-70"
             onClick={() => router.back()}
+            disabled={isSubmitting}
           >
             Cancel
           </button>
