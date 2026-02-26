@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getCourseProgressForDevice } from "@/src/lib/progress";
+import { getCourseProgressForDevice } from "@//lib/progress";
 
 export async function GET(req: NextRequest) {
   const deviceToken = req.nextUrl.searchParams.get("deviceToken");

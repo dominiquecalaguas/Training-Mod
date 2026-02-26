@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { db } from "@/src/db/client";
-import { courses, lessons } from "@/src/db/schema";
+import { db } from "@/db/client";
+import { courses, lessons } from "@/db/schema";
 import { eq, asc } from "drizzle-orm";
 
 export default async function CoursePage({

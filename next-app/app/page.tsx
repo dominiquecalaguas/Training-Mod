@@ -1,7 +1,7 @@
-import { db } from "@/src/db/client";
-import { courses } from "@/src/db/schema";
-import { CourseGrid } from "@/src/components/CourseGrid";
-import { DeviceTokenProvider } from "@/src/components/DeviceTokenProvider";
+import { db } from "@/db/client";
+import { courses } from "@/db/schema";
+import { CourseGrid } from "@//components/CourseGrid";
+import { DeviceTokenProvider } from "@//components/DeviceTokenProvider";
 
 export default async function Home() {
   let allCourses: (typeof courses.$inferSelect)[] = [];

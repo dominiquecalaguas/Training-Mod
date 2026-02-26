@@ -1,10 +1,10 @@
 import { notFound } from "next/navigation";
-import { db } from "@/src/db/client";
-import { courses, lessons } from "@/src/db/schema";
+import { db } from "@/db/client";
+import { courses, lessons } from "@/db/schema";
 import { eq, asc } from "drizzle-orm";
-import { DeviceTokenProvider } from "@/src/components/DeviceTokenProvider";
-import { CourseSidebar } from "@/src/components/CourseSidebar";
-import { LessonContent } from "@/src/components/LessonContent";
+import { DeviceTokenProvider } from "@//components/DeviceTokenProvider";
+import { CourseSidebar } from "@//components/CourseSidebar";
+import { LessonContent } from "@//components/LessonContent";
 
 export default async function LessonPage({
   params,

@@ -1,8 +1,8 @@
 import Link from "next/link";
 import { Suspense } from "react";
 import { eq, sql } from "drizzle-orm";
-import { db } from "@/src/db/client";
-import { courses, lessons } from "@/src/db/schema";
+import { db } from "@/db/client";
+import { courses, lessons } from "@/db/schema";
 import {
   createCourse,
   deleteCourse,

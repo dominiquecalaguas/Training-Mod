@@ -3,8 +3,8 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { InferSelectModel } from "drizzle-orm";
-import { courses, lessons } from "@/src/db/schema";
-import { useDeviceToken } from "@/src/components/DeviceTokenProvider";
+import { courses, lessons } from "@/db/schema";
+import { useDeviceToken } from "@//components/DeviceTokenProvider";
 
 type Course = InferSelectModel<typeof courses>;
 type Lesson = InferSelectModel<typeof lessons>;

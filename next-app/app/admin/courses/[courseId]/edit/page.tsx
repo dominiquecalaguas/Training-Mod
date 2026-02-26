@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
-import { db } from "@/src/db/client";
-import { courses } from "@/src/db/schema";
+import { db } from "@/db/client";
+import { courses } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { updateCourse } from "../../../actions";
 

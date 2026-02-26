@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import ReactMarkdown from "react-markdown";
-import { useDeviceToken } from "@/src/components/DeviceTokenProvider";
+import { useDeviceToken } from "@//components/DeviceTokenProvider";
 
 export function LessonContent({
   courseId,

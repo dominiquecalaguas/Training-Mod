@@ -1,7 +1,7 @@
 "use client";
 
 import { createContext, useContext, useEffect, useState } from "react";
-import { getOrCreateDeviceToken } from "@/src/lib/deviceToken";
+import { getOrCreateDeviceToken } from "@//lib/deviceToken";
 
 type DeviceTokenContextValue = string | null;
 

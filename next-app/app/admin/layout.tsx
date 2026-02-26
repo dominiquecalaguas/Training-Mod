@@ -1,4 +1,4 @@
-import { AdminGate } from "@/src/components/AdminGate";
+import { AdminGate } from "@//components/AdminGate";
 
 export default function AdminLayout({
   children,

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { markLessonComplete } from "@/src/lib/progress";
+import { markLessonComplete } from "@//lib/progress";
 
 export async function POST(req: NextRequest) {
   const body = await req.json().catch(() => null);

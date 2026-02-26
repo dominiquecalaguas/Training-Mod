@@ -3,8 +3,8 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { asc, and, eq, lt, gt, desc } from "drizzle-orm";
-import { db } from "@/src/db/client";
-import { courses, lessons } from "@/src/db/schema";
+import { db } from "@/db/client";
+import { courses, lessons } from "@/db/schema";
 
 export async function createCourse(formData: FormData) {
   const title = String(formData.get("title") || "").trim();
