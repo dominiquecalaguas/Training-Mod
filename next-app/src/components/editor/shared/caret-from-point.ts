@@ -24,7 +24,6 @@ export function caretFromPoint(
     }
     // @ts-expect-error Firefox-specific API not in lib dom types
   } else if (document.caretPositionFromPoint !== "undefined") {
-    // @ts-expect-error Firefox-specific API not in lib dom types
     const range = document.caretPositionFromPoint(x, y)
     if (range === null) {
       return null
