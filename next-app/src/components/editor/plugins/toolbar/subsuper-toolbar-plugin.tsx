@@ -17,7 +17,9 @@ export function SubSuperToolbarPlugin() {
 
   const $updateToolbar = (selection: BaseSelection) => {
     if ($isRangeSelection(selection) || $isTableSelection(selection)) {
+      // @ts-expect-error Lexical selection type is broader than RangeSelection here
       setIsSubscript(selection.hasFormat("subscript"))
+      // @ts-expect-error Lexical selection type is broader than RangeSelection here
       setIsSuperscript(selection.hasFormat("superscript"))
     }
   }
