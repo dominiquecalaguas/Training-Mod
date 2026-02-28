@@ -14,7 +14,7 @@ type Lesson = {
   order: number;
 };
 
-const emptyLexicalState: SerializedEditorState = {
+const emptyLexicalState = {
   root: {
     children: [
       {
@@ -42,7 +42,7 @@ const emptyLexicalState: SerializedEditorState = {
     type: "root",
     version: 1,
   },
-};
+} as unknown as SerializedEditorState;
 
 function parseLessonContent(content: string): SerializedEditorState {
   const trimmed = content?.trim() ?? "";
@@ -81,7 +81,7 @@ function parseLessonContent(content: string): SerializedEditorState {
         },
       ],
     },
-  };
+  } as unknown as SerializedEditorState;
 }
 
 export function EditableLessonList({

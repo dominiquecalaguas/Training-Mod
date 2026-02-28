@@ -9,10 +9,11 @@ import { LessonContent } from "@//components/LessonContent";
 export default async function LessonPage({
   params,
 }: {
-  params: { courseId: string; lessonId: string };
+  params: Promise<{ courseId: string; lessonId: string }>;
 }) {
-  const courseId = Number(params.courseId);
-  const lessonId = Number(params.lessonId);
+  const { courseId: courseIdParam, lessonId: lessonIdParam } = await params;
+  const courseId = Number(courseIdParam);
+  const lessonId = Number(lessonIdParam);
   if (Number.isNaN(courseId) || Number.isNaN(lessonId)) notFound();
 
   const [course] = await db
@@ -33,14 +34,15 @@ export default async function LessonPage({
 
   return (
     <DeviceTokenProvider>
-      <main className="min-h-screen bg-neutral-950 py-10 px-4 text-zinc-50">
+      <main className="min-h-screen bg-neutral-50 py-10 px-4 text-neutral-900">
         <div className="mx-auto flex max-w-6xl flex-col gap-6 lg:flex-row">
           <CourseSidebar
             courseId={course.id}
+            courseTitle={course.title}
             lessons={courseLessons}
             currentLessonId={lesson.id}
           />
-          <section className="flex-1 rounded-2xl border border-neutral-800 bg-neutral-900/80 p-6">
+          <section className="flex-1 rounded-2xl border border-neutral-200 bg-white p-6 shadow-sm">
             <LessonContent
               courseId={course.id}
               lessonId={lesson.id}
