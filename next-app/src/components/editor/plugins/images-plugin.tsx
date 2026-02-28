@@ -41,6 +41,8 @@ import { Button } from "@/components/ui/button"
 import { DialogFooter } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { cn } from "@/lib/utils"
+import { CloudUpload, X } from "lucide-react"
 import {
   Tabs,
   TabsContent,
@@ -62,7 +64,6 @@ export function InsertImageUriDialogBody({
   onClick: (payload: InsertImagePayload) => void
 }) {
   const [src, setSrc] = useState("")
-  const [altText, setAltText] = useState("")
 
   const isDisabled = src === ""
 
@@ -78,21 +79,11 @@ export function InsertImageUriDialogBody({
           data-test-id="image-modal-url-input"
         />
       </div>
-      <div className="grid gap-2">
-        <Label htmlFor="alt-text">Alt Text</Label>
-        <Input
-          id="alt-text"
-          placeholder="Random unsplash image"
-          onChange={(e) => setAltText(e.target.value)}
-          value={altText}
-          data-test-id="image-modal-alt-text-input"
-        />
-      </div>
       <DialogFooter>
         <Button
           type="submit"
           disabled={isDisabled}
-          onClick={() => onClick({ altText, src })}
+          onClick={() => onClick({ altText: "", src })}
           data-test-id="image-modal-confirm-btn"
         >
           Confirm
@@ -102,59 +93,125 @@ export function InsertImageUriDialogBody({
   )
 }
 
+function processImageFile(file: File | null, setSrc: (s: string) => void) {
+  if (file == null || !file.type.startsWith("image/")) return
+  const reader = new FileReader()
+  reader.onload = function () {
+    if (typeof reader.result === "string") setSrc(reader.result)
+  }
+  reader.readAsDataURL(file)
+}
+
 export function InsertImageUploadedDialogBody({
   onClick,
 }: {
   onClick: (payload: InsertImagePayload) => void
 }) {
   const [src, setSrc] = useState("")
-  const [altText, setAltText] = useState("")
+  const [fileName, setFileName] = useState("")
+  const [isDragging, setIsDragging] = useState(false)
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
   const isDisabled = src === ""
 
-  const loadImage = (files: FileList | null) => {
-    const reader = new FileReader()
-    reader.onload = function () {
-      if (typeof reader.result === "string") {
-        setSrc(reader.result)
-      }
-      return ""
+  const handleFiles = (files: FileList | null) => {
+    if (files?.length) {
+      setFileName(files[0].name)
+      processImageFile(files[0], setSrc)
     }
-    if (files !== null) {
-      reader.readAsDataURL(files[0])
+  }
+
+  const onDrop = (e: React.DragEvent) => {
+    e.preventDefault()
+    setIsDragging(false)
+    const file = e.dataTransfer.files?.[0]
+    if (file) {
+      setFileName(file.name)
+      processImageFile(file, setSrc)
     }
+  }
+
+  const onDragOver = (e: React.DragEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    if (e.dataTransfer.types.includes("Files")) setIsDragging(true)
+  }
+
+  const onDragLeave = (e: React.DragEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    if (!e.currentTarget.contains(e.relatedTarget)) setIsDragging(false)
+  }
+
+  const clearImage = () => {
+    setSrc("")
+    setFileName("")
+    if (fileInputRef.current) fileInputRef.current.value = ""
   }
 
   return (
     <div className="grid gap-4 py-4">
       <div className="grid gap-2">
-        <Label htmlFor="image-upload">Image Upload</Label>
-        <Input
-          id="image-upload"
+        <Label>Image</Label>
+        <input
+          ref={fileInputRef}
           type="file"
-          onChange={(e) => loadImage(e.target.files)}
           accept="image/*"
+          className="sr-only"
+          onChange={(e) => handleFiles(e.target.files)}
           data-test-id="image-modal-file-upload"
         />
+        {src ? (
+          <div className="flex items-center gap-3 rounded-lg border border-zinc-200 bg-zinc-50 p-3">
+            <img
+              src={src}
+              alt=""
+              className="size-16 shrink-0 rounded-md border border-zinc-200 object-cover"
+            />
+            <span className="min-w-0 flex-1 truncate text-sm text-zinc-700">
+              {fileName || "Image"}
+            </span>
+            <button
+              type="button"
+              onClick={clearImage}
+              className="shrink-0 rounded-md p-1.5 text-zinc-500 hover:bg-zinc-200 hover:text-zinc-800"
+              aria-label="Remove image"
+            >
+              <X className="size-4" />
+            </button>
+          </div>
+        ) : (
+          <button
+            type="button"
+            onClick={() => fileInputRef.current?.click()}
+            onDrop={onDrop}
+            onDragOver={onDragOver}
+            onDragLeave={onDragLeave}
+            className={cn(
+              "-mt-[25px] flex min-h-[185px] w-full cursor-pointer flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed transition-colors",
+              isDragging
+                ? "border-zinc-400 bg-zinc-100"
+                : "border-zinc-300 bg-white hover:border-zinc-400 hover:bg-zinc-50"
+            )}
+          >
+            <CloudUpload className="size-10 text-zinc-500" />
+            <span className="text-sm font-medium text-zinc-900">
+              Drag & drop to upload
+            </span>
+            <span className="text-xs text-zinc-500">or browse</span>
+          </button>
+        )}
       </div>
-      <div className="grid gap-2">
-        <Label htmlFor="alt-text">Alt Text</Label>
-        <Input
-          id="alt-text"
-          placeholder="Descriptive alternative text"
-          onChange={(e) => setAltText(e.target.value)}
-          value={altText}
-          data-test-id="image-modal-alt-text-input"
-        />
-      </div>
-      <Button
-        type="submit"
-        disabled={isDisabled}
-        onClick={() => onClick({ altText, src })}
-        data-test-id="image-modal-file-upload-btn"
-      >
-        Confirm
-      </Button>
+      <DialogFooter>
+        <Button
+          type="button"
+          disabled={isDisabled}
+          onClick={() => onClick({ altText: "", src })}
+          data-test-id="image-modal-file-upload-btn"
+        >
+          Insert image
+        </Button>
+      </DialogFooter>
     </div>
   )
 }
@@ -185,20 +242,20 @@ export function InsertImageDialog({
   }
 
   return (
-    <Tabs defaultValue="url">
+    <Tabs defaultValue="file">
       <TabsList className="w-full">
-        <TabsTrigger value="url" className="w-full">
-          URL
-        </TabsTrigger>
         <TabsTrigger value="file" className="w-full">
           File
         </TabsTrigger>
+        <TabsTrigger value="url" className="w-full">
+          URL
+        </TabsTrigger>
       </TabsList>
-      <TabsContent value="url">
-        <InsertImageUriDialogBody onClick={onClick} />
-      </TabsContent>
       <TabsContent value="file">
         <InsertImageUploadedDialogBody onClick={onClick} />
+      </TabsContent>
+      <TabsContent value="url">
+        <InsertImageUriDialogBody onClick={onClick} />
       </TabsContent>
     </Tabs>
   )

@@ -7,19 +7,15 @@ import { SelectItem } from "@/components/ui/select"
 export function InsertImage() {
   const { activeEditor, showModal } = useToolbarContext()
 
-  const openImageModal = () => {
-    showModal("Insert Image", (onClose) => (
-      <InsertImageDialog activeEditor={activeEditor} onClose={onClose} />
-    ))
-  }
-
   return (
     <SelectItem
       value="image"
-      onPointerDown={(e) => {
-        e.preventDefault()
-        openImageModal()
-      }}
+      onPointerUp={() =>
+        showModal("Insert Image", (onClose) => (
+          <InsertImageDialog activeEditor={activeEditor} onClose={onClose} />
+        ))
+      }
+      className=""
     >
       <div className="flex items-center gap-1">
         <ImageIcon className="size-4" />

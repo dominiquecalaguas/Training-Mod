@@ -29,7 +29,7 @@ export function useEditorModal(): [
     const { title, content } = modalContent
     return (
       <Dialog open={true} onOpenChange={onClose}>
-        <DialogContent>
+        <DialogContent className="editor-modal-light bg-white text-zinc-900 border-zinc-200">
           <DialogHeader>
             <DialogTitle>{title}</DialogTitle>
           </DialogHeader>

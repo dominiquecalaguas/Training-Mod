@@ -1,6 +1,7 @@
 "use client"
 
 import { useRef } from "react"
+import { LexicalCollaboration } from "@lexical/react/LexicalCollaborationContext"
 import {
   InitialConfigType,
   LexicalComposer,
@@ -54,17 +55,19 @@ export function Editor({
   return (
     <div className="flex h-full w-full flex-col overflow-hidden rounded-lg bg-white text-zinc-900 isolate">
       <LexicalComposer initialConfig={configRef.current}>
-        <TooltipProvider>
-          <Plugins />
+        <LexicalCollaboration>
+          <TooltipProvider>
+            <Plugins />
 
-          <OnChangePlugin
+            <OnChangePlugin
             ignoreSelectionChange={true}
             onChange={(editorState) => {
               onChange?.(editorState)
               onSerializedChange?.(editorState.toJSON())
             }}
           />
-        </TooltipProvider>
+          </TooltipProvider>
+        </LexicalCollaboration>
       </LexicalComposer>
     </div>
   )
