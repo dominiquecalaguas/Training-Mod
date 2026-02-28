@@ -11,10 +11,13 @@ import {
 
 export default async function AdminLessonsPage({
   params,
+  searchParams,
 }: {
-  params: { courseId: string };
+  params: Promise<{ courseId: string }>;
+  searchParams: Promise<{ created?: string }>;
 }) {
-  const courseId = Number(params.courseId);
+  const { courseId: courseIdParam } = await params;
+  const courseId = Number(courseIdParam);
   if (Number.isNaN(courseId)) notFound();
 
   const [course] = await db
@@ -30,8 +33,15 @@ export default async function AdminLessonsPage({
     .where(eq(lessons.courseId, courseId))
     .orderBy(asc(lessons.order));
 
+  const { created } = await searchParams;
+
   return (
     <div className="flex flex-col gap-6">
+      {created === "1" && (
+        <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
+          Course created. Add content to each lesson below.
+        </div>
+      )}
       <section className="flex items-center justify-between gap-3">
         <div>
           <h2 className="text-lg font-semibold tracking-tight">

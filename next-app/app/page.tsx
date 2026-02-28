@@ -1,10 +1,12 @@
 import { db } from "@/db/client";
-import { courses } from "@/db/schema";
+import { courses, lessons } from "@/db/schema";
+import { count } from "drizzle-orm";
 import { CourseGrid } from "@//components/CourseGrid";
 import { DeviceTokenProvider } from "@//components/DeviceTokenProvider";
 
 export default async function Home() {
   let allCourses: (typeof courses.$inferSelect)[] = [];
+  let lessonCountByCourseId: Record<number, number> = {};
   let loadError = false;
 
   try {
@@ -12,6 +14,18 @@ export default async function Home() {
       .select()
       .from(courses)
       .orderBy(courses.order);
+
+    const counts = await db
+      .select({
+        courseId: lessons.courseId,
+        count: count().as("count"),
+      })
+      .from(lessons)
+      .groupBy(lessons.courseId);
+
+    lessonCountByCourseId = Object.fromEntries(
+      counts.map((row) => [row.courseId, Number(row.count)]),
+    );
   } catch {
     loadError = true;
   }
@@ -41,7 +55,10 @@ export default async function Home() {
               Unable to load courses right now. Please try again shortly.
             </p>
           )}
-          <CourseGrid courses={allCourses} />
+          <CourseGrid
+            courses={allCourses}
+            lessonCountByCourseId={lessonCountByCourseId}
+          />
         </div>
       </main>
     </DeviceTokenProvider>

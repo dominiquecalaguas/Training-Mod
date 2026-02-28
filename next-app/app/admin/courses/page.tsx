@@ -3,14 +3,8 @@ import { Suspense } from "react";
 import { eq, sql } from "drizzle-orm";
 import { db } from "@/db/client";
 import { courses, lessons } from "@/db/schema";
-import {
-  createCourse,
-  deleteCourse,
-  reorderCourse,
-  seedCheckInProceduresCourse,
-} from "../actions";
-import { DeleteCourseForm } from "./DeleteCourseForm";
 import { count } from "drizzle-orm";
+import { DraggableCourseList } from "./DraggableCourseList";
 
 const lessonCounts = db
   .select({
@@ -65,67 +59,7 @@ async function CourseListView() {
       <div className="border-b border-zinc-200 px-4 py-2 text-xs font-semibold uppercase tracking-wide text-zinc-500">
         Existing courses
       </div>
-      {rows.length === 0 ? (
-        <p className="px-4 py-6 text-sm text-zinc-500">
-          No courses yet. Create your first course above.
-        </p>
-      ) : (
-        <ul className="divide-y divide-zinc-100 text-sm">
-          {rows.map((row) => (
-            <li
-              key={row.course.id}
-              className="flex items-center gap-4 px-4 py-3"
-            >
-              <div className="w-10 text-xs font-mono text-zinc-500">
-                {row.course.order}
-              </div>
-              <div className="flex flex-1 flex-col">
-                <span className="font-medium text-zinc-900">
-                  {row.course.title}
-                </span>
-                <span className="text-xs text-zinc-500">
-                  {row.lessonCount} lessons
-                </span>
-              </div>
-              <div className="flex items-center gap-2">
-                <form action={reorderCourse}>
-                  <input type="hidden" name="id" value={row.course.id} />
-                  <input type="hidden" name="direction" value="up" />
-                  <button
-                    type="submit"
-                    className="rounded-full border border-zinc-200 px-2 py-1 text-xs text-zinc-600 hover:bg-zinc-100"
-                  >
-                    ↑
-                  </button>
-                </form>
-                <form action={reorderCourse}>
-                  <input type="hidden" name="id" value={row.course.id} />
-                  <input type="hidden" name="direction" value="down" />
-                  <button
-                    type="submit"
-                    className="rounded-full border border-zinc-200 px-2 py-1 text-xs text-zinc-600 hover:bg-zinc-100"
-                  >
-                    ↓
-                  </button>
-                </form>
-                <Link
-                  href={`/admin/courses/${row.course.id}/edit`}
-                  className="rounded-full border border-zinc-200 px-3 py-1 text-xs text-zinc-700 hover:bg-zinc-100"
-                >
-                  Edit
-                </Link>
-                <Link
-                  href={`/admin/courses/${row.course.id}/lessons`}
-                  className="rounded-full border border-zinc-200 px-3 py-1 text-xs text-zinc-700 hover:bg-zinc-100"
-                >
-                  Lessons
-                </Link>
-                <DeleteCourseForm action={deleteCourse} courseId={row.course.id} />
-              </div>
-            </li>
-          ))}
-        </ul>
-      )}
+      <DraggableCourseList rows={rows} />
     </section>
   );
 }

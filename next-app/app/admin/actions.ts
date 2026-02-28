@@ -2,50 +2,138 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { asc, and, eq, lt, gt, desc } from "drizzle-orm";
+import { asc, and, eq, lt, gt, desc, sql } from "drizzle-orm";
 import { db } from "@/db/client";
 import { courses, lessons } from "@/db/schema";
+import { writeFile, mkdir } from "fs/promises";
+import path from "path";
+
+async function saveThumbnailFile(file: File): Promise<string | null> {
+  const bytes = await file.arrayBuffer();
+  const buffer = Buffer.from(bytes);
+  const ext = path.extname(file.name) || ".jpg";
+  const safeExt = /^\.(jpe?g|png|gif|webp)$/i.test(ext) ? ext : ".jpg";
+  const filename = `course-${Date.now()}-${Math.random().toString(36).slice(2, 9)}${safeExt}`;
+  const dir = path.join(process.cwd(), "public", "course-thumbnails");
+  await mkdir(dir, { recursive: true });
+  const filepath = path.join(dir, filename);
+  await writeFile(filepath, buffer);
+  return `/course-thumbnails/${filename}`;
+}
+
+type LessonInput = { title: string; order: number };
+
+function parseLessonsFromFormData(formData: FormData): LessonInput[] {
+  const raw = formData.get("lessons");
+  if (raw === null || raw === undefined || String(raw).trim() === "") return [];
+  try {
+    const parsed = JSON.parse(String(raw)) as unknown;
+    if (!Array.isArray(parsed)) return [];
+    return parsed
+      .filter(
+        (item): item is LessonInput =>
+          item != null &&
+          typeof item === "object" &&
+          "title" in item &&
+          "order" in item,
+      )
+      .map((item) => ({
+        title: String(item.title ?? "").trim() || "Untitled lesson",
+        order: Number(item.order) || 0,
+      }))
+      .sort((a, b) => a.order - b.order)
+      .map((item, i) => ({ ...item, order: i + 1 }));
+  } catch {
+    return [];
+  }
+}
 
 export async function createCourse(formData: FormData) {
   const title = String(formData.get("title") || "").trim();
   const description = String(formData.get("description") || "").trim();
-  const thumbnailUrl = String(formData.get("thumbnailUrl") || "").trim();
-  const order = Number(formData.get("order") || "0");
+  const thumbnailFile = formData.get("thumbnail") as File | null;
 
   if (!title) return;
 
-  await db.insert(courses).values({
-    title,
-    description: description || null,
-    thumbnailUrl: thumbnailUrl || null,
-    order,
-  });
+  let thumbnailUrl: string | null = null;
+  if (thumbnailFile && thumbnailFile.size > 0) {
+    thumbnailUrl = await saveThumbnailFile(thumbnailFile);
+  }
+
+  const [{ maxOrder }] = await db
+    .select({ maxOrder: sql<number>`coalesce(max(${courses.order}), 0)` })
+    .from(courses);
+  const order = Number(maxOrder) + 1;
+
+  const [inserted] = await db
+    .insert(courses)
+    .values({
+      title,
+      description: description || null,
+      thumbnailUrl,
+      order,
+    })
+    .returning({ id: courses.id });
+
+  if (!inserted) {
+    revalidatePath("/admin/courses");
+    revalidatePath("/");
+    redirect("/admin/courses");
+    return;
+  }
+
+  const newCourseId = inserted.id;
+  const lessonInputs = parseLessonsFromFormData(formData);
+
+  if (lessonInputs.length > 0) {
+    await db.insert(lessons).values(
+      lessonInputs.map((l) => ({
+        courseId: newCourseId,
+        title: l.title,
+        content: "",
+        order: l.order,
+      })),
+    );
+  }
 
   revalidatePath("/admin/courses");
   revalidatePath("/");
-  redirect("/admin/courses");
+  revalidatePath(`/admin/courses/${newCourseId}/lessons`);
+  revalidatePath(`/courses/${newCourseId}`);
+  redirect(`/admin/courses/${newCourseId}/lessons?created=1`);
 }
 
 export async function updateCourse(formData: FormData) {
   const id = Number(formData.get("id") || "0");
   const title = String(formData.get("title") || "");
   const description = String(formData.get("description") || "");
-  const thumbnailUrl = String(formData.get("thumbnailUrl") || "");
-  const order = Number(formData.get("order") || "0");
+  const thumbnailFile = formData.get("thumbnail") as File | null;
 
   if (!id || !title) return;
+
+  let thumbnailUrl: string | null | undefined = undefined;
+  if (thumbnailFile && thumbnailFile.size > 0) {
+    thumbnailUrl = await saveThumbnailFile(thumbnailFile);
+  } else {
+    const [current] = await db
+      .select({ thumbnailUrl: courses.thumbnailUrl })
+      .from(courses)
+      .where(eq(courses.id, id))
+      .limit(1);
+    thumbnailUrl = current?.thumbnailUrl ?? null;
+  }
 
   await db
     .update(courses)
     .set({
       title,
       description: description || null,
-      thumbnailUrl: thumbnailUrl || null,
-      order,
+      thumbnailUrl: thumbnailUrl ?? null,
     })
     .where(eq(courses.id, id));
 
   revalidatePath("/admin/courses");
+  revalidatePath(`/admin/courses/${id}/edit`);
   revalidatePath("/");
 }
 
@@ -58,46 +146,46 @@ export async function deleteCourse(formData: FormData) {
   revalidatePath("/");
 }
 
-export async function reorderCourse(formData: FormData) {
-  const id = Number(formData.get("id") || "0");
-  const direction = String(formData.get("direction") || "");
-  if (!id || (direction !== "up" && direction !== "down")) return;
+export async function setCoursesOrder(formData: FormData) {
+  const ids = formData.getAll("ids");
+  if (!Array.isArray(ids) || ids.length === 0) return;
 
-  const [current] = await db
-    .select()
-    .from(courses)
-    .where(eq(courses.id, id))
-    .limit(1);
-  if (!current) return;
+  const numericIds = ids
+    .map((id) => Number(id))
+    .filter((id) => Number.isInteger(id) && id > 0);
 
-  const targetWhere =
-    direction === "up"
-      ? lt(courses.order, current.order)
-      : gt(courses.order, current.order);
-
-  const [neighbor] = await db
-    .select()
-    .from(courses)
-    .where(targetWhere)
-    .orderBy(
-      direction === "up" ? desc(courses.order) : asc(courses.order),
-    )
-    .limit(1);
-
-  if (!neighbor) return;
-
-  await db
-    .update(courses)
-    .set({ order: neighbor.order })
-    .where(eq(courses.id, current.id));
-
-  await db
-    .update(courses)
-    .set({ order: current.order })
-    .where(eq(courses.id, neighbor.id));
+  for (let i = 0; i < numericIds.length; i++) {
+    await db
+      .update(courses)
+      .set({ order: i + 1 })
+      .where(eq(courses.id, numericIds[i]));
+  }
 
   revalidatePath("/admin/courses");
   revalidatePath("/");
+}
+
+export async function setLessonsOrder(formData: FormData) {
+  const courseId = Number(formData.get("courseId") || "0");
+  const ids = formData.getAll("ids");
+  if (!courseId || !Array.isArray(ids) || ids.length === 0) return;
+
+  const numericIds = ids
+    .map((id) => Number(id))
+    .filter((id) => Number.isInteger(id) && id > 0);
+
+  for (let i = 0; i < numericIds.length; i++) {
+    await db
+      .update(lessons)
+      .set({ order: i + 1 })
+      .where(
+        and(eq(lessons.id, numericIds[i]), eq(lessons.courseId, courseId)),
+      );
+  }
+
+  revalidatePath(`/admin/courses/${courseId}/lessons`);
+  revalidatePath(`/admin/courses/${courseId}/edit`);
+  revalidatePath(`/courses/${courseId}`);
 }
 
 export async function createLesson(formData: FormData) {
@@ -138,6 +226,7 @@ export async function updateLesson(formData: FormData) {
     .where(eq(lessons.id, id));
 
   revalidatePath(`/admin/courses/${courseId}/lessons`);
+  revalidatePath(`/admin/courses/${courseId}/edit`);
   revalidatePath(`/courses/${courseId}`);
 }
 

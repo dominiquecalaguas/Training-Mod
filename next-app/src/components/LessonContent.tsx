@@ -3,6 +3,23 @@
 import { useState } from "react";
 import ReactMarkdown from "react-markdown";
 import { useDeviceToken } from "@//components/DeviceTokenProvider";
+import { LexicalViewer } from "@/components/blocks/editor-x/lexical-viewer";
+
+function isLexicalContent(content: string): boolean {
+  const trimmed = content?.trim() ?? "";
+  if (!trimmed.startsWith("{") || !trimmed.includes('"root"')) return false;
+  try {
+    const parsed = JSON.parse(trimmed) as unknown;
+    return (
+      parsed != null &&
+      typeof parsed === "object" &&
+      "root" in parsed &&
+      parsed.root != null
+    );
+  } catch {
+    return false;
+  }
+}
 
 export function LessonContent({
   courseId,
@@ -70,7 +87,15 @@ export function LessonContent({
         </div>
       </header>
       <section className="prose prose-sm max-w-none prose-invert prose-headings:mt-4 prose-headings:mb-2 prose-p:my-2 prose-li:my-1">
-        <ReactMarkdown>{content}</ReactMarkdown>
+        {isLexicalContent(content) ? (
+          <LexicalViewer
+            key={lessonId}
+            serializedState={JSON.parse(content)}
+            className="lesson-lexical-content"
+          />
+        ) : (
+          <ReactMarkdown>{content}</ReactMarkdown>
+        )}
       </section>
     </article>
   );

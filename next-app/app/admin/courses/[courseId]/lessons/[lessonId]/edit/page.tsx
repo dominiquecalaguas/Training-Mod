@@ -7,10 +7,11 @@ import { updateLesson } from "../../../../../actions";
 export default async function EditLessonPage({
   params,
 }: {
-  params: { courseId: string; lessonId: string };
+  params: Promise<{ courseId: string; lessonId: string }>;
 }) {
-  const courseId = Number(params.courseId);
-  const lessonId = Number(params.lessonId);
+  const { courseId: courseIdParam, lessonId: lessonIdParam } = await params;
+  const courseId = Number(courseIdParam);
+  const lessonId = Number(lessonIdParam);
   if (Number.isNaN(courseId) || Number.isNaN(lessonId)) notFound();
 
   const [course] = await db

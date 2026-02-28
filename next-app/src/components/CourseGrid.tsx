@@ -13,7 +13,13 @@ type ProgressMap = Record<
   { totalLessons: number; completedLessons: number }
 >;
 
-export function CourseGrid({ courses }: { courses: Course[] }) {
+export function CourseGrid({
+  courses,
+  lessonCountByCourseId = {},
+}: {
+  courses: Course[];
+  lessonCountByCourseId?: Record<number, number>;
+}) {
   const deviceToken = useDeviceToken();
   const [progress, setProgress] = useState<ProgressMap>({});
 
@@ -53,11 +59,12 @@ export function CourseGrid({ courses }: { courses: Course[] }) {
       <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
         {courses.map((course) => {
           const stats = progress[course.id];
+          const totalLessons =
+            lessonCountByCourseId[course.id] ?? stats?.totalLessons ?? 0;
+          const completedLessons = stats?.completedLessons ?? 0;
           const pct =
-            stats && stats.totalLessons > 0
-              ? Math.round(
-                  (stats.completedLessons / stats.totalLessons) * 100,
-                )
+            totalLessons > 0
+              ? Math.round((completedLessons / totalLessons) * 100)
               : 0;
 
           return (
@@ -94,20 +101,19 @@ export function CourseGrid({ courses }: { courses: Course[] }) {
                     {course.description}
                   </p>
                 )}
-                <div className="mt-auto">
-                  <div className="h-2 w-full overflow-hidden rounded-full bg-neutral-800">
-                    <div
-                      className="h-full rounded-full bg-gradient-to-r from-emerald-400 via-emerald-300 to-emerald-500 transition-all"
-                      style={{ width: `${pct}%` }}
-                    />
-                  </div>
-                  {stats && (
-                    <p className="mt-1 text-[11px] text-neutral-400">
-                      {stats.completedLessons}/{stats.totalLessons} lessons
-                      completed
+                {totalLessons > 0 && (
+                  <div className="mt-auto space-y-1.5">
+                    <div className="h-2 w-full overflow-hidden rounded-full bg-neutral-800">
+                      <div
+                        className="h-full rounded-full bg-gradient-to-r from-emerald-400 via-emerald-300 to-emerald-500 transition-all"
+                        style={{ width: `${pct}%` }}
+                      />
+                    </div>
+                    <p className="text-[11px] text-neutral-400">
+                      {completedLessons} out of {totalLessons} lessons completed
                     </p>
-                  )}
-                </div>
+                  </div>
+                )}
               </div>
             </Link>
           );

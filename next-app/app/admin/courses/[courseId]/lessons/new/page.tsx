@@ -7,9 +7,10 @@ import { createLesson } from "../../../../actions";
 export default async function NewLessonPage({
   params,
 }: {
-  params: { courseId: string };
+  params: Promise<{ courseId: string }>;
 }) {
-  const courseId = Number(params.courseId);
+  const { courseId: courseIdParam } = await params;
+  const courseId = Number(courseIdParam);
   if (Number.isNaN(courseId)) notFound();
 
   const [course] = await db
