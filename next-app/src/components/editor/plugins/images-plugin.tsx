@@ -140,7 +140,8 @@ export function InsertImageUploadedDialogBody({
   const onDragLeave = (e: React.DragEvent) => {
     e.preventDefault()
     e.stopPropagation()
-    if (!e.currentTarget.contains(e.relatedTarget)) setIsDragging(false)
+    const related = e.relatedTarget as Node | null
+    if (!related || !e.currentTarget.contains(related)) setIsDragging(false)
   }
 
   const clearImage = () => {
