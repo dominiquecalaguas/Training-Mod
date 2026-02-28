@@ -14,10 +14,19 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Invalid body" }, { status: 400 });
   }
 
-  if (body.password !== adminPassword) {
+  const submitted = body.password.trim();
+  const expected = adminPassword.trim();
+  if (submitted !== expected) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  return NextResponse.json({ ok: true });
+  const res = NextResponse.json({ ok: true });
+  res.cookies.set("admin_authed", "1", {
+    path: "/",
+    httpOnly: true,
+    sameSite: "lax",
+    maxAge: 60 * 60 * 24 * 7, // 7 days
+  });
+  return res;
 }
 

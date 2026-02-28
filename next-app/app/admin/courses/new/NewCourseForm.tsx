@@ -106,10 +106,12 @@ export function NewCourseForm({
         <div className="sm:col-span-2 space-y-2">
           <div className="text-xs font-medium text-zinc-700">Description</div>
           <input type="hidden" name="description" />
-          <Editor
-            editorSerializedState={descriptionState ?? undefined}
-            onSerializedChange={(value) => setDescriptionState(value)}
-          />
+          <div className="relative w-full min-h-[400px] overflow-hidden rounded-lg border border-zinc-200">
+            <Editor
+              editorSerializedState={descriptionState ?? undefined}
+              onSerializedChange={(value) => setDescriptionState(value)}
+            />
+          </div>
         </div>
         <label className="text-xs font-medium text-zinc-700">
           Thumbnail URL

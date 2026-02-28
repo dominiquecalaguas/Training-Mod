@@ -52,7 +52,7 @@ export function Editor({
   }
 
   return (
-    <div className="rounded-lg border bg-white text-zinc-900 shadow">
+    <div className="flex h-full w-full flex-col overflow-hidden rounded-lg bg-white text-zinc-900 isolate">
       <LexicalComposer initialConfig={configRef.current}>
         <TooltipProvider>
           <Plugins />

@@ -22,13 +22,10 @@ import { TablePlugin } from "@lexical/react/LexicalTablePlugin"
 
 import { ContentEditable } from "@/components/editor/editor-ui/content-editable"
 import { ActionsPlugin } from "@/components/editor/plugins/actions/actions-plugin"
-import { CharacterLimitPlugin } from "@/components/editor/plugins/actions/character-limit-plugin"
 import { ClearEditorActionPlugin } from "@/components/editor/plugins/actions/clear-editor-plugin"
-import { CounterCharacterPlugin } from "@/components/editor/plugins/actions/counter-character-plugin"
 import { EditModeTogglePlugin } from "@/components/editor/plugins/actions/edit-mode-toggle-plugin"
 import { ImportExportPlugin } from "@/components/editor/plugins/actions/import-export-plugin"
 import { MarkdownTogglePlugin } from "@/components/editor/plugins/actions/markdown-toggle-plugin"
-import { MaxLengthPlugin } from "@/components/editor/plugins/actions/max-length-plugin"
 import { ShareContentPlugin } from "@/components/editor/plugins/actions/share-content-plugin"
 import { SpeechToTextPlugin } from "@/components/editor/plugins/actions/speech-to-text-plugin"
 import { TreeViewPlugin } from "@/components/editor/plugins/actions/tree-view-plugin"
@@ -94,7 +91,6 @@ import { FontFormatToolbarPlugin } from "@/components/editor/plugins/toolbar/fon
 import { FontSizeToolbarPlugin } from "@/components/editor/plugins/toolbar/font-size-toolbar-plugin"
 import { HistoryToolbarPlugin } from "@/components/editor/plugins/toolbar/history-toolbar-plugin"
 import { LinkToolbarPlugin } from "@/components/editor/plugins/toolbar/link-toolbar-plugin"
-import { SubSuperToolbarPlugin } from "@/components/editor/plugins/toolbar/subsuper-toolbar-plugin"
 import { ToolbarPlugin } from "@/components/editor/plugins/toolbar/toolbar-plugin"
 import { EMOJI } from "@/components/editor/transformers/markdown-emoji-transformer"
 import { HR } from "@/components/editor/transformers/markdown-hr-transformer"
@@ -104,7 +100,6 @@ import { TWEET } from "@/components/editor/transformers/markdown-tweet-transform
 import { Separator } from "@/components/ui/separator"
 
 const placeholder = "Press / for commands..."
-const maxLength = 500
 
 export function Plugins({}) {
   const [floatingAnchorElem, setFloatingAnchorElem] =
@@ -118,10 +113,10 @@ export function Plugins({}) {
   }
 
   return (
-    <div className="relative">
+    <div className="relative flex min-h-0 flex-1 flex-col overflow-hidden">
       <ToolbarPlugin>
         {({ blockType }) => (
-          <div className="editor-toolbar-light vertical-align-middle sticky top-0 z-10 flex items-center gap-2 overflow-auto border-b border-zinc-200 bg-white p-1 text-zinc-900">
+          <div className="editor-toolbar-light flex min-w-0 flex-shrink-0 flex-wrap items-center gap-1.5 border-b border-zinc-200 bg-white p-1.5 text-zinc-900 w-full">
             <HistoryToolbarPlugin />
             <Separator orientation="vertical" className="!h-7" />
             <BlockFormatDropDown>
@@ -142,7 +137,6 @@ export function Plugins({}) {
                 <Separator orientation="vertical" className="!h-7" />
                 <FontFormatToolbarPlugin />
                 <Separator orientation="vertical" className="!h-7" />
-                <SubSuperToolbarPlugin />
                 <LinkToolbarPlugin setIsLinkEditMode={setIsLinkEditMode} />
                 <Separator orientation="vertical" className="!h-7" />
                 <ClearFormattingToolbarPlugin />
@@ -164,15 +158,15 @@ export function Plugins({}) {
           </div>
         )}
       </ToolbarPlugin>
-      <div className="relative">
+      <div className="relative flex min-h-0 flex-1 flex-col overflow-hidden">
         <AutoFocusPlugin />
         <RichTextPlugin
           contentEditable={
-            <div className="">
-              <div className="" ref={onRef}>
+            <div className="flex min-h-0 w-full flex-1 overflow-hidden">
+              <div className="h-full w-full overflow-hidden" ref={onRef}>
                 <ContentEditable
                   placeholder={placeholder}
-                  className="ContentEditable__root relative block h-[calc(100vh-90px)] min-h-72 overflow-auto px-8 py-4 focus:outline-none"
+                  className="ContentEditable__root relative block h-full min-h-0 overflow-auto px-6 py-4 focus:outline-none bg-white text-zinc-900"
                 />
               </div>
             </div>
@@ -265,15 +259,8 @@ export function Plugins({}) {
         <ListMaxIndentLevelPlugin />
       </div>
       <ActionsPlugin>
-        <div className="clear-both flex items-center justify-between gap-2 overflow-auto border-t p-1">
-          <div className="flex flex-1 justify-start">
-            <MaxLengthPlugin maxLength={maxLength} />
-            <CharacterLimitPlugin maxLength={maxLength} charset="UTF-16" />
-          </div>
-          <div>
-            <CounterCharacterPlugin charset="UTF-16" />
-          </div>
-          <div className="flex flex-1 justify-end">
+        <div className="flex flex-shrink-0 items-center justify-end gap-2 overflow-hidden border-t border-zinc-200 bg-white p-1.5">
+          <div className="flex items-center gap-2">
             <SpeechToTextPlugin />
             <ShareContentPlugin />
             <ImportExportPlugin />
