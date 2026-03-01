@@ -15,6 +15,7 @@ export function ThumbnailUploadField({
 }: ThumbnailUploadFieldProps) {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [removedByUser, setRemovedByUser] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -24,13 +25,18 @@ export function ThumbnailUploadField({
     };
   }, [previewUrl]);
 
-  const showPreview = selectedFile || currentImageUrl;
-  const displayUrl = selectedFile ? previewUrl : currentImageUrl ?? null;
+  const showPreview = selectedFile || (currentImageUrl && !removedByUser);
+  const displayUrl = selectedFile
+    ? previewUrl
+    : removedByUser
+      ? null
+      : currentImageUrl ?? null;
   const displayLabel = selectedFile ? selectedFile.name : "Current thumbnail";
 
   const handleFiles = (files: FileList | null) => {
     if (files?.length && files[0].type.startsWith("image/")) {
       const file = files[0];
+      setRemovedByUser(false);
       setSelectedFile(file);
       setPreviewUrl((prev) => {
         if (prev) URL.revokeObjectURL(prev);
@@ -65,10 +71,14 @@ export function ThumbnailUploadField({
   };
 
   const clearImage = () => {
-    setSelectedFile(null);
-    if (previewUrl) {
-      URL.revokeObjectURL(previewUrl);
-      setPreviewUrl(null);
+    if (selectedFile) {
+      setSelectedFile(null);
+      if (previewUrl) {
+        URL.revokeObjectURL(previewUrl);
+        setPreviewUrl(null);
+      }
+    } else if (currentImageUrl) {
+      setRemovedByUser(true);
     }
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
@@ -76,6 +86,11 @@ export function ThumbnailUploadField({
   return (
     <div className="sm:col-span-2 space-y-2">
       <label className="text-xs font-medium text-zinc-700">{label}</label>
+      <input
+        type="hidden"
+        name="removeThumbnail"
+        value={removedByUser && !selectedFile ? "1" : ""}
+      />
       <input
         ref={fileInputRef}
         type="file"

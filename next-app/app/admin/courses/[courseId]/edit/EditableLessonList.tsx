@@ -2,9 +2,16 @@
 
 import { useState, useCallback } from "react";
 import type { SerializedEditorState } from "lexical";
-import { ChevronDown, ChevronRight, GripVertical } from "lucide-react";
+import { ChevronDown, ChevronRight, GripVertical, Trash2 } from "lucide-react";
 import { Editor } from "@/components/blocks/editor-x/editor";
-import { setLessonsOrder, updateLesson } from "../../../actions";
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { setLessonsOrder, deleteLesson, updateLesson } from "../../../actions";
 
 type Lesson = {
   id: number;
@@ -95,6 +102,9 @@ export function EditableLessonList({
   const [lessons, setLessons] = useState(initialLessons);
   const [expandedIds, setExpandedIds] = useState<Set<number>>(new Set());
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
+  const [deleteConfirmLessonId, setDeleteConfirmLessonId] = useState<
+    number | null
+  >(null);
   const [contentStateByLessonId, setContentStateByLessonId] = useState<
     Record<number, SerializedEditorState>
   >({});
@@ -154,42 +164,96 @@ export function EditableLessonList({
     setDraggedIndex(null);
   }, []);
 
+  const handleDeleteConfirm = useCallback(
+    async (formData: FormData) => {
+      await deleteLesson(formData);
+      const id = Number(formData.get("id") || "0");
+      if (id) setLessons((prev) => prev.filter((l) => l.id !== id));
+      setDeleteConfirmLessonId(null);
+    },
+    [],
+  );
+
   return (
-    <ul className="flex flex-col gap-1">
-      {lessons.map((lesson, index) => {
-        const isExpanded = expandedIds.has(lesson.id);
-        return (
-          <li
-            key={lesson.id}
-            onDragOver={handleDragOver}
-            onDrop={(e) => handleDrop(e, index)}
-            className={`rounded-lg border border-zinc-200 bg-white ${draggedIndex === index ? "opacity-50" : ""}`}
-          >
-            <div
-              className="flex items-center gap-2 px-3 py-2 cursor-pointer hover:bg-zinc-50"
-              onClick={() => toggleExpanded(lesson.id)}
+    <>
+      <ul className="divide-y divide-zinc-100 rounded-lg border border-zinc-200 bg-zinc-50/50">
+        {lessons.map((lesson, index) => {
+          const isExpanded = expandedIds.has(lesson.id);
+          return (
+            <li
+              key={lesson.id}
+              onDragOver={handleDragOver}
+              onDrop={(e) => handleDrop(e, index)}
+              className={`flex flex-col ${draggedIndex === index ? "opacity-50" : ""}`}
             >
               <div
-                draggable
-                onClick={(e) => e.stopPropagation()}
-                onDragStart={(e) => handleDragStart(e, index)}
-                onDragEnd={handleDragEnd}
-                className="cursor-grab touch-none text-zinc-400 hover:text-zinc-600 active:cursor-grabbing"
-                aria-label="Drag to reorder"
+                className="flex items-center gap-3 px-3 py-2 cursor-pointer hover:bg-zinc-100/80"
+                onClick={() => toggleExpanded(lesson.id)}
               >
-                <GripVertical className="size-4" />
+                <div
+                  draggable
+                  onClick={(e) => e.stopPropagation()}
+                  onDragStart={(e) => handleDragStart(e, index)}
+                  onDragEnd={handleDragEnd}
+                  className="cursor-grab touch-none text-zinc-400 hover:text-zinc-600 active:cursor-grabbing"
+                  aria-label="Drag to reorder"
+                >
+                  <GripVertical className="size-4" />
+                </div>
+                <span className="text-zinc-500 shrink-0">
+                  {isExpanded ? (
+                    <ChevronDown className="size-4" />
+                  ) : (
+                    <ChevronRight className="size-4" />
+                  )}
+                </span>
+                <form
+                  action={updateLesson}
+                  className="flex-1 min-w-0"
+                  onClick={(e) => e.stopPropagation()}
+                  onBlur={(e) => {
+                    const form = (e.target as HTMLElement).closest("form");
+                    if (!form) return;
+                    const titleInput = form.querySelector<HTMLInputElement>(
+                      'input[name="title"]',
+                    );
+                    if (
+                      !titleInput ||
+                      titleInput.value.trim() === lesson.title.trim()
+                    )
+                      return;
+                    const contentInput =
+                      form.querySelector<HTMLInputElement>(
+                        'input[name="content"]',
+                      );
+                    if (contentInput) contentInput.value = lesson.content;
+                    form.requestSubmit();
+                  }}
+                >
+                  <input type="hidden" name="id" value={lesson.id} />
+                  <input type="hidden" name="courseId" value={courseId} />
+                  <input type="hidden" name="content" />
+                  <input type="hidden" name="order" value={lesson.order} />
+                  <input
+                    type="text"
+                    name="title"
+                    defaultValue={lesson.title}
+                    placeholder="Lesson title"
+                    className="w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm outline-none focus:border-zinc-900"
+                  />
+                </form>
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setDeleteConfirmLessonId(lesson.id);
+                  }}
+                  className="shrink-0 rounded-full p-2 text-zinc-500 hover:bg-zinc-200 hover:text-zinc-700"
+                  aria-label="Remove lesson"
+                >
+                  <Trash2 className="size-4" />
+                </button>
               </div>
-              <span className="text-zinc-500">
-                {isExpanded ? (
-                  <ChevronDown className="size-4" />
-                ) : (
-                  <ChevronRight className="size-4" />
-                )}
-              </span>
-              <span className="text-sm font-medium text-zinc-800 truncate">
-                {lesson.title || `Lesson ${lesson.order}`}
-              </span>
-            </div>
             {isExpanded && (
               <div className="border-t border-zinc-100 bg-zinc-50/50 p-4">
                 <form
@@ -266,6 +330,53 @@ export function EditableLessonList({
           </li>
         );
       })}
-    </ul>
+      </ul>
+
+      <Dialog
+        open={deleteConfirmLessonId !== null}
+        onOpenChange={(open) => !open && setDeleteConfirmLessonId(null)}
+      >
+        <DialogContent
+          showCloseButton={true}
+          className="bg-white text-zinc-900 border-zinc-200 [&_[data-slot=dialog-close]]:text-zinc-500 [&_[data-slot=dialog-close]]:hover:text-zinc-900"
+        >
+          <DialogHeader>
+            <DialogTitle className="text-zinc-900">
+              Delete lesson?
+            </DialogTitle>
+          </DialogHeader>
+          <p className="text-sm text-zinc-600">
+            This lesson will be removed. This cannot be undone.
+          </p>
+          <form
+            onSubmit={async (e) => {
+              e.preventDefault();
+              if (deleteConfirmLessonId == null) return;
+              const formData = new FormData();
+              formData.set("id", String(deleteConfirmLessonId));
+              formData.set("courseId", String(courseId));
+              await handleDeleteConfirm(formData);
+            }}
+            className="flex flex-col gap-4"
+          >
+            <DialogFooter>
+              <button
+                type="button"
+                onClick={() => setDeleteConfirmLessonId(null)}
+                className="rounded-full border border-zinc-300 bg-white px-4 py-1.5 text-sm font-medium text-zinc-700 hover:bg-zinc-100"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                className="rounded-full bg-red-600 px-4 py-1.5 text-sm font-medium text-white hover:bg-red-700"
+              >
+                Delete
+              </button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }

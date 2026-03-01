@@ -114,8 +114,11 @@ export async function updateCourse(formData: FormData) {
 
   if (!id || !title) return;
 
+  const removeThumbnail = formData.get("removeThumbnail");
   let thumbnailUrl: string | null | undefined = undefined;
-  if (thumbnailFile && thumbnailFile.size > 0) {
+  if (removeThumbnail) {
+    thumbnailUrl = null;
+  } else if (thumbnailFile && thumbnailFile.size > 0) {
     thumbnailUrl = await saveThumbnailFile(thumbnailFile);
   } else {
     const [current] = await db
@@ -207,6 +210,7 @@ export async function createLesson(formData: FormData) {
   });
 
   revalidatePath(`/admin/courses/${courseId}/lessons`);
+  revalidatePath(`/admin/courses/${courseId}/edit`);
   revalidatePath(`/courses/${courseId}`);
 }
 
@@ -242,6 +246,7 @@ export async function deleteLesson(formData: FormData) {
   await db.delete(lessons).where(eq(lessons.id, id));
 
   revalidatePath(`/admin/courses/${courseId}/lessons`);
+  revalidatePath(`/admin/courses/${courseId}/edit`);
   revalidatePath(`/courses/${courseId}`);
 }
 

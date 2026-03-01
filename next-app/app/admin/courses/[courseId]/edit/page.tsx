@@ -1,9 +1,9 @@
-import Link from "next/link";
 import { notFound } from "next/navigation";
+import { Plus } from "lucide-react";
 import { db } from "@/db/client";
 import { courses, lessons } from "@/db/schema";
 import { asc, eq } from "drizzle-orm";
-import { updateCourse } from "../../../actions";
+import { createLesson, updateCourse } from "../../../actions";
 import { ThumbnailUploadField } from "@/components/ThumbnailUploadField";
 import { EditableLessonList } from "./EditableLessonList";
 
@@ -70,22 +70,32 @@ export default async function EditCoursePage({
       </div>
 
       <div className="rounded-xl border border-zinc-200 bg-white p-6">
-        <h2 className="text-lg font-semibold tracking-tight">
-          Lesson content
-        </h2>
-        {courseLessons.length === 0 ? (
-          <p className="mt-4 text-sm text-zinc-500">
-            No lessons yet.{" "}
-            <Link
-              href={`/admin/courses/${id}/lessons`}
-              className="font-medium text-zinc-700 underline hover:text-zinc-900"
+        <div className="flex items-center justify-between gap-2">
+          <h2 className="text-lg font-semibold tracking-tight">Lessons</h2>
+          <form action={createLesson}>
+            <input type="hidden" name="courseId" value={id} />
+            <input type="hidden" name="title" value="Untitled lesson" />
+            <input type="hidden" name="content" value="" />
+            <input
+              type="hidden"
+              name="order"
+              value={courseLessons.length + 1}
+            />
+            <button
+              type="submit"
+              className="inline-flex items-center gap-1.5 rounded-full border border-zinc-300 px-3 py-1.5 text-xs font-medium text-zinc-700 hover:bg-zinc-100"
             >
-              Add lessons from the Lessons page
-            </Link>
-            .
-          </p>
-        ) : (
-          <div className="mt-4">
+              <Plus className="size-3.5" />
+              Add lesson
+            </button>
+          </form>
+        </div>
+        <div className="mt-4 space-y-2">
+          {courseLessons.length === 0 ? (
+            <p className="text-sm text-zinc-500">
+              No lessons yet. Click Add lesson above to create one.
+            </p>
+          ) : (
             <EditableLessonList
               lessons={courseLessons.map((l) => ({
                 id: l.id,
@@ -97,8 +107,12 @@ export default async function EditCoursePage({
               }))}
               courseId={id}
             />
-          </div>
-        )}
+          )}
+          <p className="text-[11px] text-zinc-500">
+            Add, remove, and reorder lessons. You can add content to each lesson
+            in the expanded section below.
+          </p>
+        </div>
       </div>
     </div>
   );
