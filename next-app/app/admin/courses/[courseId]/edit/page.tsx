@@ -1,10 +1,10 @@
 import { notFound } from "next/navigation";
-import { Plus } from "lucide-react";
 import { db } from "@/db/client";
 import { courses, lessons } from "@/db/schema";
 import { asc, eq } from "drizzle-orm";
-import { createLesson, updateCourse } from "../../../actions";
+import { updateCourse } from "../../../actions";
 import { ThumbnailUploadField } from "@/components/ThumbnailUploadField";
+import { AddLessonButton } from "./AddLessonButton";
 import { EditableLessonList } from "./EditableLessonList";
 
 export default async function EditCoursePage({
@@ -72,23 +72,7 @@ export default async function EditCoursePage({
       <div className="rounded-xl border border-zinc-200 bg-white p-6">
         <div className="flex items-center justify-between gap-2">
           <h2 className="text-lg font-semibold tracking-tight">Lessons</h2>
-          <form action={createLesson}>
-            <input type="hidden" name="courseId" value={id} />
-            <input type="hidden" name="title" value="Untitled lesson" />
-            <input type="hidden" name="content" value="" />
-            <input
-              type="hidden"
-              name="order"
-              value={courseLessons.length + 1}
-            />
-            <button
-              type="submit"
-              className="inline-flex items-center gap-1.5 rounded-full border border-zinc-300 px-3 py-1.5 text-xs font-medium text-zinc-700 hover:bg-zinc-100"
-            >
-              <Plus className="size-3.5" />
-              Add lesson
-            </button>
-          </form>
+          <AddLessonButton courseId={id} nextOrder={courseLessons.length + 1} />
         </div>
         <div className="mt-4 space-y-2">
           {courseLessons.length === 0 ? (
