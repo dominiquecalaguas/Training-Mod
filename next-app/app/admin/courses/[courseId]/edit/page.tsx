@@ -4,6 +4,7 @@ import { db } from "@/db/client";
 import { courses, lessons } from "@/db/schema";
 import { asc, eq } from "drizzle-orm";
 import { updateCourse } from "../../../actions";
+import { ThumbnailUploadField } from "@/components/ThumbnailUploadField";
 import { EditableLessonList } from "./EditableLessonList";
 
 export default async function EditCoursePage({
@@ -53,25 +54,10 @@ export default async function EditCoursePage({
               className="mt-1 w-full rounded-md border border-zinc-300 px-3 py-2 text-sm outline-none focus:border-zinc-900"
             />
           </label>
-          <label className="text-xs font-medium text-zinc-700 sm:col-span-2">
-            {course.thumbnailUrl ? "Replace thumbnail" : "Thumbnail"}
-            {course.thumbnailUrl && (
-              <div className="mt-1 mb-2">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={course.thumbnailUrl}
-                  alt=""
-                  className="h-24 w-auto rounded-md border border-zinc-200 object-cover"
-                />
-              </div>
-            )}
-            <input
-              type="file"
-              name="thumbnail"
-              accept="image/*"
-              className="mt-1 w-full rounded-md border border-zinc-300 px-3 py-2 text-sm file:mr-3 file:rounded-full file:border-0 file:bg-zinc-100 file:px-4 file:py-1.5 file:text-sm file:font-medium file:text-zinc-700 focus:outline-none focus:border-zinc-900"
-            />
-          </label>
+          <ThumbnailUploadField
+            label={course.thumbnailUrl ? "Replace thumbnail" : "Thumbnail"}
+            currentImageUrl={course.thumbnailUrl}
+          />
           <div className="sm:col-span-2">
             <button
               type="submit"
@@ -107,6 +93,7 @@ export default async function EditCoursePage({
                 title: l.title,
                 content: l.content,
                 order: l.order,
+                updatedAt: l.updatedAt,
               }))}
               courseId={id}
             />

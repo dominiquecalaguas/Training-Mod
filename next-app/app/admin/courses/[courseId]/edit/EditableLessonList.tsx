@@ -12,6 +12,7 @@ type Lesson = {
   title: string;
   content: string;
   order: number;
+  updatedAt?: string | Date | null;
 };
 
 const emptyLexicalState = {
@@ -242,13 +243,22 @@ export function EditableLessonList({
                       />
                     </div>
                   </div>
-                  <div className="sm:col-span-2">
+                  <div className="sm:col-span-2 flex flex-wrap items-center gap-3">
                     <button
                       type="submit"
                       className="inline-flex items-center rounded-full bg-zinc-900 px-4 py-1.5 text-sm font-medium text-white hover:bg-zinc-800"
                     >
                       Save lesson
                     </button>
+                    {lesson.updatedAt && (
+                      <span className="text-sm italic text-zinc-500">
+                        Last modified on{" "}
+                        {new Date(lesson.updatedAt).toLocaleString(undefined, {
+                          dateStyle: "medium",
+                          timeStyle: "short",
+                        })}
+                      </span>
+                    )}
                   </div>
                 </form>
               </div>

@@ -2,43 +2,12 @@
 
 import { useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import type { SerializedEditorState } from "lexical";
 import { GripVertical, Loader2, Plus, Trash2 } from "lucide-react";
-
-import { Editor } from "@/components/blocks/editor-x/editor";
+import { ThumbnailUploadField } from "@/components/ThumbnailUploadField";
 
 type PendingLesson = { title: string; order: number };
 
-const initialEditorValue = {
-  root: {
-    children: [
-      {
-        children: [
-          {
-            detail: 0,
-            format: 0,
-            mode: "normal",
-            style: "",
-            text: "",
-            type: "text",
-            version: 1,
-          },
-        ],
-        direction: "ltr",
-        format: "",
-        indent: 0,
-        type: "paragraph",
-        version: 1,
-      },
-    ],
-    direction: "ltr",
-    format: "",
-    indent: 0,
-    type: "root",
-    version: 1,
-  },
-} as unknown as SerializedEditorState;
-
+const DESCRIPTION_MAX_LENGTH = 160;
 const initialLessons: PendingLesson[] = [{ title: "", order: 1 }];
 
 export function NewCourseForm({
@@ -47,24 +16,11 @@ export function NewCourseForm({
   action: (formData: FormData) => Promise<void>;
 }) {
   const router = useRouter();
-  const [descriptionState, setDescriptionState] =
-    useState<SerializedEditorState | null>(initialEditorValue);
+  const [description, setDescription] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [pendingLessons, setPendingLessons] =
     useState<PendingLesson[]>(initialLessons);
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
-
-  const flushDescriptionToForm = useCallback(
-    (form: HTMLFormElement) => {
-      const hidden = form.querySelector<HTMLInputElement>(
-        'input[name="description"]',
-      );
-      if (hidden && descriptionState) {
-        hidden.value = JSON.stringify(descriptionState);
-      }
-    },
-    [descriptionState],
-  );
 
   const normalizedLessons = pendingLessons.map((l, i) => ({
     ...l,
@@ -133,7 +89,6 @@ export function NewCourseForm({
   const handleSubmit = useCallback(
     (e: React.FormEvent<HTMLFormElement>) => {
       const form = e.currentTarget;
-      flushDescriptionToForm(form);
       const lessonsInput = form.querySelector<HTMLInputElement>(
         'input[name="lessons"]',
       );
@@ -142,7 +97,7 @@ export function NewCourseForm({
       }
       setIsSubmitting(true);
     },
-    [flushDescriptionToForm, normalizedLessons],
+    [normalizedLessons],
   );
 
   return (
@@ -163,24 +118,26 @@ export function NewCourseForm({
           />
         </label>
         <div className="sm:col-span-2 space-y-2">
-          <div className="text-xs font-medium text-zinc-700">Description</div>
-          <input type="hidden" name="description" />
-          <div className="relative w-full min-h-[400px] overflow-hidden rounded-lg border border-zinc-200">
-            <Editor
-              editorSerializedState={descriptionState ?? undefined}
-              onSerializedChange={(value) => setDescriptionState(value)}
+          <label className="text-xs font-medium text-zinc-700">
+            Description
+            <textarea
+              name="description"
+              value={description}
+              onChange={(e) =>
+                setDescription(e.target.value.slice(0, DESCRIPTION_MAX_LENGTH))
+              }
+              maxLength={DESCRIPTION_MAX_LENGTH}
+              rows={4}
+              placeholder="Brief description shown on the course card on the homepage"
+              className="mt-1 w-full rounded-md border border-zinc-300 px-3 py-2 text-sm outline-none focus:border-zinc-900 resize-y"
             />
-          </div>
+          </label>
+          <p className="text-xs text-zinc-500">
+            {description.length} / {DESCRIPTION_MAX_LENGTH} characters (fits
+            the text shown on the course card on the homepage)
+          </p>
         </div>
-        <label className="text-xs font-medium text-zinc-700 sm:col-span-2">
-          Thumbnail
-          <input
-            type="file"
-            name="thumbnail"
-            accept="image/*"
-            className="mt-1 w-full rounded-md border border-zinc-300 px-3 py-2 text-sm file:mr-3 file:rounded-full file:border-0 file:bg-zinc-100 file:px-4 file:py-1.5 file:text-sm file:font-medium file:text-zinc-700 focus:outline-none focus:border-zinc-900"
-          />
-        </label>
+        <ThumbnailUploadField label="Thumbnail" />
         <input type="hidden" name="lessons" />
         <div className="sm:col-span-2 space-y-2">
           <div className="flex items-center justify-between gap-2">

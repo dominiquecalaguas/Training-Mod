@@ -8,6 +8,7 @@ import {
   deleteLesson,
   reorderLesson,
 } from "../../../actions";
+import { DeleteLessonForm } from "./DeleteLessonForm";
 
 export default async function AdminLessonsPage({
   params,
@@ -110,27 +111,11 @@ export default async function AdminLessonsPage({
                   >
                     Edit
                   </Link>
-                  <form
-                    action={deleteLesson}
-                    onSubmit={(e) => {
-                      if (
-                        !confirm(
-                          "Delete this lesson? This cannot be undone.",
-                        )
-                      ) {
-                        e.preventDefault();
-                      }
-                    }}
-                  >
-                    <input type="hidden" name="id" value={lesson.id} />
-                    <input type="hidden" name="courseId" value={courseId} />
-                    <button
-                      type="submit"
-                      className="rounded-full border border-red-200 px-3 py-1 text-xs text-red-600 hover:bg-red-50"
-                    >
-                      Delete
-                    </button>
-                  </form>
+                  <DeleteLessonForm
+                    deleteLesson={deleteLesson}
+                    lessonId={lesson.id}
+                    courseId={courseId}
+                  />
                 </div>
               </li>
             ))}

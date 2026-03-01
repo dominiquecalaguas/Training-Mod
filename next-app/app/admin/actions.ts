@@ -48,9 +48,12 @@ function parseLessonsFromFormData(formData: FormData): LessonInput[] {
   }
 }
 
+const DESCRIPTION_MAX_LENGTH = 160;
+
 export async function createCourse(formData: FormData) {
   const title = String(formData.get("title") || "").trim();
-  const description = String(formData.get("description") || "").trim();
+  let description = String(formData.get("description") || "").trim();
+  description = description.slice(0, DESCRIPTION_MAX_LENGTH);
   const thumbnailFile = formData.get("thumbnail") as File | null;
 
   if (!title) return;
@@ -222,6 +225,7 @@ export async function updateLesson(formData: FormData) {
       title,
       content,
       order,
+      updatedAt: new Date(),
     })
     .where(eq(lessons.id, id));
 

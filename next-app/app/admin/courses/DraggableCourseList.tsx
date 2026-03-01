@@ -104,12 +104,6 @@ export function DraggableCourseList({ rows: initialRows }: { rows: Row[] }) {
             >
               Edit
             </Link>
-            <Link
-              href={`/admin/courses/${row.course.id}/lessons`}
-              className="rounded-full border border-zinc-200 px-3 py-1 text-xs text-zinc-700 hover:bg-zinc-100"
-            >
-              Lessons
-            </Link>
             <DeleteCourseForm action={deleteCourse} courseId={row.course.id} />
           </div>
         </li>
