@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, Fragment } from "react";
 import { useRouter } from "next/navigation";
 import { GripVertical, Loader2, Plus, Trash2 } from "lucide-react";
 import { ThumbnailUploadField } from "@/components/ThumbnailUploadField";
@@ -21,6 +21,9 @@ export function NewCourseForm({
   const [pendingLessons, setPendingLessons] =
     useState<PendingLesson[]>(initialLessons);
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
+  const [dropIndicatorBeforeIndex, setDropIndicatorBeforeIndex] = useState<
+    number | null
+  >(null);
 
   const normalizedLessons = pendingLessons.map((l, i) => ({
     ...l,
@@ -53,14 +56,59 @@ export function NewCourseForm({
       e.dataTransfer.setData("text/plain", String(index));
       e.dataTransfer.effectAllowed = "move";
       setDraggedIndex(index);
+
+      const li = (e.target as HTMLElement).closest("li");
+      const row = li as HTMLElement | null;
+      if (row) {
+        const rect = row.getBoundingClientRect();
+        const ghost = row.cloneNode(true) as HTMLElement;
+        ghost.style.opacity = "0.6";
+        ghost.style.position = "fixed";
+        ghost.style.left = "-9999px";
+        ghost.style.top = "0";
+        ghost.style.pointerEvents = "none";
+        ghost.style.width = `${rect.width}px`;
+        ghost.style.backgroundColor = "rgb(250 250 250)";
+        ghost.style.border = "1px solid rgb(228 228 231)";
+        ghost.style.borderRadius = "8px";
+        ghost.style.boxSizing = "border-box";
+        const inputEl = ghost.querySelector("input");
+        const titleSpan = document.createElement("span");
+        titleSpan.className = "flex-1 rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900";
+        titleSpan.textContent = pendingLessons[index]?.title || "Lesson title";
+        if (inputEl) inputEl.replaceWith(titleSpan);
+        ghost.querySelector("button")?.remove();
+        document.body.appendChild(ghost);
+        const offsetX = e.clientX - rect.left;
+        const offsetY = e.clientY - rect.top;
+        e.dataTransfer.setDragImage(ghost, offsetX, offsetY);
+        requestAnimationFrame(() => ghost.remove());
+      }
+    },
+    [pendingLessons],
+  );
+
+  const getInsertBeforeIndex = useCallback(
+    (e: React.DragEvent, itemIndex: number): number => {
+      const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+      const mid = rect.top + rect.height / 2;
+      return e.clientY < mid ? itemIndex : itemIndex + 1;
     },
     [],
   );
 
-  const handleDragOver = useCallback((e: React.DragEvent) => {
-    e.preventDefault();
-    e.dataTransfer.dropEffect = "move";
-  }, []);
+  const handleDragOver = useCallback(
+    (e: React.DragEvent, index: number) => {
+      e.preventDefault();
+      e.dataTransfer.dropEffect = "move";
+      const insertBefore = Math.min(
+        Math.max(0, getInsertBeforeIndex(e, index)),
+        pendingLessons.length,
+      );
+      setDropIndicatorBeforeIndex(insertBefore);
+    },
+    [pendingLessons.length, getInsertBeforeIndex],
+  );
 
   const handleDrop = useCallback(
     (e: React.DragEvent, dropIndex: number) => {
@@ -69,6 +117,7 @@ export function NewCourseForm({
       const dragIndex = raw === "" ? NaN : Number(raw);
       if (Number.isNaN(dragIndex) || dragIndex === dropIndex) {
         setDraggedIndex(null);
+        setDropIndicatorBeforeIndex(null);
         return;
       }
       setPendingLessons((prev) => {
@@ -78,12 +127,14 @@ export function NewCourseForm({
         return next.map((l, i) => ({ ...l, order: i + 1 }));
       });
       setDraggedIndex(null);
+      setDropIndicatorBeforeIndex(null);
     },
     [],
   );
 
   const handleDragEnd = useCallback(() => {
     setDraggedIndex(null);
+    setDropIndicatorBeforeIndex(null);
   }, []);
 
   const handleSubmit = useCallback(
@@ -153,39 +204,53 @@ export function NewCourseForm({
           </div>
           <ul className="divide-y divide-zinc-100 rounded-lg border border-zinc-200 bg-zinc-50/50">
             {pendingLessons.map((lesson, index) => (
-              <li
-                key={index}
-                onDragOver={handleDragOver}
-                onDrop={(e) => handleDrop(e, index)}
-                className={`flex items-center gap-3 px-3 py-2 ${draggedIndex === index ? "opacity-50" : ""}`}
-              >
-                <div
-                  draggable
-                  onDragStart={(e) => handleDragStart(e, index)}
-                  onDragEnd={handleDragEnd}
-                  className="cursor-grab touch-none text-zinc-400 hover:text-zinc-600 active:cursor-grabbing"
-                  aria-label="Drag to reorder"
+              <Fragment key={index}>
+                {dropIndicatorBeforeIndex === index && (
+                  <li className="list-none" aria-hidden>
+                    <div className="min-h-[2px] w-full bg-zinc-900" style={{ height: 2 }} />
+                  </li>
+                )}
+                <li
+                  onDragOver={(e) => handleDragOver(e, index)}
+                  onDrop={(e) => {
+                    const insertBefore = getInsertBeforeIndex(e, index);
+                    handleDrop(e, insertBefore);
+                  }}
+                  className={`flex items-center gap-3 px-3 py-2 ${draggedIndex === index ? "opacity-50" : ""}`}
                 >
-                  <GripVertical className="size-4" />
-                </div>
-                <input
-                  type="text"
-                  value={lesson.title}
-                  onChange={(e) => updateLessonTitle(index, e.target.value)}
-                  placeholder="Lesson title"
-                  className="flex-1 rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm outline-none focus:border-zinc-900"
-                />
-                <button
-                  type="button"
-                  onClick={() => removeLesson(index)}
-                  disabled={pendingLessons.length <= 1}
-                  className="rounded-full p-2 text-zinc-500 hover:bg-zinc-200 hover:text-zinc-700 disabled:pointer-events-none disabled:opacity-50"
-                  aria-label="Remove lesson"
-                >
-                  <Trash2 className="size-4" />
-                </button>
-              </li>
+                  <div
+                    draggable
+                    onDragStart={(e) => handleDragStart(e, index)}
+                    onDragEnd={handleDragEnd}
+                    className="cursor-grab touch-none text-zinc-400 hover:text-zinc-600 active:cursor-grabbing"
+                    aria-label="Drag to reorder"
+                  >
+                    <GripVertical className="size-4" />
+                  </div>
+                  <input
+                    type="text"
+                    value={lesson.title}
+                    onChange={(e) => updateLessonTitle(index, e.target.value)}
+                    placeholder="Lesson title"
+                    className="flex-1 rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm outline-none focus:border-zinc-900"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => removeLesson(index)}
+                    disabled={pendingLessons.length <= 1}
+                    className="rounded-full p-2 text-zinc-500 hover:bg-zinc-200 hover:text-zinc-700 disabled:pointer-events-none disabled:opacity-50"
+                    aria-label="Remove lesson"
+                  >
+                    <Trash2 className="size-4" />
+                  </button>
+                </li>
+              </Fragment>
             ))}
+            {dropIndicatorBeforeIndex === pendingLessons.length && (
+              <li className="list-none" aria-hidden>
+                <div className="min-h-[2px] w-full bg-zinc-900" style={{ height: 2 }} />
+              </li>
+            )}
           </ul>
           <p className="text-[11px] text-zinc-500">
             Add, remove, and reorder lessons. You can add content to each lesson

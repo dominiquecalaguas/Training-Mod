@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, Fragment } from "react";
 import type { SerializedEditorState } from "lexical";
 import { ChevronDown, ChevronRight, GripVertical, Trash2 } from "lucide-react";
 import { Editor } from "@/components/blocks/editor-x/editor";
@@ -102,6 +102,9 @@ export function EditableLessonList({
   const [lessons, setLessons] = useState(initialLessons);
   const [expandedIds, setExpandedIds] = useState<Set<number>>(new Set());
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
+  const [dropIndicatorBeforeIndex, setDropIndicatorBeforeIndex] = useState<
+    number | null
+  >(null);
   const [deleteConfirmLessonId, setDeleteConfirmLessonId] = useState<
     number | null
   >(null);
@@ -123,14 +126,55 @@ export function EditableLessonList({
       e.dataTransfer.setData("text/plain", String(lessons[index].id));
       e.dataTransfer.effectAllowed = "move";
       setDraggedIndex(index);
+
+      const li = (e.target as HTMLElement).closest("li");
+      const row = li?.querySelector(":scope > div:first-of-type") as
+        | HTMLElement
+        | undefined;
+      if (row) {
+        const rect = row.getBoundingClientRect();
+        const ghost = row.cloneNode(true) as HTMLElement;
+        ghost.style.opacity = "0.6";
+        ghost.style.position = "fixed";
+        ghost.style.left = "-9999px";
+        ghost.style.top = "0";
+        ghost.style.pointerEvents = "none";
+        ghost.style.width = `${rect.width}px`;
+        ghost.style.backgroundColor = "rgb(250 250 250)";
+        ghost.style.border = "1px solid rgb(228 228 231)";
+        ghost.style.borderRadius = "8px";
+        ghost.style.boxSizing = "border-box";
+        document.body.appendChild(ghost);
+        const offsetX = e.clientX - rect.left;
+        const offsetY = e.clientY - rect.top;
+        e.dataTransfer.setDragImage(ghost, offsetX, offsetY);
+        requestAnimationFrame(() => ghost.remove());
+      }
     },
     [lessons],
   );
 
-  const handleDragOver = useCallback((e: React.DragEvent) => {
-    e.preventDefault();
-    e.dataTransfer.dropEffect = "move";
-  }, []);
+  const getInsertBeforeIndex = useCallback(
+    (e: React.DragEvent, itemIndex: number): number => {
+      const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+      const mid = rect.top + rect.height / 2;
+      return e.clientY < mid ? itemIndex : itemIndex + 1;
+    },
+    [],
+  );
+
+  const handleDragOver = useCallback(
+    (e: React.DragEvent, index: number) => {
+      e.preventDefault();
+      e.dataTransfer.dropEffect = "move";
+      const insertBefore = Math.min(
+        Math.max(0, getInsertBeforeIndex(e, index)),
+        lessons.length,
+      );
+      setDropIndicatorBeforeIndex(insertBefore);
+    },
+    [lessons.length, getInsertBeforeIndex],
+  );
 
   const handleDrop = useCallback(
     (e: React.DragEvent, dropIndex: number) => {
@@ -139,11 +183,13 @@ export function EditableLessonList({
       const draggedId = idStr ? Number(idStr) : null;
       if (draggedId == null) {
         setDraggedIndex(null);
+        setDropIndicatorBeforeIndex(null);
         return;
       }
       const dragIndex = lessons.findIndex((l) => l.id === draggedId);
       if (dragIndex === -1 || dragIndex === dropIndex) {
         setDraggedIndex(null);
+        setDropIndicatorBeforeIndex(null);
         return;
       }
       const newLessons = [...lessons];
@@ -151,6 +197,7 @@ export function EditableLessonList({
       newLessons.splice(dropIndex, 0, removed);
       setLessons(newLessons);
       setDraggedIndex(null);
+      setDropIndicatorBeforeIndex(null);
 
       const formData = new FormData();
       formData.append("courseId", String(courseId));
@@ -162,6 +209,7 @@ export function EditableLessonList({
 
   const handleDragEnd = useCallback(() => {
     setDraggedIndex(null);
+    setDropIndicatorBeforeIndex(null);
   }, []);
 
   const handleDeleteConfirm = useCallback(
@@ -180,12 +228,20 @@ export function EditableLessonList({
         {lessons.map((lesson, index) => {
           const isExpanded = expandedIds.has(lesson.id);
           return (
-            <li
-              key={lesson.id}
-              onDragOver={handleDragOver}
-              onDrop={(e) => handleDrop(e, index)}
-              className={`flex flex-col ${draggedIndex === index ? "opacity-50" : ""}`}
-            >
+            <Fragment key={lesson.id}>
+              {dropIndicatorBeforeIndex === index && (
+                <li className="list-none" aria-hidden>
+                  <div className="min-h-[2px] w-full bg-zinc-900" style={{ height: 2 }} />
+                </li>
+              )}
+              <li
+                onDragOver={(e) => handleDragOver(e, index)}
+                onDrop={(e) => {
+                  const insertBefore = getInsertBeforeIndex(e, index);
+                  handleDrop(e, insertBefore);
+                }}
+                className={`flex flex-col ${draggedIndex === index ? "opacity-50" : ""}`}
+              >
               <div
                 className="flex items-center gap-3 px-3 py-2 cursor-pointer hover:bg-zinc-100/80"
                 onClick={() => toggleExpanded(lesson.id)}
@@ -323,9 +379,15 @@ export function EditableLessonList({
                 </form>
               </div>
             )}
+              </li>
+            </Fragment>
+          );
+        })}
+        {dropIndicatorBeforeIndex === lessons.length && (
+          <li className="list-none" aria-hidden>
+            <div className="min-h-[2px] w-full bg-zinc-900" style={{ height: 2 }} />
           </li>
-        );
-      })}
+        )}
       </ul>
 
       <Dialog
