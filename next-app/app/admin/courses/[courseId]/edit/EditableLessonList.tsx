@@ -207,41 +207,9 @@ export function EditableLessonList({
                     <ChevronRight className="size-4" />
                   )}
                 </span>
-                <form
-                  action={updateLesson}
-                  className="flex-1 min-w-0"
-                  onClick={(e) => e.stopPropagation()}
-                  onBlur={(e) => {
-                    const form = (e.target as HTMLElement).closest("form");
-                    if (!form) return;
-                    const titleInput = form.querySelector<HTMLInputElement>(
-                      'input[name="title"]',
-                    );
-                    if (
-                      !titleInput ||
-                      titleInput.value.trim() === lesson.title.trim()
-                    )
-                      return;
-                    const contentInput =
-                      form.querySelector<HTMLInputElement>(
-                        'input[name="content"]',
-                      );
-                    if (contentInput) contentInput.value = lesson.content;
-                    form.requestSubmit();
-                  }}
-                >
-                  <input type="hidden" name="id" value={lesson.id} />
-                  <input type="hidden" name="courseId" value={courseId} />
-                  <input type="hidden" name="content" />
-                  <input type="hidden" name="order" value={lesson.order} />
-                  <input
-                    type="text"
-                    name="title"
-                    defaultValue={lesson.title}
-                    placeholder="Lesson title"
-                    className="w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm outline-none focus:border-zinc-900"
-                  />
-                </form>
+                <span className="flex-1 min-w-0 px-3 py-2 text-sm text-zinc-900">
+                  {lesson.title || "Untitled lesson"}
+                </span>
                 <button
                   type="button"
                   onClick={(e) => {
@@ -257,21 +225,49 @@ export function EditableLessonList({
             {isExpanded && (
               <div className="border-t border-zinc-100 bg-zinc-50/50 p-4">
                 <form
-                  action={updateLesson}
                   className="grid gap-4 sm:grid-cols-2"
                   onClick={(e) => e.stopPropagation()}
-                  onSubmit={(e) => {
+                  onSubmit={async (e) => {
+                    e.preventDefault();
                     const form = e.currentTarget;
+                    const titleInput =
+                      form.querySelector<HTMLInputElement>(
+                        'input[name="title"]',
+                      );
                     const contentInput =
                       form.querySelector<HTMLInputElement>(
                         'input[name="content"]',
                       );
-                    if (contentInput) {
-                      const state =
-                        contentStateByLessonId[lesson.id] ??
-                        parseLessonContent(lesson.content);
-                      contentInput.value = JSON.stringify(state);
-                    }
+                    const title =
+                      titleInput?.value?.trim() ?? lesson.title;
+                    const state =
+                      contentStateByLessonId[lesson.id] ??
+                      parseLessonContent(lesson.content);
+                    const content = JSON.stringify(state);
+                    if (contentInput) contentInput.value = content;
+                    const formData = new FormData();
+                    formData.set("id", String(lesson.id));
+                    formData.set("courseId", String(courseId));
+                    formData.set("order", String(lesson.order));
+                    formData.set("title", title);
+                    formData.set("content", content);
+                    await updateLesson(formData);
+                    setLessons((prev) =>
+                      prev.map((l) =>
+                        l.id === lesson.id
+                          ? {
+                              ...l,
+                              title,
+                              content,
+                              updatedAt: new Date(),
+                            }
+                          : l,
+                      ),
+                    );
+                    setContentStateByLessonId((prev) => ({
+                      ...prev,
+                      [lesson.id]: state,
+                    }));
                   }}
                 >
                   <input type="hidden" name="id" value={lesson.id} />
