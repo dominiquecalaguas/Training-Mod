@@ -2,7 +2,7 @@
 
 import { useState, useCallback, Fragment, useEffect } from "react";
 import type { SerializedEditorState } from "lexical";
-import { ChevronDown, ChevronRight, GripVertical, Trash2 } from "lucide-react";
+import { Check, ChevronDown, ChevronRight, GripVertical, Trash2 } from "lucide-react";
 import { Editor } from "@/components/blocks/editor-x/editor";
 import {
   Dialog,
@@ -118,6 +118,25 @@ export function EditableLessonList({
   const [contentStateByLessonId, setContentStateByLessonId] = useState<
     Record<number, SerializedEditorState>
   >({});
+  const [titleByLessonId, setTitleByLessonId] = useState<Record<number, string>>({});
+  const [lastSavedByLessonId, setLastSavedByLessonId] = useState<
+    Record<number, { title: string; contentJson: string }>
+  >({});
+
+  const isDirty = useCallback(
+    (lessonId: number) => {
+      const lesson = lessons.find((l) => l.id === lessonId);
+      const currentTitle = titleByLessonId[lessonId] ?? lesson?.title ?? "";
+      const currentContentJson = JSON.stringify(
+        contentStateByLessonId[lessonId] ??
+          (lesson ? parseLessonContent(lesson.content) : emptyLexicalState),
+      );
+      const last = lastSavedByLessonId[lessonId];
+      if (!last) return true;
+      return currentTitle !== last.title || currentContentJson !== last.contentJson;
+    },
+    [lessons, titleByLessonId, contentStateByLessonId, lastSavedByLessonId],
+  );
 
   const toggleExpanded = useCallback((lessonId: number) => {
     setExpandedIds((prev) => {
@@ -293,16 +312,11 @@ export function EditableLessonList({
                   onSubmit={async (e) => {
                     e.preventDefault();
                     const form = e.currentTarget;
-                    const titleInput =
-                      form.querySelector<HTMLInputElement>(
-                        'input[name="title"]',
-                      );
                     const contentInput =
                       form.querySelector<HTMLInputElement>(
                         'input[name="content"]',
                       );
-                    const title =
-                      titleInput?.value?.trim() ?? lesson.title;
+                    const title = (titleByLessonId[lesson.id] ?? lesson.title).trim();
                     const state =
                       contentStateByLessonId[lesson.id] ??
                       parseLessonContent(lesson.content);
@@ -331,6 +345,10 @@ export function EditableLessonList({
                       ...prev,
                       [lesson.id]: state,
                     }));
+                    setLastSavedByLessonId((prev) => ({
+                      ...prev,
+                      [lesson.id]: { title, contentJson: content },
+                    }));
                   }}
                 >
                   <input type="hidden" name="id" value={lesson.id} />
@@ -342,7 +360,13 @@ export function EditableLessonList({
                     <input
                       type="text"
                       name="title"
-                      defaultValue={lesson.title}
+                      value={titleByLessonId[lesson.id] ?? lesson.title}
+                      onChange={(e) =>
+                        setTitleByLessonId((prev) => ({
+                          ...prev,
+                          [lesson.id]: e.target.value,
+                        }))
+                      }
                       required
                       className="mt-1 w-full rounded-md border border-zinc-300 px-3 py-2 text-sm outline-none focus:border-zinc-900"
                     />
@@ -367,12 +391,28 @@ export function EditableLessonList({
                     </div>
                   </div>
                   <div className="sm:col-span-2 flex flex-wrap items-center gap-3">
-                    <button
-                      type="submit"
-                      className="inline-flex items-center rounded-full bg-zinc-900 px-4 py-1.5 text-sm font-medium text-white hover:bg-zinc-800"
-                    >
-                      Save lesson
-                    </button>
+                    {(() => {
+                      const saved = lastSavedByLessonId[lesson.id];
+                      const dirty = isDirty(lesson.id);
+                      const showSaved = saved && !dirty;
+                      return showSaved ? (
+                        <button
+                          type="button"
+                          disabled
+                          className="inline-flex items-center gap-1.5 rounded-full bg-zinc-300 px-4 py-1.5 text-sm font-medium text-zinc-600 cursor-not-allowed"
+                        >
+                          <Check className="size-4" />
+                          Saved
+                        </button>
+                      ) : (
+                        <button
+                          type="submit"
+                          className="inline-flex items-center rounded-full bg-zinc-900 px-4 py-1.5 text-sm font-medium text-white hover:bg-zinc-800"
+                        >
+                          Save lesson
+                        </button>
+                      );
+                    })()}
                     {lesson.updatedAt && (
                       <span className="text-sm italic text-zinc-500">
                         Last modified on{" "}
