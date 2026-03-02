@@ -21,11 +21,14 @@ export function CourseSidebar({
   courseTitle,
   lessons: courseLessons,
   currentLessonId,
+  progressVersion = 0,
 }: {
   courseId: number;
   courseTitle: string;
   lessons: Lesson[];
   currentLessonId?: number;
+  /** Increment to force refetch of lesson progress (e.g. after complete/uncomplete). */
+  progressVersion?: number;
 }) {
   const deviceToken = useDeviceToken();
   const [lessonProgress, setLessonProgress] = useState<LessonProgressMap>({});
@@ -47,7 +50,7 @@ export function CourseSidebar({
     return () => {
       cancelled = true;
     };
-  }, [courseId, deviceToken]);
+  }, [courseId, deviceToken, progressVersion]);
 
   useEffect(() => {
     let cancelled = false;
@@ -63,7 +66,7 @@ export function CourseSidebar({
     return () => {
       cancelled = true;
     };
-  }, [deviceToken]);
+  }, [deviceToken, progressVersion]);
 
   const stats = courseProgress[courseId];
   const totalLessons = stats?.totalLessons ?? courseLessons.length;

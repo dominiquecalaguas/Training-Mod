@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { markLessonComplete } from "@//lib/progress";
+import { markLessonComplete, unmarkLessonComplete } from "@//lib/progress";
 
 export async function POST(req: NextRequest) {
   const body = await req.json().catch(() => null);
@@ -25,6 +25,29 @@ export async function POST(req: NextRequest) {
     courseId,
     lessonId,
   });
+
+  return NextResponse.json({ ok: true });
+}
+
+export async function DELETE(req: NextRequest) {
+  const body = await req.json().catch(() => null);
+  if (!body) {
+    return NextResponse.json({ error: "Invalid body" }, { status: 400 });
+  }
+
+  const { deviceToken, lessonId } = body as {
+    deviceToken?: string;
+    lessonId?: number;
+  };
+
+  if (!deviceToken || !lessonId) {
+    return NextResponse.json(
+      { error: "Missing deviceToken or lessonId" },
+      { status: 400 },
+    );
+  }
+
+  await unmarkLessonComplete({ deviceToken, lessonId });
 
   return NextResponse.json({ ok: true });
 }

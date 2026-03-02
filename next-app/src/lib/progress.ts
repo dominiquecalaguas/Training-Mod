@@ -22,6 +22,18 @@ export async function markLessonComplete(opts: {
     });
 }
 
+export async function unmarkLessonComplete(opts: {
+  deviceToken: string;
+  lessonId: number;
+}) {
+  const { deviceToken, lessonId } = opts;
+  await db
+    .delete(progress)
+    .where(
+      and(eq(progress.deviceToken, deviceToken), eq(progress.lessonId, lessonId)),
+    );
+}
+
 export async function getCourseProgressForDevice(deviceToken: string) {
   const totals = await db
     .select({

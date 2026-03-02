@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { Check } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import { useDeviceToken } from "@//components/DeviceTokenProvider";
 import { LexicalViewer } from "@/components/blocks/editor-x/lexical-viewer";
@@ -28,12 +29,15 @@ export function LessonContent({
   title,
   content,
   nextLessonHref,
+  onProgressChange,
 }: {
   courseId: number;
   lessonId: number;
   title: string;
   content: string;
   nextLessonHref?: string;
+  /** Called when lesson is marked complete or not complete so parent can refresh sidebar. */
+  onProgressChange?: () => void;
 }) {
   const deviceToken = useDeviceToken();
   const router = useRouter();
@@ -74,9 +78,33 @@ export function LessonContent({
         throw new Error("Failed to save progress");
       }
       setCompleted(true);
+      onProgressChange?.();
       if (nextLessonHref) {
         router.push(nextLessonHref);
       }
+    } catch (e) {
+      setError((e as Error).message);
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function handleMarkIncomplete() {
+    try {
+      setSaving(true);
+      setError(null);
+      const res = await fetch("/api/progress/lesson", {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ deviceToken, lessonId }),
+      });
+      if (!res.ok) {
+        throw new Error("Failed to update progress");
+      }
+      setCompleted(false);
+      onProgressChange?.();
     } catch (e) {
       setError((e as Error).message);
     } finally {
@@ -108,11 +136,24 @@ export function LessonContent({
       >
         <button
           type="button"
-          onClick={handleMarkComplete}
-          disabled={saving || completed}
-          className="w-full rounded-lg bg-neutral-700 px-4 py-3 text-sm font-medium text-white shadow-sm hover:bg-neutral-800 disabled:cursor-not-allowed disabled:bg-neutral-500"
+          onClick={completed ? handleMarkIncomplete : handleMarkComplete}
+          disabled={saving}
+          className={`w-full rounded-lg px-4 py-3 text-sm font-medium shadow-sm disabled:cursor-not-allowed ${
+            completed
+              ? "bg-neutral-200 text-neutral-600 hover:bg-neutral-300"
+              : "bg-neutral-700 text-white hover:bg-neutral-800 disabled:bg-neutral-500"
+          }`}
         >
-          {completed ? "Completed" : saving ? "Saving…" : "Complete lesson →"}
+          {saving ? (
+            "Saving…"
+          ) : completed ? (
+            <span className="inline-flex items-center justify-center gap-2">
+              <Check className="size-4" strokeWidth={2.5} />
+              Completed
+            </span>
+          ) : (
+            "Complete lesson →"
+          )}
         </button>
         {error && (
           <p className="mt-2 text-xs text-red-600">

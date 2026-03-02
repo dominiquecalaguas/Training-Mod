@@ -3,8 +3,7 @@ import { db } from "@/db/client";
 import { courses, lessons } from "@/db/schema";
 import { eq, asc } from "drizzle-orm";
 import { DeviceTokenProvider } from "@//components/DeviceTokenProvider";
-import { CourseSidebar } from "@//components/CourseSidebar";
-import { LessonContent } from "@//components/LessonContent";
+import { LessonPageClient } from "./LessonPageClient";
 
 export default async function LessonPage({
   params,
@@ -43,25 +42,12 @@ export default async function LessonPage({
 
   return (
     <DeviceTokenProvider>
-      <main className="min-h-screen bg-neutral-50 py-10 px-4 text-neutral-900">
-        <div className="mx-auto flex max-w-6xl flex-col gap-6 lg:flex-row">
-          <CourseSidebar
-            courseId={course.id}
-            courseTitle={course.title}
-            lessons={courseLessons}
-            currentLessonId={lesson.id}
-          />
-          <section className="flex-1 rounded-2xl border border-neutral-200 bg-white p-6 shadow-sm">
-            <LessonContent
-              courseId={course.id}
-              lessonId={lesson.id}
-              title={lesson.title}
-              content={lesson.content}
-              nextLessonHref={nextLessonHref}
-            />
-          </section>
-        </div>
-      </main>
+      <LessonPageClient
+        course={course}
+        courseLessons={courseLessons}
+        lesson={lesson}
+        nextLessonHref={nextLessonHref}
+      />
     </DeviceTokenProvider>
   );
 }
