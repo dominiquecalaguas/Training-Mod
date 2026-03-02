@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { Check } from "lucide-react";
 import { InferSelectModel } from "drizzle-orm";
 import { lessons } from "@/db/schema";
 import { useDeviceToken } from "@//components/DeviceTokenProvider";
@@ -112,13 +113,18 @@ export function CourseSidebar({
                       : ""
                   }`}
                 >
-                  <span className="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-neutral-200 text-[11px] font-medium text-neutral-600">
-                    {lesson.order}
+                  <span
+                    className={`inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full ${
+                      isDone
+                        ? "bg-emerald-500 text-white"
+                        : "border-2 border-neutral-300 bg-transparent"
+                    }`}
+                  >
+                    {isDone ? (
+                      <Check className="size-3.5" strokeWidth={2.5} />
+                    ) : null}
                   </span>
                   <span className="flex-1 truncate">{lesson.title}</span>
-                  {isDone && (
-                    <span className="shrink-0 text-xs text-emerald-600">✓</span>
-                  )}
                 </Link>
               </li>
             );
