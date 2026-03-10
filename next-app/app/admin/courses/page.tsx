@@ -3,6 +3,8 @@ import { Suspense } from "react";
 import { courses } from "@/db/schema";
 import { DraggableCourseList } from "./DraggableCourseList";
 
+export const dynamic = "force-dynamic";
+
 async function CourseListView() {
   let rows: Array<{
     course: typeof courses.$inferSelect;
