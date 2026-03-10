@@ -10,6 +10,8 @@ They're in the `.env` file locally
 - SUPABASE_PASSWORD
 
 
+
+
 ### For Database Changes
 For DB migrations, we need to do the following:
 - Make the DB schema changes in `src/db/schema/` (e.g. `users.ts`)
