@@ -1,13 +1,14 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { eq } from "drizzle-orm";
 import { db } from "@/db/client";
 import { courses } from "@/db/schema";
 
 export async function GET(
-  _req: Request,
-  { params }: { params: { courseId: string } },
+  _req: NextRequest,
+  { params }: { params: Promise<{ courseId: string }> },
 ) {
-  const courseId = Number(params.courseId);
+  const paramsData = await params;
+  const courseId = Number(paramsData.courseId);
   if (Number.isNaN(courseId)) {
     return NextResponse.json({ error: "Invalid courseId" }, { status: 400 });
   }

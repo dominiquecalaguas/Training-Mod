@@ -1,14 +1,15 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { and, eq } from "drizzle-orm";
 import { db } from "@/db/client";
 import { lessons } from "@/db/schema";
 
 export async function GET(
-  _req: Request,
-  { params }: { params: { courseId: string; lessonId: string } },
+  _req: NextRequest,
+  { params }: { params: Promise<{ courseId: string; lessonId: string }> },
 ) {
-  const courseId = Number(params.courseId);
-  const lessonId = Number(params.lessonId);
+  const paramsData = await params;
+  const courseId = Number(paramsData.courseId);
+  const lessonId = Number(paramsData.lessonId);
   if (Number.isNaN(courseId) || Number.isNaN(lessonId)) {
     return NextResponse.json({ error: "Invalid ids" }, { status: 400 });
   }
@@ -32,11 +33,12 @@ export async function GET(
 }
 
 export async function PATCH(
-  req: Request,
-  { params }: { params: { courseId: string; lessonId: string } },
+  req: NextRequest,
+  { params }: { params: Promise<{ courseId: string; lessonId: string }> },
 ) {
-  const courseId = Number(params.courseId);
-  const lessonId = Number(params.lessonId);
+  const paramsData = await params;
+  const courseId = Number(paramsData.courseId);
+  const lessonId = Number(paramsData.lessonId);
   if (Number.isNaN(courseId) || Number.isNaN(lessonId)) {
     return NextResponse.json({ error: "Invalid ids" }, { status: 400 });
   }
@@ -73,11 +75,12 @@ export async function PATCH(
 }
 
 export async function DELETE(
-  _req: Request,
-  { params }: { params: { courseId: string; lessonId: string } },
+  _req: NextRequest,
+  { params }: { params: Promise<{ courseId: string; lessonId: string }> },
 ) {
-  const courseId = Number(params.courseId);
-  const lessonId = Number(params.lessonId);
+  const paramsData = await params;
+  const courseId = Number(paramsData.courseId);
+  const lessonId = Number(paramsData.lessonId);
   if (Number.isNaN(courseId) || Number.isNaN(lessonId)) {
     return NextResponse.json({ error: "Invalid ids" }, { status: 400 });
   }

@@ -1,13 +1,14 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { eq } from "drizzle-orm";
 import { db } from "@/db/client";
 import { courses } from "@/db/schema";
 
 export async function GET(
-  _req: Request,
-  { params }: { params: { courseId: string } },
+  _req: NextRequest,
+  { params }: { params: Promise<{ courseId: string }> },
 ) {
-  const courseId = Number(params.courseId);
+  const paramsData = await params;
+  const courseId = Number(paramsData.courseId);
   if (Number.isNaN(courseId)) {
     return NextResponse.json({ error: "Invalid courseId" }, { status: 400 });
   }
@@ -31,10 +32,11 @@ export async function GET(
 }
 
 export async function PATCH(
-  req: Request,
-  { params }: { params: { courseId: string } },
+  req: NextRequest,
+  { params }: { params: Promise<{ courseId: string }> },
 ) {
-  const courseId = Number(params.courseId);
+  const paramsData = await params;
+  const courseId = Number(paramsData.courseId);
   if (Number.isNaN(courseId)) {
     return NextResponse.json({ error: "Invalid courseId" }, { status: 400 });
   }
@@ -74,10 +76,11 @@ export async function PATCH(
 }
 
 export async function DELETE(
-  _req: Request,
-  { params }: { params: { courseId: string } },
+  _req: NextRequest,
+  { params }: { params: Promise<{ courseId: string }> },
 ) {
-  const courseId = Number(params.courseId);
+  const paramsData = await params;
+  const courseId = Number(paramsData.courseId);
   if (Number.isNaN(courseId)) {
     return NextResponse.json({ error: "Invalid courseId" }, { status: 400 });
   }
