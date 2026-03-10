@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Suspense } from "react";
 import { courses } from "@/db/schema";
+import { apiUrl } from "@/lib/api";
 import { DraggableCourseList } from "./DraggableCourseList";
 
 export const dynamic = "force-dynamic";
@@ -12,7 +13,7 @@ async function CourseListView() {
   }>;
 
   try {
-    const res = await fetch("/api/admin/courses", { cache: "no-store" });
+    const res = await fetch(apiUrl("/api/admin/courses"), { cache: "no-store" });
     if (!res.ok) {
       const errorBody = (await res.json().catch(() => null)) as
         | { error?: string; hint?: string }

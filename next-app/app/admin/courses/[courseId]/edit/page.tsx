@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import { courses, lessons } from "@/db/schema";
+import { apiUrl } from "@/lib/api";
 import { updateCourse } from "../../../actions";
 import { ThumbnailUploadField } from "@/components/ThumbnailUploadField";
 import { AddLessonButton } from "./AddLessonButton";
@@ -14,14 +15,14 @@ export default async function EditCoursePage({
   const id = Number(courseIdParam);
   if (Number.isNaN(id)) notFound();
 
-  const courseRes = await fetch(`/api/admin/courses/${id}`, {
+  const courseRes = await fetch(apiUrl(`/api/admin/courses/${id}`), {
     cache: "no-store",
   });
   if (!courseRes.ok || courseRes.status === 404) notFound();
 
   const course = (await courseRes.json()) as typeof courses.$inferSelect;
 
-  const lessonsRes = await fetch(`/api/admin/courses/${id}/lessons`, {
+  const lessonsRes = await fetch(apiUrl(`/api/admin/courses/${id}/lessons`), {
     cache: "no-store",
   });
   if (!lessonsRes.ok) notFound();

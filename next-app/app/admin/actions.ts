@@ -7,6 +7,7 @@ import { db } from "@/db/client";
 import { courses, lessons } from "@/db/schema";
 import { writeFile, mkdir } from "fs/promises";
 import path from "path";
+import { apiUrl } from "@/lib/api";
 
 async function saveThumbnailFile(file: File): Promise<string | null> {
   const bytes = await file.arrayBuffer();
@@ -50,10 +51,10 @@ function parseLessonsFromFormData(formData: FormData): LessonInput[] {
 
 const DESCRIPTION_MAX_LENGTH = 160;
 async function requestJson(
-  url: string,
+  path: string,
   options: { method: string; body?: unknown },
 ) {
-  return fetch(url, {
+  return fetch(apiUrl(path), {
     method: options.method,
     headers: {
       "Content-Type": "application/json",

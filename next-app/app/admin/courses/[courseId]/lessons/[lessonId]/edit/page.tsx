@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import { courses, lessons } from "@/db/schema";
+import { apiUrl } from "@/lib/api";
 import { updateLesson } from "../../../../../actions";
 
 export default async function EditLessonPage({
@@ -13,11 +14,13 @@ export default async function EditLessonPage({
   if (Number.isNaN(courseId) || Number.isNaN(lessonId)) notFound();
 
   const [courseRes, lessonRes, lessonsRes] = await Promise.all([
-    fetch(`/api/admin/courses/${courseId}`, { cache: "no-store" }),
-    fetch(`/api/admin/courses/${courseId}/lessons/${lessonId}`, {
+    fetch(apiUrl(`/api/admin/courses/${courseId}`), { cache: "no-store" }),
+    fetch(apiUrl(`/api/admin/courses/${courseId}/lessons/${lessonId}`), {
       cache: "no-store",
     }),
-    fetch(`/api/admin/courses/${courseId}/lessons`, { cache: "no-store" }),
+    fetch(apiUrl(`/api/admin/courses/${courseId}/lessons`), {
+      cache: "no-store",
+    }),
   ]);
 
   if (!courseRes.ok || courseRes.status === 404) notFound();

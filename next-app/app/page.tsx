@@ -1,6 +1,7 @@
 import { courses } from "@/db/schema";
 import { CourseGrid } from "@//components/CourseGrid";
 import { DeviceTokenProvider } from "@//components/DeviceTokenProvider";
+import { apiUrl } from "@/lib/api";
 
 export default async function Home() {
   let allCourses: Array<typeof courses.$inferSelect> = [];
@@ -8,7 +9,7 @@ export default async function Home() {
   let loadError = false;
 
   try {
-    const res = await fetch("/api/courses", { cache: "no-store" });
+    const res = await fetch(apiUrl("/api/courses"), { cache: "no-store" });
     if (!res.ok) {
       loadError = true;
     } else {

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { courses, lessons } from "@/db/schema";
+import { apiUrl } from "@/lib/api";
 import {
   createLesson,
   deleteLesson,
@@ -20,8 +21,10 @@ export default async function AdminLessonsPage({
   if (Number.isNaN(courseId)) notFound();
 
   const [courseRes, lessonsRes] = await Promise.all([
-    fetch(`/api/admin/courses/${courseId}`, { cache: "no-store" }),
-    fetch(`/api/admin/courses/${courseId}/lessons`, { cache: "no-store" }),
+    fetch(apiUrl(`/api/admin/courses/${courseId}`), { cache: "no-store" }),
+    fetch(apiUrl(`/api/admin/courses/${courseId}/lessons`), {
+      cache: "no-store",
+    }),
   ]);
 
   if (!courseRes.ok || courseRes.status === 404) notFound();

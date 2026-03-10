@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { courses, lessons } from "@/db/schema";
 import { DeviceTokenProvider } from "@//components/DeviceTokenProvider";
+import { apiUrl } from "@/lib/api";
 import { LessonPageClient } from "./LessonPageClient";
 
 export default async function LessonPage({
@@ -14,8 +15,8 @@ export default async function LessonPage({
   if (Number.isNaN(courseId) || Number.isNaN(lessonId)) notFound();
 
   const [courseRes, lessonsRes] = await Promise.all([
-    fetch(`/api/courses/${courseId}`, { cache: "no-store" }),
-    fetch(`/api/courses/${courseId}/lessons`, { cache: "no-store" }),
+    fetch(apiUrl(`/api/courses/${courseId}`), { cache: "no-store" }),
+    fetch(apiUrl(`/api/courses/${courseId}/lessons`), { cache: "no-store" }),
   ]);
 
   if (!courseRes.ok || courseRes.status === 404) notFound();
