@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, Fragment, useEffect } from "react";
+import { useState, useCallback, Fragment } from "react";
 import type { SerializedEditorState } from "lexical";
 import { Check, ChevronDown, ChevronRight, GripVertical, Trash2 } from "lucide-react";
 import { Editor } from "@/components/blocks/editor-x/editor";
@@ -100,12 +100,6 @@ export function EditableLessonList({
   courseId: number;
 }) {
   const [lessons, setLessons] = useState(initialLessons);
-
-  // Sync from server when list changes (e.g. after Add lesson + router.refresh)
-  const initialIdsKey = initialLessons.map((l) => l.id).join(",");
-  useEffect(() => {
-    setLessons(initialLessons);
-  }, [initialIdsKey]); // eslint-disable-line react-hooks/exhaustive-deps -- only sync when server list identity changes
 
   const [expandedIds, setExpandedIds] = useState<Set<number>>(new Set());
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);

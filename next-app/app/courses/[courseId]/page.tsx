@@ -1,7 +1,5 @@
 import { notFound, redirect } from "next/navigation";
-import { db } from "@/db/client";
 import { courses, lessons } from "@/db/schema";
-import { eq, asc } from "drizzle-orm";
 
 export default async function CoursePage({
   params,
@@ -12,19 +10,18 @@ export default async function CoursePage({
   const courseId = Number(courseIdParam);
   if (Number.isNaN(courseId)) notFound();
 
-  const [course] = await db
-    .select()
-    .from(courses)
-    .where(eq(courses.id, courseId))
-    .limit(1);
+  const [courseRes, lessonsRes] = await Promise.all([
+    fetch(`/api/courses/${courseId}`, { cache: "no-store" }),
+    fetch(`/api/courses/${courseId}/lessons`, { cache: "no-store" }),
+  ]);
 
-  if (!course) notFound();
+  if (!courseRes.ok || courseRes.status === 404) notFound();
+  if (!lessonsRes.ok) notFound();
 
-  const courseLessons = await db
-    .select()
-    .from(lessons)
-    .where(eq(lessons.courseId, courseId))
-    .orderBy(asc(lessons.order));
+  const course = (await courseRes.json()) as typeof courses.$inferSelect;
+  const courseLessons = (await lessonsRes.json()) as Array<
+    typeof lessons.$inferSelect
+  >;
 
   if (courseLessons.length > 0) {
     redirect(`/courses/${courseId}/lessons/${courseLessons[0].id}`);
@@ -58,4 +55,3 @@ export default async function CoursePage({
     </main>
   );
 }
-

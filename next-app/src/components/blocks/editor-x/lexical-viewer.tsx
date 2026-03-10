@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef } from "react";
+import { useMemo, useState } from "react";
 import type { InitialConfigType } from "@lexical/react/LexicalComposer";
 import { LexicalComposer } from "@lexical/react/LexicalComposer";
 import { LexicalErrorBoundary } from "@lexical/react/LexicalErrorBoundary";
@@ -19,26 +19,26 @@ export function LexicalViewer({
   serializedState: SerializedEditorState;
   className?: string;
 }) {
-  const configRef = useRef<InitialConfigType | null>(null);
-  if (configRef.current === null) {
-    configRef.current = {
+  const [initialSerialized] = useState(() => serializedState);
+  const initialConfig = useMemo<InitialConfigType>(() => {
+    return {
       namespace: "LexicalViewer",
       theme: editorTheme,
       nodes,
       editable: false,
-      editorState: JSON.stringify(serializedState),
+      editorState: JSON.stringify(initialSerialized),
       onError: (error: Error) => {
         console.error(error);
       },
     };
-  }
+  }, [initialSerialized]);
 
   return (
     <div
       className={className}
       style={{ minHeight: "1.5em" }}
     >
-      <LexicalComposer initialConfig={configRef.current}>
+      <LexicalComposer initialConfig={initialConfig}>
         <RichTextPlugin
           contentEditable={
             <ContentEditable

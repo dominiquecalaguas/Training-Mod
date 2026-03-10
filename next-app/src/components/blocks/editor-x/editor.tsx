@@ -1,6 +1,6 @@
 "use client"
 
-import { useRef } from "react"
+import { useMemo, useState } from "react"
 import { LexicalCollaboration } from "@lexical/react/LexicalCollaborationContext"
 import {
   InitialConfigType,
@@ -38,23 +38,21 @@ export function Editor({
 }) {
   // Use initial serialized state only on first mount so parent state updates
   // don't re-apply and block focus/typing
-  const initialSerializedRef = useRef<SerializedEditorState | undefined>(
-    editorSerializedState
-  )
-  const configRef = useRef<InitialConfigType | null>(null)
-  if (configRef.current === null) {
-    configRef.current = {
+  const [initialEditorState] = useState(() => editorState)
+  const [initialSerialized] = useState(() => editorSerializedState)
+  const initialConfig = useMemo(() => {
+    const baseConfig: InitialConfigType = {
       ...editorConfig,
-      ...(editorState ? { editorState } : {}),
-      ...(initialSerializedRef.current
-        ? { editorState: JSON.stringify(initialSerializedRef.current) }
-        : {}),
+      ...(initialEditorState ? { editorState: initialEditorState } : {}),
     }
-  }
+    return initialSerialized
+      ? { ...baseConfig, editorState: JSON.stringify(initialSerialized) }
+      : baseConfig
+  }, [initialEditorState, initialSerialized])
 
   return (
     <div className="flex h-full w-full flex-col overflow-hidden rounded-lg bg-white text-zinc-900 isolate">
-      <LexicalComposer initialConfig={configRef.current}>
+      <LexicalComposer initialConfig={initialConfig}>
         <LexicalCollaboration>
           <TooltipProvider>
             <Plugins />

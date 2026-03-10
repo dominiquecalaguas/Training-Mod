@@ -1,7 +1,5 @@
 import { notFound } from "next/navigation";
-import { db } from "@/db/client";
 import { courses, lessons } from "@/db/schema";
-import { eq, asc } from "drizzle-orm";
 import { DeviceTokenProvider } from "@//components/DeviceTokenProvider";
 import { LessonPageClient } from "./LessonPageClient";
 
@@ -15,18 +13,18 @@ export default async function LessonPage({
   const lessonId = Number(lessonIdParam);
   if (Number.isNaN(courseId) || Number.isNaN(lessonId)) notFound();
 
-  const [course] = await db
-    .select()
-    .from(courses)
-    .where(eq(courses.id, courseId))
-    .limit(1);
-  if (!course) notFound();
+  const [courseRes, lessonsRes] = await Promise.all([
+    fetch(`/api/courses/${courseId}`, { cache: "no-store" }),
+    fetch(`/api/courses/${courseId}/lessons`, { cache: "no-store" }),
+  ]);
 
-  const courseLessons = await db
-    .select()
-    .from(lessons)
-    .where(eq(lessons.courseId, courseId))
-    .orderBy(asc(lessons.order));
+  if (!courseRes.ok || courseRes.status === 404) notFound();
+  if (!lessonsRes.ok) notFound();
+
+  const course = (await courseRes.json()) as typeof courses.$inferSelect;
+  const courseLessons = (await lessonsRes.json()) as Array<
+    typeof lessons.$inferSelect
+  >;
 
   const lesson = courseLessons.find((l) => l.id === lessonId);
   if (!lesson) notFound();
@@ -51,4 +49,3 @@ export default async function LessonPage({
     </DeviceTokenProvider>
   );
 }
-

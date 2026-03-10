@@ -1,8 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { db } from "@/db/client";
 import { courses, lessons } from "@/db/schema";
-import { asc, eq } from "drizzle-orm";
 import {
   createLesson,
   deleteLesson,
@@ -21,18 +19,18 @@ export default async function AdminLessonsPage({
   const courseId = Number(courseIdParam);
   if (Number.isNaN(courseId)) notFound();
 
-  const [course] = await db
-    .select()
-    .from(courses)
-    .where(eq(courses.id, courseId))
-    .limit(1);
-  if (!course) notFound();
+  const [courseRes, lessonsRes] = await Promise.all([
+    fetch(`/api/admin/courses/${courseId}`, { cache: "no-store" }),
+    fetch(`/api/admin/courses/${courseId}/lessons`, { cache: "no-store" }),
+  ]);
 
-  const courseLessons = await db
-    .select()
-    .from(lessons)
-    .where(eq(lessons.courseId, courseId))
-    .orderBy(asc(lessons.order));
+  if (!courseRes.ok || courseRes.status === 404) notFound();
+  if (!lessonsRes.ok) notFound();
+
+  const course = (await courseRes.json()) as typeof courses.$inferSelect;
+  const courseLessons = (await lessonsRes.json()) as Array<
+    typeof lessons.$inferSelect
+  >;
 
   const { created } = await searchParams;
 
@@ -167,4 +165,3 @@ export default async function AdminLessonsPage({
     </div>
   );
 }
-

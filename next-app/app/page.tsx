@@ -1,31 +1,19 @@
-import { db } from "@/db/client";
-import { courses, lessons } from "@/db/schema";
-import { count } from "drizzle-orm";
+import { courses } from "@/db/schema";
 import { CourseGrid } from "@//components/CourseGrid";
 import { DeviceTokenProvider } from "@//components/DeviceTokenProvider";
 
 export default async function Home() {
-  let allCourses: (typeof courses.$inferSelect)[] = [];
-  let lessonCountByCourseId: Record<number, number> = {};
+  let allCourses: Array<typeof courses.$inferSelect> = [];
+  const lessonCountByCourseId: Record<number, number> = {};
   let loadError = false;
 
   try {
-    allCourses = await db
-      .select()
-      .from(courses)
-      .orderBy(courses.order);
-
-    const counts = await db
-      .select({
-        courseId: lessons.courseId,
-        count: count().as("count"),
-      })
-      .from(lessons)
-      .groupBy(lessons.courseId);
-
-    lessonCountByCourseId = Object.fromEntries(
-      counts.map((row) => [row.courseId, Number(row.count)]),
-    );
+    const res = await fetch("/api/courses", { cache: "no-store" });
+    if (!res.ok) {
+      loadError = true;
+    } else {
+      allCourses = (await res.json()) as Array<typeof courses.$inferSelect>;
+    }
   } catch {
     loadError = true;
   }

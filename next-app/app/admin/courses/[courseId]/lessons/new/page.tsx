@@ -1,7 +1,5 @@
 import { notFound } from "next/navigation";
-import { db } from "@/db/client";
 import { courses, lessons } from "@/db/schema";
-import { asc, eq } from "drizzle-orm";
 import { createLesson } from "../../../../actions";
 
 export default async function NewLessonPage({
@@ -13,18 +11,18 @@ export default async function NewLessonPage({
   const courseId = Number(courseIdParam);
   if (Number.isNaN(courseId)) notFound();
 
-  const [course] = await db
-    .select()
-    .from(courses)
-    .where(eq(courses.id, courseId))
-    .limit(1);
-  if (!course) notFound();
+  const [courseRes, lessonsRes] = await Promise.all([
+    fetch(`/api/admin/courses/${courseId}`, { cache: "no-store" }),
+    fetch(`/api/admin/courses/${courseId}/lessons`, { cache: "no-store" }),
+  ]);
 
-  const existing = await db
-    .select()
-    .from(lessons)
-    .where(eq(lessons.courseId, courseId))
-    .orderBy(asc(lessons.order));
+  if (!courseRes.ok || courseRes.status === 404) notFound();
+  if (!lessonsRes.ok) notFound();
+
+  const course = (await courseRes.json()) as typeof courses.$inferSelect;
+  const existing = (await lessonsRes.json()) as Array<
+    typeof lessons.$inferSelect
+  >;
 
   return (
     <div className="rounded-xl border border-zinc-200 bg-white p-6">
@@ -71,4 +69,3 @@ export default async function NewLessonPage({
     </div>
   );
 }
-

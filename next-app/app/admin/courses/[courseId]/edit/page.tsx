@@ -1,7 +1,5 @@
 import { notFound } from "next/navigation";
-import { db } from "@/db/client";
 import { courses, lessons } from "@/db/schema";
-import { asc, eq } from "drizzle-orm";
 import { updateCourse } from "../../../actions";
 import { ThumbnailUploadField } from "@/components/ThumbnailUploadField";
 import { AddLessonButton } from "./AddLessonButton";
@@ -16,18 +14,22 @@ export default async function EditCoursePage({
   const id = Number(courseIdParam);
   if (Number.isNaN(id)) notFound();
 
-  const [course] = await db
-    .select()
-    .from(courses)
-    .where(eq(courses.id, id))
-    .limit(1);
-  if (!course) notFound();
+  const courseRes = await fetch(`/api/admin/courses/${id}`, {
+    cache: "no-store",
+  });
+  if (!courseRes.ok || courseRes.status === 404) notFound();
 
-  const courseLessons = await db
-    .select()
-    .from(lessons)
-    .where(eq(lessons.courseId, id))
-    .orderBy(asc(lessons.order));
+  const course = (await courseRes.json()) as typeof courses.$inferSelect;
+
+  const lessonsRes = await fetch(`/api/admin/courses/${id}/lessons`, {
+    cache: "no-store",
+  });
+  if (!lessonsRes.ok) notFound();
+
+  const courseLessons = (await lessonsRes.json()) as Array<
+    typeof lessons.$inferSelect
+  >;
+  const lessonsKey = courseLessons.map((lesson) => lesson.id).join(",");
 
   return (
     <div className="flex flex-col gap-8">
@@ -81,6 +83,7 @@ export default async function EditCoursePage({
             </p>
           ) : (
             <EditableLessonList
+              key={lessonsKey}
               lessons={courseLessons.map((l) => ({
                 id: l.id,
                 courseId: l.courseId,
@@ -101,4 +104,3 @@ export default async function EditCoursePage({
     </div>
   );
 }
-

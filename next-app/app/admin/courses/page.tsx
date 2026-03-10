@@ -1,19 +1,7 @@
 import Link from "next/link";
 import { Suspense } from "react";
-import { eq, sql } from "drizzle-orm";
-import { db } from "@/db/client";
-import { courses, lessons } from "@/db/schema";
-import { count } from "drizzle-orm";
+import { courses } from "@/db/schema";
 import { DraggableCourseList } from "./DraggableCourseList";
-
-const lessonCounts = db
-  .select({
-    courseId: lessons.courseId,
-    lessonCount: count().as("lesson_count"),
-  })
-  .from(lessons)
-  .groupBy(lessons.courseId)
-  .as("lesson_counts");
 
 async function CourseListView() {
   let rows: Array<{
@@ -22,36 +10,24 @@ async function CourseListView() {
   }>;
 
   try {
-    const result = await db
-      .select({
-        id: courses.id,
-        title: courses.title,
-        description: courses.description,
-        thumbnailUrl: courses.thumbnailUrl,
-        order: courses.order,
-        createdAt: courses.createdAt,
-        updatedAt: courses.updatedAt,
-        lessonCount: sql<number>`coalesce(${lessonCounts.lessonCount}, 0)`,
-      })
-      .from(courses)
-      .leftJoin(lessonCounts, eq(courses.id, lessonCounts.courseId))
-      .orderBy(courses.order);
+    const res = await fetch("/api/admin/courses", { cache: "no-store" });
+    if (!res.ok) {
+      const errorBody = (await res.json().catch(() => null)) as
+        | { error?: string; hint?: string }
+        | null;
+      const message = errorBody?.error ?? "Unable to load courses";
+      const hint = errorBody?.hint ? ` ${errorBody.hint}` : "";
+      throw new Error(`${message}.${hint}`);
+    }
 
-    rows = result.map((r) => {
-      const { lessonCount, ...course } = r;
-      return {
-        course,
-        lessonCount: Number(lessonCount),
-      };
-    });
+    rows = (await res.json()) as Array<{
+      course: typeof courses.$inferSelect;
+      lessonCount: number;
+    }>;
   } catch (err) {
     const msg =
       err instanceof Error ? err.message : String(err);
-    const hint =
-      msg.includes("does not exist") || msg.includes("relation")
-        ? " Run migrations: npm run db:migrate"
-        : " Check DATABASE_URL in .env and that the database is reachable.";
-    throw new Error(`Database error: ${msg}.${hint}`);
+    throw new Error(`Course load error: ${msg}`);
   }
 
   return (
@@ -95,4 +71,3 @@ export default async function AdminCoursesPage() {
     </div>
   );
 }
-
