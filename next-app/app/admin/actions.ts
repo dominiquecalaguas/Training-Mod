@@ -231,6 +231,8 @@ export async function createLesson(formData: FormData) {
   revalidatePath(`/admin/courses/${courseId}/lessons`);
   revalidatePath(`/admin/courses/${courseId}/edit`);
   revalidatePath(`/courses/${courseId}`);
+  revalidatePath("/admin/courses");
+  revalidatePath("/");
 }
 
 export async function updateLesson(formData: FormData) {
@@ -255,6 +257,8 @@ export async function updateLesson(formData: FormData) {
   revalidatePath(`/admin/courses/${courseId}/lessons`);
   revalidatePath(`/admin/courses/${courseId}/edit`);
   revalidatePath(`/courses/${courseId}`);
+  revalidatePath("/admin/courses");
+  revalidatePath("/");
 }
 
 export async function deleteLesson(formData: FormData) {
@@ -273,6 +277,8 @@ export async function deleteLesson(formData: FormData) {
   revalidatePath(`/admin/courses/${courseId}/lessons`);
   revalidatePath(`/admin/courses/${courseId}/edit`);
   revalidatePath(`/courses/${courseId}`);
+  revalidatePath("/admin/courses");
+  revalidatePath("/");
 }
 
 export async function reorderLesson(formData: FormData) {
