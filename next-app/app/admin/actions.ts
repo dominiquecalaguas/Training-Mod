@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { and, eq, sql } from "drizzle-orm";
+import { put } from "@vercel/blob";
 import { db } from "@/db/client";
 import { courses, lessons } from "@/db/schema";
 import { writeFile, mkdir } from "fs/promises";
@@ -10,16 +11,35 @@ import path from "path";
 import { apiUrl } from "@/lib/api";
 
 async function saveThumbnailFile(file: File): Promise<string | null> {
-  const bytes = await file.arrayBuffer();
-  const buffer = Buffer.from(bytes);
   const ext = path.extname(file.name) || ".jpg";
   const safeExt = /^\.(jpe?g|png|gif|webp)$/i.test(ext) ? ext : ".jpg";
-  const filename = `course-${Date.now()}-${Math.random().toString(36).slice(2, 9)}${safeExt}`;
-  const dir = path.join(process.cwd(), "public", "course-thumbnails");
-  await mkdir(dir, { recursive: true });
-  const filepath = path.join(dir, filename);
-  await writeFile(filepath, buffer);
-  return `/course-thumbnails/${filename}`;
+  const pathname = `course-thumbnails/course-${Date.now()}${safeExt}`;
+
+  // Use Vercel Blob when token is set (required on Vercel; optional locally)
+  if (process.env.BLOB_READ_WRITE_TOKEN) {
+    const blob = await put(pathname, file, {
+      access: "public",
+      addRandomSuffix: true,
+      contentType: file.type || undefined,
+    });
+    return blob.url;
+  }
+
+  // Local development: write to public/course-thumbnails
+  try {
+    const bytes = await file.arrayBuffer();
+    const buffer = Buffer.from(bytes);
+    const filename = `course-${Date.now()}-${Math.random().toString(36).slice(2, 9)}${safeExt}`;
+    const dir = path.join(process.cwd(), "public", "course-thumbnails");
+    await mkdir(dir, { recursive: true });
+    const filepath = path.join(dir, filename);
+    await writeFile(filepath, buffer);
+    return `/course-thumbnails/${filename}`;
+  } catch (err) {
+    // On Vercel without BLOB_READ_WRITE_TOKEN, filesystem is read-only
+    console.error("Thumbnail save failed (use BLOB_READ_WRITE_TOKEN on Vercel):", err);
+    return null;
+  }
 }
 
 type LessonInput = { title: string; order: number };
@@ -132,8 +152,11 @@ export async function updateCourse(formData: FormData) {
   if (removeThumbnail) {
     thumbnailUrl = null;
   } else if (thumbnailFile && thumbnailFile.size > 0) {
-    thumbnailUrl = await saveThumbnailFile(thumbnailFile);
-  } else {
+    const saved = await saveThumbnailFile(thumbnailFile);
+    // If save failed (e.g. Vercel without BLOB_READ_WRITE_TOKEN), keep current
+    thumbnailUrl = saved ?? undefined;
+  }
+  if (thumbnailUrl === undefined) {
     const [current] = await db
       .select({ thumbnailUrl: courses.thumbnailUrl })
       .from(courses)
