@@ -18,6 +18,13 @@ export function DraggableCourseList({ rows: initialRows }: { rows: Row[] }) {
   const [rows, setRows] = useState(initialRows);
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
 
+  const handleCourseDeleted = useCallback(
+    (courseId: number) => {
+      setRows((prev) => prev.filter((row) => row.course.id !== courseId));
+    },
+    [],
+  );
+
   const handleDragStart = useCallback(
     (e: React.DragEvent, index: number) => {
       e.dataTransfer.setData("text/plain", String(rows[index].course.id));
@@ -104,7 +111,11 @@ export function DraggableCourseList({ rows: initialRows }: { rows: Row[] }) {
             >
               Edit
             </Link>
-            <DeleteCourseForm action={deleteCourse} courseId={row.course.id} />
+            <DeleteCourseForm
+              action={deleteCourse}
+              courseId={row.course.id}
+              onDeleted={handleCourseDeleted}
+            />
           </div>
         </li>
       ))}

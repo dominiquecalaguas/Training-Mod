@@ -8,14 +8,20 @@ const MESSAGE =
 type Props = {
   action: (formData: FormData) => void | Promise<void>;
   courseId: number;
+  onDeleted?: (courseId: number) => void;
 };
 
-export function DeleteCourseForm({ action, courseId }: Props) {
+export function DeleteCourseForm({ action, courseId, onDeleted }: Props) {
   const [isPending, startTransition] = useTransition();
 
   return (
     <form
-      action={(formData) => startTransition(() => action(formData))}
+      action={(formData) =>
+        startTransition(async () => {
+          await action(formData);
+          onDeleted?.(courseId);
+        })
+      }
       onSubmit={(e) => {
         if (!confirm(MESSAGE)) e.preventDefault();
       }}
