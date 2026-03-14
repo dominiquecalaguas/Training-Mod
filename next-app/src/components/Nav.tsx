@@ -25,6 +25,12 @@ export async function Nav() {
             Home
           </Link>
           <Link
+            href="/dashboard"
+            className="rounded-md px-3 py-2 text-sm font-medium text-neutral-400 transition hover:bg-neutral-800/60 hover:text-neutral-100"
+          >
+            Dashboard
+          </Link>
+          <Link
             href="/admin/courses"
             className="rounded-md px-3 py-2 text-sm font-medium text-neutral-400 transition hover:bg-neutral-800/60 hover:text-neutral-100"
           >

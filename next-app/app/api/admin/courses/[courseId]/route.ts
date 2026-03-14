@@ -56,6 +56,10 @@ export async function PATCH(
   const thumbnailUrl =
     typeof body.thumbnailUrl === "string" ? body.thumbnailUrl.trim() : "";
   const order = Number(body.order ?? 0);
+  const archived =
+    typeof body.archived === "boolean"
+      ? body.archived
+      : undefined;
 
   try {
     await db
@@ -65,6 +69,9 @@ export async function PATCH(
         description: description || null,
         thumbnailUrl: thumbnailUrl || null,
         order,
+        ...(archived !== undefined
+          ? { archivedAt: archived ? new Date() : null }
+          : {}),
       })
       .where(eq(courses.id, courseId));
 

@@ -7,6 +7,7 @@ import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 import { eq } from "drizzle-orm";
 import crypto from "node:crypto";
+import { getPostHogClient } from "@/lib/posthog-server";
 
 const ARGON2_OPTIONS = {
   memoryCost: 19456,
@@ -131,6 +132,11 @@ export async function POST(request: Request) {
     sessionCookie.value,
     sessionCookie.attributes,
   );
+
+  const phDistinctId = request.headers.get("x-posthog-distinct-id") ?? emailStr;
+  const posthog = getPostHogClient();
+  posthog.identify({ distinctId: emailStr, properties: { email: emailStr, name: nameStr } });
+  posthog.capture({ distinctId: phDistinctId, event: "user_signed_up", properties: { email: emailStr, name: nameStr, $set: { email: emailStr, name: nameStr } } });
 
   return NextResponse.json({ ok: true }, { status: 201 });
 }

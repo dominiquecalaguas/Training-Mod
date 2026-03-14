@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { InferSelectModel } from "drizzle-orm";
 import { courses } from "@/db/schema";
 import { useDeviceToken } from "@//components/DeviceTokenProvider";
+import { trackCourseClicked } from "@/lib/analytics";
 
 type Course = InferSelectModel<typeof courses>;
 
@@ -71,6 +72,7 @@ export function CourseGrid({
             <Link
               key={course.id}
               href={`/courses/${course.id}`}
+              onClick={() => trackCourseClicked(course.id)}
               className="group flex flex-col overflow-hidden rounded-2xl border border-neutral-200 bg-white shadow-md transition hover:-translate-y-0.5 hover:border-neutral-300 hover:shadow-lg"
             >
               {course.thumbnailUrl ? (

@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { InferSelectModel } from "drizzle-orm";
 import { courses, lessons } from "@/db/schema";
 import { useDeviceToken } from "@//components/DeviceTokenProvider";
+import { trackCourseClicked, trackLessonClicked } from "@/lib/analytics";
 
 type Course = InferSelectModel<typeof courses>;
 type Lesson = InferSelectModel<typeof lessons>;
@@ -76,6 +77,7 @@ export function CourseLibrary({
             <div className="flex flex-col sm:flex-row sm:items-stretch">
               <Link
                 href={`/courses/${course.id}`}
+                onClick={() => trackCourseClicked(course.id)}
                 className="group flex flex-1 flex-col overflow-hidden sm:min-w-0"
               >
                 {course.thumbnailUrl ? (
@@ -153,6 +155,9 @@ export function CourseLibrary({
                     <li key={lesson.id}>
                       <Link
                         href={`/courses/${course.id}/lessons/${lesson.id}`}
+                        onClick={() =>
+                          trackLessonClicked(course.id, lesson.id)
+                        }
                         className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-neutral-300 transition hover:bg-neutral-800/80 hover:text-white"
                       >
                         <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-neutral-800 text-xs font-medium text-neutral-400">

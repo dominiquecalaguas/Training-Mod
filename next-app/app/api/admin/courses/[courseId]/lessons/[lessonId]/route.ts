@@ -56,6 +56,10 @@ export async function PATCH(
   const content =
     typeof body.content === "string" ? body.content : "";
   const order = Number(body.order ?? 0);
+  const archived =
+    typeof body.archived === "boolean"
+      ? body.archived
+      : undefined;
 
   try {
     await db
@@ -64,6 +68,9 @@ export async function PATCH(
         title,
         content,
         order,
+        ...(archived !== undefined
+          ? { archivedAt: archived ? new Date() : null }
+          : {}),
       })
       .where(and(eq(lessons.id, lessonId), eq(lessons.courseId, courseId)));
 

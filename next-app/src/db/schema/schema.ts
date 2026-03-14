@@ -14,6 +14,7 @@ export const courses = pgTable("courses", {
   description: text("description"),
   thumbnailUrl: text("thumbnail_url"),
   order: integer("order").notNull(),
+  archivedAt: timestamp("archived_at", { withTimezone: true }),
   createdAt: timestamp("created_at", { withTimezone: true })
     .notNull()
     .defaultNow(),
@@ -32,6 +33,7 @@ export const lessons = pgTable(
     title: text("title").notNull(),
     content: text("content").notNull(),
     order: integer("order").notNull(),
+    archivedAt: timestamp("archived_at", { withTimezone: true }),
     createdAt: timestamp("created_at", { withTimezone: true })
       .notNull()
       .defaultNow(),

@@ -6,6 +6,7 @@ import { Check } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import { useDeviceToken } from "@//components/DeviceTokenProvider";
 import { LexicalViewer } from "@/components/blocks/editor-x/lexical-viewer";
+import posthog from "posthog-js";
 
 function isLexicalContent(content: string): boolean {
   const trimmed = content?.trim() ?? "";
@@ -77,6 +78,7 @@ export function LessonContent({
       if (!res.ok) {
         throw new Error("Failed to save progress");
       }
+      posthog.capture("lesson_completed", { courseId, lessonId });
       setCompleted(true);
       onProgressChange?.();
       if (nextLessonHref) {
@@ -103,6 +105,7 @@ export function LessonContent({
       if (!res.ok) {
         throw new Error("Failed to update progress");
       }
+      posthog.capture("lesson_uncompleted", { courseId, lessonId });
       setCompleted(false);
       onProgressChange?.();
     } catch (e) {

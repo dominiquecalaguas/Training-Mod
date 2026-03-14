@@ -6,6 +6,7 @@ import { Check } from "lucide-react";
 import { InferSelectModel } from "drizzle-orm";
 import { lessons } from "@/db/schema";
 import { useDeviceToken } from "@//components/DeviceTokenProvider";
+import { trackLessonClicked } from "@/lib/analytics";
 
 type Lesson = InferSelectModel<typeof lessons>;
 
@@ -110,6 +111,7 @@ export function CourseSidebar({
               <li key={lesson.id}>
                 <Link
                   href={`/courses/${courseId}/lessons/${lesson.id}`}
+                  onClick={() => trackLessonClicked(courseId, lesson.id)}
                   className={`flex items-center gap-2 rounded-md px-2 py-1.5 text-neutral-700 hover:bg-neutral-100 ${
                     isCurrent
                       ? "bg-amber-100 font-medium text-amber-900"

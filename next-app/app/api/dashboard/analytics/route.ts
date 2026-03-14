@@ -1,0 +1,238 @@
+import { NextResponse } from "next/server";
+import { cookies } from "next/headers";
+import { db } from "@/db/client";
+import { courses, lessons } from "@/db/schema";
+import { inArray } from "drizzle-orm";
+
+const ANALYTICS_EVENTS = [
+  "course_clicked",
+  "lesson_clicked",
+  "lesson_viewed",
+] as const;
+
+type EventName = (typeof ANALYTICS_EVENTS)[number];
+
+interface RawEvent {
+  event: string;
+  properties: string | Record<string, unknown>;
+  timestamp?: string;
+}
+
+interface ParsedEvent {
+  event: EventName;
+  courseId: number;
+  lessonId?: number;
+  timestamp: string;
+}
+
+function parseEvents(results: RawEvent[]): ParsedEvent[] {
+  const out: ParsedEvent[] = [];
+  for (const row of results) {
+    if (!ANALYTICS_EVENTS.includes(row.event as EventName)) continue;
+    const props =
+      typeof row.properties === "string"
+        ? (JSON.parse(row.properties || "{}") as Record<string, unknown>)
+        : row.properties;
+    const courseId = Number(props?.courseId);
+    if (Number.isNaN(courseId)) continue;
+    const lessonId =
+      row.event !== "course_clicked"
+        ? Number(props?.lessonId)
+        : undefined;
+    if (row.event !== "course_clicked" && Number.isNaN(Number(props?.lessonId)))
+      continue;
+    out.push({
+      event: row.event as EventName,
+      courseId,
+      lessonId: lessonId as number | undefined,
+      timestamp: row.timestamp ?? new Date().toISOString(),
+    });
+  }
+  return out;
+}
+
+export async function GET(request: Request) {
+  const cookieStore = await cookies();
+  if (cookieStore.get("admin_authed")?.value !== "1") {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const filter =
+    new URL(request.url).searchParams.get("filter") ?? "all";
+  const statusFilter =
+    filter === "active"
+      ? "active"
+      : filter === "archived"
+        ? "archived"
+        : "all";
+
+  const personalKey = process.env.POSTHOG_PERSONAL_API_KEY;
+  const projectId = process.env.POSTHOG_PROJECT_ID;
+  const host =
+    process.env.POSTHOG_HOST ??
+    process.env.NEXT_PUBLIC_POSTHOG_HOST ??
+    "https://us.i.posthog.com";
+
+  if (!personalKey || !projectId) {
+    return NextResponse.json({
+      ok: true,
+      message: "PostHog not configured (missing POSTHOG_PERSONAL_API_KEY or POSTHOG_PROJECT_ID)",
+      byCourse: [],
+      byLesson: [],
+      courseResolve: {},
+      lessonResolve: {},
+    });
+  }
+
+  try {
+    const after = new Date();
+    after.setDate(after.getDate() - 30);
+    const url = new URL(
+      `${host.replace(/\/$/, "")}/api/projects/${encodeURIComponent(projectId)}/events/`,
+    );
+    url.searchParams.set("limit", "1000");
+    url.searchParams.set("after", after.toISOString());
+    url.searchParams.set("format", "json");
+
+    const res = await fetch(url.toString(), {
+      headers: { Authorization: `Bearer ${personalKey}` },
+      next: { revalidate: 60 },
+    });
+
+    if (!res.ok) {
+      const text = await res.text();
+      return NextResponse.json(
+        {
+          ok: false,
+          error: `PostHog API error: ${res.status}`,
+          detail: text.slice(0, 500),
+        },
+        { status: 502 },
+      );
+    }
+
+    const data = (await res.json()) as { results?: RawEvent[] };
+    const rawEvents = data.results ?? [];
+    const events = parseEvents(rawEvents);
+
+    const courseIds = [...new Set(events.map((e) => e.courseId))];
+    const lessonIds = [
+      ...new Set(
+        events.map((e) => e.lessonId).filter((id): id is number => id != null),
+      ),
+    ];
+
+    const courseRows =
+      courseIds.length > 0
+        ? await db
+            .select({
+              id: courses.id,
+              title: courses.title,
+              archivedAt: courses.archivedAt,
+            })
+            .from(courses)
+            .where(inArray(courses.id, courseIds))
+        : [];
+    const lessonRows =
+      lessonIds.length > 0
+        ? await db
+            .select({
+              id: lessons.id,
+              courseId: lessons.courseId,
+              title: lessons.title,
+              archivedAt: lessons.archivedAt,
+            })
+            .from(lessons)
+            .where(inArray(lessons.id, lessonIds))
+        : [];
+
+    const courseResolve: Record<
+      number,
+      { title: string; archived: boolean }
+    > = Object.fromEntries(
+      courseRows.map((r) => [
+        r.id,
+        { title: r.title, archived: r.archivedAt != null },
+      ]),
+    );
+    const lessonResolve: Record<
+      number,
+      { courseId: number; title: string; archived: boolean }
+    > = Object.fromEntries(
+      lessonRows.map((r) => [
+        r.id,
+        {
+          courseId: r.courseId,
+          title: r.title,
+          archived: r.archivedAt != null,
+        },
+      ]),
+    );
+
+    const courseClicks: Record<number, number> = {};
+    const lessonClicks: Record<number, number> = {};
+    const lessonViews: Record<number, number> = {};
+
+    for (const e of events) {
+      if (e.event === "course_clicked") {
+        courseClicks[e.courseId] = (courseClicks[e.courseId] ?? 0) + 1;
+      } else if (e.event === "lesson_clicked" && e.lessonId != null) {
+        lessonClicks[e.lessonId] = (lessonClicks[e.lessonId] ?? 0) + 1;
+      } else if (e.event === "lesson_viewed" && e.lessonId != null) {
+        lessonViews[e.lessonId] = (lessonViews[e.lessonId] ?? 0) + 1;
+      }
+    }
+
+    let byCourse = courseIds.map((id) => ({
+      courseId: id,
+      title: courseResolve[id]?.title ?? `Course #${id} (deleted)`,
+      archived: courseResolve[id]?.archived ?? true,
+      courseClicks: courseClicks[id] ?? 0,
+      lessonClicks: lessonRows
+        .filter((l) => l.courseId === id)
+        .reduce((sum, l) => sum + (lessonClicks[l.id] ?? 0), 0),
+      lessonViews: lessonRows
+        .filter((l) => l.courseId === id)
+        .reduce((sum, l) => sum + (lessonViews[l.id] ?? 0), 0),
+    }));
+
+    let byLesson = lessonIds.map((id) => {
+      const meta = lessonResolve[id];
+      return {
+        lessonId: id,
+        courseId: meta?.courseId ?? 0,
+        lessonTitle: meta?.title ?? `Lesson #${id} (deleted)`,
+        courseTitle:
+          meta != null
+            ? courseResolve[meta.courseId]?.title ?? `Course #${meta.courseId} (deleted)`
+            : "—",
+        archived: meta?.archived ?? true,
+        lessonClicks: lessonClicks[id] ?? 0,
+        lessonViews: lessonViews[id] ?? 0,
+      };
+    });
+
+    if (statusFilter === "active") {
+      byCourse = byCourse.filter((r) => !r.archived);
+      byLesson = byLesson.filter((r) => !r.archived);
+    } else if (statusFilter === "archived") {
+      byCourse = byCourse.filter((r) => r.archived);
+      byLesson = byLesson.filter((r) => r.archived);
+    }
+
+    return NextResponse.json({
+      ok: true,
+      filter: statusFilter,
+      byCourse,
+      byLesson,
+      courseResolve,
+      lessonResolve,
+    });
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    return NextResponse.json(
+      { ok: false, error: message },
+      { status: 500 },
+    );
+  }
+}

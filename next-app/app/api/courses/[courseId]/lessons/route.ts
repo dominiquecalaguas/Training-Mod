@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { asc, eq } from "drizzle-orm";
+import { and, asc, eq, isNull } from "drizzle-orm";
 import { db } from "@/db/client";
 import { lessons } from "@/db/schema";
 
@@ -17,7 +17,7 @@ export async function GET(
     const rows = await db
       .select()
       .from(lessons)
-      .where(eq(lessons.courseId, courseId))
+      .where(and(eq(lessons.courseId, courseId), isNull(lessons.archivedAt)))
       .orderBy(asc(lessons.order));
 
     return NextResponse.json(rows);

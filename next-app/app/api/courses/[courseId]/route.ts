@@ -20,7 +20,7 @@ export async function GET(
       .where(eq(courses.id, courseId))
       .limit(1);
 
-    if (!course) {
+    if (!course || course.archivedAt != null) {
       return NextResponse.json({ error: "Not found" }, { status: 404 });
     }
 

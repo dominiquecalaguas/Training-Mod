@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
+import posthog from "posthog-js";
 
 export function LoginForm() {
   const router = useRouter();
@@ -29,6 +30,8 @@ export function LoginForm() {
         );
         return;
       }
+      posthog.identify(email, { email });
+      posthog.capture("user_signed_in", { email });
       const redirectTo = searchParams.get("from") ?? "/";
       router.push(redirectTo);
       router.refresh();

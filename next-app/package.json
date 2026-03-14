@@ -51,6 +51,8 @@
     "lucide-react": "^0.575.0",
     "next": "16.1.6",
     "postgres": "^3.4.8",
+    "posthog-js": "^1.360.2",
+    "posthog-node": "^5.28.2",
     "radix-ui": "^1.4.3",
     "react": "19.2.3",
     "react-dom": "19.2.3",

@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { CourseSidebar } from "@//components/CourseSidebar";
 import { LessonContent } from "@//components/LessonContent";
+import { LessonViewTracker } from "@//components/LessonViewTracker";
 import type { InferSelectModel } from "drizzle-orm";
 import type { courses, lessons } from "@/db/schema";
 
@@ -24,6 +25,7 @@ export function LessonPageClient({
 
   return (
     <main className="min-h-screen bg-neutral-50 py-10 px-4 text-neutral-900">
+      <LessonViewTracker courseId={course.id} lessonId={lesson.id} />
       <div className="mx-auto flex max-w-6xl flex-col gap-6 lg:flex-row">
         <CourseSidebar
           courseId={course.id}

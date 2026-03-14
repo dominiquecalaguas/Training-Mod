@@ -5,6 +5,7 @@ import { verify } from "@node-rs/argon2";
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 import { eq } from "drizzle-orm";
+import { getPostHogClient } from "@/lib/posthog-server";
 
 const ARGON2_OPTIONS = {
   memoryCost: 19456,
@@ -71,6 +72,11 @@ export async function POST(request: Request) {
     sessionCookie.value,
     sessionCookie.attributes,
   );
+
+  const phDistinctId = request.headers.get("x-posthog-distinct-id") ?? email;
+  const posthog = getPostHogClient();
+  posthog.identify({ distinctId: email, properties: { email } });
+  posthog.capture({ distinctId: phDistinctId, event: "user_signed_in", properties: { email, $set: { email } } });
 
   return NextResponse.json({ ok: true });
 }

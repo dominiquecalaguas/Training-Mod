@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import posthog from "posthog-js";
 
 export function RegisterForm() {
   const router = useRouter();
@@ -35,6 +36,8 @@ export function RegisterForm() {
         );
         return;
       }
+      posthog.identify(email.trim(), { email: email.trim(), name: name.trim() });
+      posthog.capture("user_signed_up", { email: email.trim(), name: name.trim() });
       router.push("/");
       router.refresh();
     } catch {
