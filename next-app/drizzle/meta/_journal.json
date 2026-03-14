@@ -29,6 +29,13 @@
       "when": 1772087360250,
       "tag": "0003_chubby_terrax",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1773522859570,
+      "tag": "0004_burly_vin_gonzales",
+      "breakpoints": true
     }
   ]
 }

@@ -1,6 +1,10 @@
 import Link from "next/link";
+import { getPageSession } from "@/auth/lucia";
+import { LogoutButton } from "@/components/LogoutButton";
 
-export function Nav() {
+export async function Nav() {
+  const { user } = await getPageSession();
+
   return (
     <nav
       className="sticky top-0 z-50 border-b border-neutral-800/80 bg-neutral-950/90 backdrop-blur-sm"
@@ -26,6 +30,29 @@ export function Nav() {
           >
             Admin
           </Link>
+          {user ? (
+            <>
+              <span className="rounded-md px-3 py-2 text-sm text-neutral-400">
+                {user.email}
+              </span>
+              <LogoutButton />
+            </>
+          ) : (
+            <>
+              <Link
+                href="/login"
+                className="rounded-md px-3 py-2 text-sm font-medium text-neutral-400 transition hover:bg-neutral-800/60 hover:text-neutral-100"
+              >
+                Log in
+              </Link>
+              <Link
+                href="/register"
+                className="rounded-md px-3 py-2 text-sm font-medium text-neutral-400 transition hover:bg-neutral-800/60 hover:text-neutral-100"
+              >
+                Sign up
+              </Link>
+            </>
+          )}
         </div>
       </div>
     </nav>

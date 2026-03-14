@@ -8,7 +8,11 @@ if (!connectionString) {
   throw new Error("DATABASE_URL is not set");
 }
 
-const client = postgres(connectionString, { max: 1, prepare: false, ssl: "require"});
+export const postgresClient = postgres(connectionString, {
+  max: 1,
+  prepare: false,
+  ssl: "require",
+});
 
-export const db = drizzle(client, { schema });
+export const db = drizzle(postgresClient, { schema });
 
