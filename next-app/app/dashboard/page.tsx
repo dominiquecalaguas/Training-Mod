@@ -95,8 +95,44 @@ export default async function DashboardPage({
   const byCourse = data.byCourse ?? [];
   const byLesson = data.byLesson ?? [];
 
+  const totalCourseClicks = byCourse.reduce((s, r) => s + r.courseClicks, 0);
+  const totalLessonClicks = byCourse.reduce((s, r) => s + r.lessonClicks, 0);
+  const totalLessonViews = byCourse.reduce((s, r) => s + r.lessonViews, 0);
+
   return (
     <div className="flex flex-col gap-8">
+      <section className="grid gap-4 sm:grid-cols-3">
+        <div className="rounded-xl border border-zinc-200 bg-white p-4">
+          <p className="text-xs font-semibold uppercase tracking-wide text-zinc-500">
+            Course clicks
+          </p>
+          <p className="mt-1 text-2xl font-semibold tabular-nums text-zinc-900">
+            {totalCourseClicks}
+          </p>
+          <p className="mt-0.5 text-xs text-zinc-500">Last 30 days</p>
+        </div>
+        <div className="rounded-xl border border-zinc-200 bg-white p-4">
+          <p className="text-xs font-semibold uppercase tracking-wide text-zinc-500">
+            Lesson clicks
+          </p>
+          <p className="mt-1 text-2xl font-semibold tabular-nums text-zinc-900">
+            {totalLessonClicks}
+          </p>
+          <p className="mt-0.5 text-xs text-zinc-500">Last 30 days</p>
+        </div>
+        <div className="rounded-xl border border-zinc-200 bg-white p-4">
+          <p className="text-xs font-semibold uppercase tracking-wide text-zinc-500">
+            Lesson views
+          </p>
+          <p className="mt-1 text-2xl font-semibold tabular-nums text-zinc-900">
+            {totalLessonViews}
+          </p>
+          <p className="mt-0.5 text-xs text-zinc-500">Last 30 days</p>
+        </div>
+      </section>
+      <p className="text-xs text-zinc-500">
+        All metrics above and in the tables below are queried from PostHog (events: course_clicked, lesson_clicked, lesson_viewed).
+      </p>
       <nav className="flex gap-2" aria-label="Filter by status">
         {(
           [

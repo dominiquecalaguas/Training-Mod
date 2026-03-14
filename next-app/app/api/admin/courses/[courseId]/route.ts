@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { eq } from "drizzle-orm";
+import { requireAdmin } from "@/auth/require-admin";
 import { db } from "@/db/client";
 import { courses } from "@/db/schema";
 
@@ -7,6 +8,8 @@ export async function GET(
   _req: NextRequest,
   { params }: { params: Promise<{ courseId: string }> },
 ) {
+  const [, err] = await requireAdmin();
+  if (err) return err;
   const paramsData = await params;
   const courseId = Number(paramsData.courseId);
   if (Number.isNaN(courseId)) {
@@ -35,6 +38,8 @@ export async function PATCH(
   req: NextRequest,
   { params }: { params: Promise<{ courseId: string }> },
 ) {
+  const [, err] = await requireAdmin();
+  if (err) return err;
   const paramsData = await params;
   const courseId = Number(paramsData.courseId);
   if (Number.isNaN(courseId)) {
@@ -86,6 +91,8 @@ export async function DELETE(
   _req: NextRequest,
   { params }: { params: Promise<{ courseId: string }> },
 ) {
+  const [, err] = await requireAdmin();
+  if (err) return err;
   const paramsData = await params;
   const courseId = Number(paramsData.courseId);
   if (Number.isNaN(courseId)) {

@@ -28,7 +28,7 @@ The Dashboard **Analytics** section needs two server-side env vars. Add them to 
    - Open [PostHog → Project Settings → Personal API Keys](https://us.posthog.com/project/341786/settings#personal-api-keys) (or **Settings** → **Personal API Keys** in your project).
    - Create a key, copy it, then add:
    ```bash
-   POSTHOG_PERSONAL_API_KEY=phx_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+   POSTHOG_PERSONAL_API_KEY=
    ```
 
 Restart the Next.js dev server after changing env vars. The Dashboard Analytics section will then load data from PostHog.

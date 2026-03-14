@@ -1,9 +1,12 @@
 import { NextResponse } from "next/server";
 import { asc, eq } from "drizzle-orm";
+import { requireAdmin } from "@/auth/require-admin";
 import { db } from "@/db/client";
 import { courses, lessons } from "@/db/schema";
 
 export async function POST() {
+  const [, err] = await requireAdmin();
+  if (err) return err;
   const title = "Check-In Procedures";
   const description =
     "Front desk check-in workflow from greeting through pretesting and handoff to the doctor.";

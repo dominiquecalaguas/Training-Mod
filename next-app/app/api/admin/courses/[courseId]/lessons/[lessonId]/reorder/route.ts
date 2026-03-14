@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { and, asc, desc, eq, gt, lt } from "drizzle-orm";
+import { requireAdmin } from "@/auth/require-admin";
 import { db } from "@/db/client";
 import { lessons } from "@/db/schema";
 
@@ -7,6 +8,8 @@ export async function POST(
   req: NextRequest,
   { params }: { params: Promise<{ courseId: string; lessonId: string }> },
 ) {
+  const [, err] = await requireAdmin();
+  if (err) return err;
   const paramsData = await params;
   const courseId = Number(paramsData.courseId);
   const lessonId = Number(paramsData.lessonId);

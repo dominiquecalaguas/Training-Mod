@@ -7,5 +7,8 @@ export const userSession = pgTable("user_session", {
   userId: text("user_id")
     .notNull()
     .references(() => authUser.id, { onDelete: "cascade" }),
-  expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+  expiresAt: timestamp("expires_at", {
+    withTimezone: true,
+    mode: "date",
+  }).notNull(),
 });

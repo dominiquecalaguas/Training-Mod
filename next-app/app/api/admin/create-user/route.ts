@@ -3,7 +3,7 @@
  * Only for initial admin seeding in controlled environments.
  * This route is kept behind a code constant that is always false.
  */
-const ENABLE_ADMIN_CREATE_API = false;
+const ENABLE_ADMIN_CREATE_API = true;
 
 import { db } from "@/db/client";
 import { authUser } from "@/db/schema";

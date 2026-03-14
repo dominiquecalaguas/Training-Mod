@@ -1,9 +1,10 @@
 import { NextResponse } from "next/server";
-import { cookies } from "next/headers";
+import { requireAdmin } from "@/auth/require-admin";
 import { db } from "@/db/client";
 import { courses, lessons } from "@/db/schema";
 import { inArray } from "drizzle-orm";
 
+/** Dashboard analytics: all data is queried from PostHog via the HogQL Query API (events course_clicked, lesson_clicked, lesson_viewed). */
 const ANALYTICS_EVENTS = [
   "course_clicked",
   "lesson_clicked",
@@ -52,10 +53,8 @@ function parseEvents(results: RawEvent[]): ParsedEvent[] {
 }
 
 export async function GET(request: Request) {
-  const cookieStore = await cookies();
-  if (cookieStore.get("admin_authed")?.value !== "1") {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  const [user, err] = await requireAdmin();
+  if (err) return err;
 
   const filter =
     new URL(request.url).searchParams.get("filter") ?? "all";

@@ -1,4 +1,4 @@
-import { AdminGate } from "@//components/AdminGate";
+import { AdminAuthGate } from "@/components/AdminAuthGate";
 
 export default function AdminLayout({
   children,
@@ -6,7 +6,7 @@ export default function AdminLayout({
   children: React.ReactNode;
 }) {
   return (
-    <AdminGate>
+    <AdminAuthGate loginReturnPath="/admin/courses">
       <main className="min-h-screen bg-zinc-50 py-8 px-4 text-zinc-900">
         <div className="mx-auto flex max-w-5xl flex-col gap-4">
           <header className="flex items-center justify-between gap-3">
@@ -22,7 +22,7 @@ export default function AdminLayout({
           {children}
         </div>
       </main>
-    </AdminGate>
+    </AdminAuthGate>
   );
 }
 

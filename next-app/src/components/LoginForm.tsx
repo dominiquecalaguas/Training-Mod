@@ -12,6 +12,7 @@ export function LoginForm() {
   const [password, setPassword] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [passwordFieldReady, setPasswordFieldReady] = useState(false);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -45,6 +46,7 @@ export function LoginForm() {
   return (
     <form
       onSubmit={handleSubmit}
+      autoComplete="off"
       className="w-full max-w-sm rounded-xl border border-neutral-300 bg-white p-6 shadow-sm ring-1 ring-neutral-200"
     >
       <h1 className="text-lg font-semibold tracking-tight text-neutral-900">
@@ -62,7 +64,7 @@ export function LoginForm() {
           onChange={(e) => setEmail(e.target.value)}
           className="mt-1 w-full rounded-md border border-neutral-300 bg-white px-3 py-2 text-sm text-neutral-900 outline-none ring-0 focus:border-neutral-500"
           required
-          autoComplete="email"
+          autoComplete="off"
         />
       </label>
       <label className="mt-4 block text-sm font-medium text-neutral-700">
@@ -72,9 +74,13 @@ export function LoginForm() {
           name="password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
+          onFocus={() => setPasswordFieldReady(true)}
+          readOnly={!passwordFieldReady}
           className="mt-1 w-full rounded-md border border-neutral-300 bg-white px-3 py-2 text-sm text-neutral-900 outline-none ring-0 focus:border-neutral-500"
           required
-          autoComplete="current-password"
+          autoComplete="new-password"
+          data-form-type="other"
+          data-lpignore="true"
         />
       </label>
       {error && (

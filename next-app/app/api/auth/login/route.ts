@@ -65,18 +65,38 @@ export async function POST(request: Request) {
     );
   }
 
-  const session = await lucia.createSession(user.id, {});
-  const sessionCookie = lucia.createSessionCookie(session.id);
-  (await cookies()).set(
-    sessionCookie.name,
-    sessionCookie.value,
-    sessionCookie.attributes,
-  );
+  try {
+    const session = await lucia.createSession(user.id, {});
+    const sessionCookie = lucia.createSessionCookie(session.id);
+    (await cookies()).set(
+      sessionCookie.name,
+      sessionCookie.value,
+      sessionCookie.attributes,
+    );
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    console.error("Login session error:", err);
+    return NextResponse.json(
+      {
+        error: "Sign-in failed",
+        ...(process.env.NODE_ENV === "development" && { detail: message }),
+      },
+      { status: 500 },
+    );
+  }
 
-  const phDistinctId = request.headers.get("x-posthog-distinct-id") ?? email;
-  const posthog = getPostHogClient();
-  posthog.identify({ distinctId: email, properties: { email } });
-  posthog.capture({ distinctId: phDistinctId, event: "user_signed_in", properties: { email, $set: { email } } });
+  try {
+    const phDistinctId = request.headers.get("x-posthog-distinct-id") ?? email;
+    const posthog = getPostHogClient();
+    posthog.identify({ distinctId: email, properties: { email } });
+    posthog.capture({
+      distinctId: phDistinctId,
+      event: "user_signed_in",
+      properties: { email, $set: { email } },
+    });
+  } catch {
+    // Don't fail login if analytics fails
+  }
 
   return NextResponse.json({ ok: true });
 }

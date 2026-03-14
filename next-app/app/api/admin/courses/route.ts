@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { asc, count, eq, sql } from "drizzle-orm";
+import { requireAdmin } from "@/auth/require-admin";
 import { db } from "@/db/client";
 import { courses, lessons } from "@/db/schema";
 
@@ -13,6 +14,8 @@ const lessonCounts = db
   .as("lesson_counts");
 
 export async function GET() {
+  const [, err] = await requireAdmin();
+  if (err) return err;
   try {
     const result = await db
       .select({
@@ -49,6 +52,8 @@ export async function GET() {
 }
 
 export async function POST(req: Request) {
+  const [, err] = await requireAdmin();
+  if (err) return err;
   const body = await req.json().catch(() => null);
   if (!body || typeof body.title !== "string") {
     return NextResponse.json({ error: "Invalid body" }, { status: 400 });
