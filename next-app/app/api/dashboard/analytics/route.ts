@@ -66,12 +66,18 @@ export async function GET(request: Request) {
         ? "archived"
         : "all";
 
-  const personalKey = process.env.POSTHOG_PERSONAL_API_KEY;
-  const projectId = process.env.POSTHOG_PROJECT_ID;
-  const host =
-    process.env.POSTHOG_HOST ??
-    process.env.NEXT_PUBLIC_POSTHOG_HOST ??
-    "https://us.i.posthog.com";
+  const personalKey = process.env.POSTHOG_PERSONAL_API_KEY?.trim();
+  const projectId = process.env.POSTHOG_PROJECT_ID?.trim();
+  // Private API (projects/events) uses app host (us.posthog.com), not ingestion host (us.i.posthog.com)
+  const appHost =
+    process.env.POSTHOG_APP_HOST ??
+    (() => {
+      const ingestion =
+        process.env.POSTHOG_HOST ??
+        process.env.NEXT_PUBLIC_POSTHOG_HOST ??
+        "https://us.i.posthog.com";
+      return ingestion.replace(".i.posthog.com", ".posthog.com");
+    })();
 
   if (!personalKey || !projectId) {
     return NextResponse.json({
@@ -85,34 +91,69 @@ export async function GET(request: Request) {
   }
 
   try {
-    const after = new Date();
-    after.setDate(after.getDate() - 30);
-    const url = new URL(
-      `${host.replace(/\/$/, "")}/api/projects/${encodeURIComponent(projectId)}/events/`,
-    );
-    url.searchParams.set("limit", "1000");
-    url.searchParams.set("after", after.toISOString());
-    url.searchParams.set("format", "json");
-
-    const res = await fetch(url.toString(), {
-      headers: { Authorization: `Bearer ${personalKey}` },
+    // Use Query API (HogQL) instead of deprecated GET /api/projects/.../events/
+    const queryUrl = `${appHost.replace(/\/$/, "")}/api/projects/${encodeURIComponent(projectId)}/query/`;
+    const res = await fetch(queryUrl, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${personalKey}`,
+      },
+      body: JSON.stringify({
+        query: {
+          kind: "HogQLQuery",
+          query: `SELECT event, properties, timestamp FROM events WHERE event IN ('course_clicked', 'lesson_clicked', 'lesson_viewed') AND timestamp >= now() - INTERVAL 30 DAY ORDER BY timestamp DESC LIMIT 1000`,
+        },
+        name: "dashboard-analytics",
+      }),
       next: { revalidate: 60 },
     });
 
+    const responseText = await res.text();
     if (!res.ok) {
-      const text = await res.text();
       return NextResponse.json(
         {
           ok: false,
           error: `PostHog API error: ${res.status}`,
-          detail: text.slice(0, 500),
+          detail: responseText.slice(0, 800),
         },
         { status: 502 },
       );
     }
 
-    const data = (await res.json()) as { results?: RawEvent[] };
-    const rawEvents = data.results ?? [];
+    let data: { results?: unknown[]; columns?: string[] };
+    try {
+      data = JSON.parse(responseText) as {
+        results?: unknown[];
+        columns?: string[];
+      };
+    } catch {
+      return NextResponse.json(
+        {
+          ok: false,
+          error: "PostHog returned invalid JSON",
+          detail: responseText.slice(0, 500),
+        },
+        { status: 502 },
+      );
+    }
+
+    const columns = data.columns ?? ["event", "properties", "timestamp"];
+    const results = data.results ?? [];
+    const rawEvents: RawEvent[] = results.map((row) => {
+      if (Array.isArray(row)) {
+        const eventIdx = columns.indexOf("event");
+        const propsIdx = columns.indexOf("properties");
+        const tsIdx = columns.indexOf("timestamp");
+        return {
+          event: (eventIdx >= 0 ? row[eventIdx] : undefined) as string,
+          properties:
+            propsIdx >= 0 ? row[propsIdx] : ({} as Record<string, unknown>),
+          timestamp: tsIdx >= 0 ? (row[tsIdx] as string) : undefined,
+        };
+      }
+      return row as RawEvent;
+    });
     const events = parseEvents(rawEvents);
 
     const courseIds = [...new Set(events.map((e) => e.courseId))];

@@ -29,6 +29,7 @@ interface AnalyticsResponse {
   ok: boolean;
   message?: string;
   error?: string;
+  detail?: string;
   byCourse?: ByCourseRow[];
   byLesson?: ByLessonRow[];
 }
@@ -46,7 +47,12 @@ async function getAnalytics(filter: Filter): Promise<AnalyticsResponse> {
     cache: "no-store",
   });
   if (!res.ok) {
-    return { ok: false, error: `Failed to load: ${res.status}` };
+    const body = await res.json().catch(() => ({})) as AnalyticsResponse;
+    return {
+      ok: false,
+      error: body.error ?? `Failed to load: ${res.status}`,
+      detail: body.detail,
+    };
   }
   return res.json() as Promise<AnalyticsResponse>;
 }
@@ -68,6 +74,11 @@ export default async function DashboardPage({
       <section className="rounded-xl border border-zinc-200 bg-white p-6">
         <h2 className="text-lg font-semibold tracking-tight">Analytics</h2>
         <p className="mt-2 text-sm text-red-600">{data.error}</p>
+        {data.detail ? (
+          <pre className="mt-2 max-h-40 overflow-auto rounded bg-zinc-100 p-2 text-xs text-zinc-700">
+            {data.detail}
+          </pre>
+        ) : null}
       </section>
     );
   }
