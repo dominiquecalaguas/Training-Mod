@@ -4,8 +4,10 @@ export const authUser = pgTable("auth_user", {
   id: text("id").primaryKey(),
   email: text("email").notNull().unique(),
   name: text("name"),
+  firstName: text("first_name"),
+  lastName: text("last_name"),
   passwordHash: text("password_hash").notNull(),
-  role: text("role").notNull().default("user"),
+  role: text("role").notNull().default("new_hire"),
   createdAt: timestamp("created_at", { withTimezone: true })
     .notNull()
     .defaultNow(),

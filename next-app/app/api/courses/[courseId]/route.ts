@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { eq } from "drizzle-orm";
+import { getPageSession } from "@/auth/lucia";
 import { db } from "@/db/client";
 import { courses } from "@/db/schema";
 
@@ -22,6 +23,11 @@ export async function GET(
 
     if (!course || course.archivedAt != null) {
       return NextResponse.json({ error: "Not found" }, { status: 404 });
+    }
+
+    const { user } = await getPageSession();
+    if (user?.role === "new_hire" && !course.isOnboarding) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
     return NextResponse.json(course);

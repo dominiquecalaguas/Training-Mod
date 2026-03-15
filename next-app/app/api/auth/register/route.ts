@@ -38,12 +38,14 @@ export async function POST(request: Request) {
 
   const {
     secretKey,
-    name,
+    firstName,
+    lastName,
     email,
     password,
   }: {
     secretKey?: unknown;
-    name?: unknown;
+    firstName?: unknown;
+    lastName?: unknown;
     email?: unknown;
     password?: unknown;
   } = body;
@@ -63,13 +65,20 @@ export async function POST(request: Request) {
     );
   }
 
-  const nameStr = typeof name === "string" ? name.trim() : "";
+  const firstNameStr = typeof firstName === "string" ? firstName.trim() : "";
+  const lastNameStr = typeof lastName === "string" ? lastName.trim() : "";
   const emailStr = typeof email === "string" ? email.trim().toLowerCase() : "";
   const passwordStr = typeof password === "string" ? password : "";
 
-  if (!nameStr || nameStr.length > 255) {
+  if (!firstNameStr || firstNameStr.length > 255) {
     return NextResponse.json(
-      { error: "Name is required and must be at most 255 characters" },
+      { error: "First name is required and must be at most 255 characters" },
+      { status: 400 },
+    );
+  }
+  if (!lastNameStr || lastNameStr.length > 255) {
+    return NextResponse.json(
+      { error: "Last name is required and must be at most 255 characters" },
       { status: 400 },
     );
   }
@@ -102,12 +111,15 @@ export async function POST(request: Request) {
   const passwordHash = await hash(passwordStr, ARGON2_OPTIONS);
   const userId = generateIdFromEntropySize(10);
 
+  const displayName = [firstNameStr, lastNameStr].filter(Boolean).join(" ");
   await db.insert(authUser).values({
     id: userId,
     email: emailStr,
-    name: nameStr,
+    name: displayName,
+    firstName: firstNameStr,
+    lastName: lastNameStr,
     passwordHash,
-    role: "user",
+    role: "new_hire",
   });
 
   if (process.env.SENDGRID_API_KEY) {
@@ -118,7 +130,7 @@ export async function POST(request: Request) {
         to: emailStr,
         from: process.env.SENDGRID_FROM_EMAIL ?? "noreply@example.com",
         subject: "Welcome",
-        text: `Welcome, ${nameStr}. Your account has been created.`,
+        text: `Welcome, ${displayName}. Your account has been created.`,
       });
     } catch (err) {
       console.error("SendGrid send failed:", err);
@@ -135,8 +147,8 @@ export async function POST(request: Request) {
 
   const phDistinctId = request.headers.get("x-posthog-distinct-id") ?? emailStr;
   const posthog = getPostHogClient();
-  posthog.identify({ distinctId: emailStr, properties: { email: emailStr, name: nameStr } });
-  posthog.capture({ distinctId: phDistinctId, event: "user_signed_up", properties: { email: emailStr, name: nameStr, $set: { email: emailStr, name: nameStr } } });
+  posthog.identify({ distinctId: emailStr, properties: { email: emailStr, name: displayName } });
+  posthog.capture({ distinctId: phDistinctId, event: "user_signed_up", properties: { email: emailStr, name: displayName, $set: { email: emailStr, name: displayName } } });
 
   return NextResponse.json({ ok: true }, { status: 201 });
 }

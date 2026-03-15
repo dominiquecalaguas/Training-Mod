@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { getPageSession } from "@/auth/lucia";
-import { LogoutButton } from "@/components/LogoutButton";
+import { UserNavDropdown } from "@/components/UserNavDropdown";
 
 export async function Nav() {
   const { user } = await getPageSession();
@@ -30,19 +30,16 @@ export async function Nav() {
           >
             Dashboard
           </Link>
-          <Link
-            href="/admin/courses"
-            className="rounded-md px-3 py-2 text-sm font-medium text-neutral-400 transition hover:bg-neutral-800/60 hover:text-neutral-100"
-          >
-            Admin
-          </Link>
+          {user?.role === "admin" && (
+            <Link
+              href="/admin/courses"
+              className="rounded-md px-3 py-2 text-sm font-medium text-neutral-400 transition hover:bg-neutral-800/60 hover:text-neutral-100"
+            >
+              Admin
+            </Link>
+          )}
           {user ? (
-            <>
-              <span className="rounded-md px-3 py-2 text-sm text-neutral-400">
-                {user.email}
-              </span>
-              <LogoutButton />
-            </>
+            <UserNavDropdown displayName={user.displayName} />
           ) : (
             <>
               <Link

@@ -57,6 +57,15 @@ export default async function EditCoursePage({
               className="mt-1 w-full rounded-md border border-zinc-300 px-3 py-2 text-sm outline-none focus:border-zinc-900"
             />
           </label>
+          <label className="flex items-center gap-2 text-xs font-medium text-zinc-700 sm:col-span-2">
+            <input
+              type="checkbox"
+              name="isOnboarding"
+              defaultChecked={course.isOnboarding}
+              className="h-4 w-4 rounded border-zinc-300"
+            />
+            Use as onboarding course (only course visible to New Hires)
+          </label>
           <ThumbnailUploadField
             label={course.thumbnailUrl ? "Replace thumbnail" : "Thumbnail"}
             currentImageUrl={course.thumbnailUrl}

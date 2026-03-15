@@ -4,6 +4,7 @@ import {
   text,
   integer,
   timestamp,
+  boolean,
   index,
   uniqueIndex,
 } from "drizzle-orm/pg-core";
@@ -14,6 +15,7 @@ export const courses = pgTable("courses", {
   description: text("description"),
   thumbnailUrl: text("thumbnail_url"),
   order: integer("order").notNull(),
+  isOnboarding: boolean("is_onboarding").notNull().default(false),
   archivedAt: timestamp("archived_at", { withTimezone: true }),
   createdAt: timestamp("created_at", { withTimezone: true })
     .notNull()

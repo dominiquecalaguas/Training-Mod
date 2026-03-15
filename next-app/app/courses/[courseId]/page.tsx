@@ -1,3 +1,4 @@
+import { cookies } from "next/headers";
 import { notFound, redirect } from "next/navigation";
 import { courses, lessons } from "@/db/schema";
 import { apiUrl } from "@/lib/api";
@@ -11,13 +12,23 @@ export default async function CoursePage({
   const courseId = Number(courseIdParam);
   if (Number.isNaN(courseId)) notFound();
 
+  const cookieStore = await cookies();
+  const headers = { Cookie: cookieStore.toString() };
+
   const [courseRes, lessonsRes] = await Promise.all([
-    fetch(apiUrl(`/api/courses/${courseId}`), { cache: "no-store" }),
-    fetch(apiUrl(`/api/courses/${courseId}/lessons`), { cache: "no-store" }),
+    fetch(apiUrl(`/api/courses/${courseId}`), {
+      cache: "no-store",
+      headers,
+    }),
+    fetch(apiUrl(`/api/courses/${courseId}/lessons`), {
+      cache: "no-store",
+      headers,
+    }),
   ]);
 
-  if (!courseRes.ok || courseRes.status === 404) notFound();
-  if (!lessonsRes.ok) notFound();
+  if (!courseRes.ok || courseRes.status === 404 || courseRes.status === 403)
+    notFound();
+  if (!lessonsRes.ok || lessonsRes.status === 403) notFound();
 
   const course = (await courseRes.json()) as typeof courses.$inferSelect;
   const courseLessons = (await lessonsRes.json()) as Array<

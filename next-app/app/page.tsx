@@ -1,3 +1,4 @@
+import { cookies } from "next/headers";
 import { courses } from "@/db/schema";
 import { CourseGrid } from "@//components/CourseGrid";
 import { DeviceTokenProvider } from "@//components/DeviceTokenProvider";
@@ -9,7 +10,11 @@ export default async function Home() {
   let loadError = false;
 
   try {
-    const res = await fetch(apiUrl("/api/courses"), { cache: "no-store" });
+    const cookieStore = await cookies();
+    const res = await fetch(apiUrl("/api/courses"), {
+      cache: "no-store",
+      headers: { Cookie: cookieStore.toString() },
+    });
     if (!res.ok) {
       loadError = true;
     } else {

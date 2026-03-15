@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { and, eq, sql } from "drizzle-orm";
+import { and, eq, ne, sql } from "drizzle-orm";
 import { put } from "@vercel/blob";
 import { db } from "@/db/client";
 import { courses, lessons } from "@/db/schema";
@@ -165,12 +165,19 @@ export async function updateCourse(formData: FormData) {
     thumbnailUrl = current?.thumbnailUrl ?? null;
   }
 
+  const isOnboarding = formData.get("isOnboarding") === "on";
+
+  if (isOnboarding) {
+    await db.update(courses).set({ isOnboarding: false }).where(ne(courses.id, id));
+  }
+
   await db
     .update(courses)
     .set({
       title,
       description: description || null,
       thumbnailUrl: thumbnailUrl ?? null,
+      isOnboarding,
     })
     .where(eq(courses.id, id));
 

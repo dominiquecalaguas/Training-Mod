@@ -1,8 +1,10 @@
 import Link from "next/link";
+import { cookies } from "next/headers";
 import { Suspense } from "react";
 import { courses } from "@/db/schema";
 import { apiUrl } from "@/lib/api";
 import { DraggableCourseList } from "./DraggableCourseList";
+import { UserManagementTable } from "./UserManagementTable";
 
 export const dynamic = "force-dynamic";
 
@@ -13,7 +15,11 @@ async function CourseListView() {
   }>;
 
   try {
-    const res = await fetch(apiUrl("/api/admin/courses"), { cache: "no-store" });
+    const cookieStore = await cookies();
+    const res = await fetch(apiUrl("/api/admin/courses"), {
+      cache: "no-store",
+      headers: { Cookie: cookieStore.toString() },
+    });
     if (!res.ok) {
       const errorBody = (await res.json().catch(() => null)) as
         | { error?: string; hint?: string }
@@ -71,6 +77,12 @@ export default async function AdminCoursesPage() {
       <Suspense fallback={<CourseListFallback />}>
         <CourseListView />
       </Suspense>
+      <section className="rounded-xl border border-zinc-200 bg-white">
+        <div className="border-b border-zinc-200 px-4 py-2 text-xs font-semibold uppercase tracking-wide text-zinc-500">
+          User management
+        </div>
+        <UserManagementTable />
+      </section>
     </div>
   );
 }

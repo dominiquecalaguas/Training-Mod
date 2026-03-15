@@ -8,7 +8,8 @@ import posthog from "posthog-js";
 export function RegisterForm() {
   const router = useRouter();
   const [secretKey, setSecretKey] = useState("");
-  const [name, setName] = useState("");
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -24,7 +25,8 @@ export function RegisterForm() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           secretKey: secretKey.trim(),
-          name: name.trim(),
+          firstName: firstName.trim(),
+          lastName: lastName.trim(),
           email: email.trim(),
           password,
         }),
@@ -36,8 +38,9 @@ export function RegisterForm() {
         );
         return;
       }
-      posthog.identify(email.trim(), { email: email.trim(), name: name.trim() });
-      posthog.capture("user_signed_up", { email: email.trim(), name: name.trim() });
+      const displayName = [firstName.trim(), lastName.trim()].filter(Boolean).join(" ");
+      posthog.identify(email.trim(), { email: email.trim(), name: displayName });
+      posthog.capture("user_signed_up", { email: email.trim(), name: displayName });
       router.push("/");
       router.refresh();
     } catch {
@@ -71,16 +74,29 @@ export function RegisterForm() {
         />
       </label>
       <label className="mt-4 block text-sm font-medium text-neutral-700">
-        Name
+        First name
         <input
           type="text"
-          name="name"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
+          name="firstName"
+          value={firstName}
+          onChange={(e) => setFirstName(e.target.value)}
           className="mt-1 w-full rounded-md border border-neutral-300 bg-white px-3 py-2 text-sm text-neutral-900 outline-none ring-0 focus:border-neutral-500"
           required
           maxLength={255}
-          autoComplete="name"
+          autoComplete="given-name"
+        />
+      </label>
+      <label className="mt-4 block text-sm font-medium text-neutral-700">
+        Last name
+        <input
+          type="text"
+          name="lastName"
+          value={lastName}
+          onChange={(e) => setLastName(e.target.value)}
+          className="mt-1 w-full rounded-md border border-neutral-300 bg-white px-3 py-2 text-sm text-neutral-900 outline-none ring-0 focus:border-neutral-500"
+          required
+          maxLength={255}
+          autoComplete="family-name"
         />
       </label>
       <label className="mt-4 block text-sm font-medium text-neutral-700">

@@ -15,9 +15,27 @@ export const lucia = new Lucia(adapter, {
     },
   },
   getUserAttributes: (attributes) => {
+    const attrs = attributes as {
+      first_name?: string | null;
+      last_name?: string | null;
+      firstName?: string | null;
+      lastName?: string | null;
+      name?: string | null;
+      email: string;
+      role: string;
+    };
+    const firstName = attrs.firstName ?? attrs.first_name ?? null;
+    const lastName = attrs.lastName ?? attrs.last_name ?? null;
+    const displayName =
+      [firstName, lastName].filter(Boolean).join(" ") ||
+      attributes.name ||
+      attributes.email;
     return {
       email: attributes.email,
       name: attributes.name,
+      firstName,
+      lastName,
+      displayName,
       role: attributes.role,
     };
   },
@@ -26,6 +44,8 @@ export const lucia = new Lucia(adapter, {
 export type DatabaseUserAttributes = {
   email: string;
   name: string | null;
+  first_name: string | null;
+  last_name: string | null;
   password_hash: string;
   role: string;
   created_at: Date;
