@@ -77,10 +77,10 @@ export default async function AdminCoursesPage() {
       <Suspense fallback={<CourseListFallback />}>
         <CourseListView />
       </Suspense>
+      <section>
+        <h2 className="text-lg font-semibold tracking-tight">User Management</h2>
+      </section>
       <section className="rounded-xl border border-zinc-200 bg-white">
-        <div className="border-b border-zinc-200 px-4 py-2 text-xs font-semibold uppercase tracking-wide text-zinc-500">
-          User management
-        </div>
         <UserManagementTable />
       </section>
     </div>
