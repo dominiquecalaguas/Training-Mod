@@ -3,16 +3,11 @@
 import { useState, useCallback } from "react";
 import Link from "next/link";
 import { GripVertical } from "lucide-react";
-import type { courses } from "@/db/schema";
+import type { CoursePreviewRow } from "./page";
 import { DeleteCourseForm } from "./DeleteCourseForm";
 import { deleteCourse, setCoursesOrder } from "../actions";
 
-type Course = typeof courses.$inferSelect;
-
-type Row = {
-  course: Course;
-  lessonCount: number;
-};
+type Row = CoursePreviewRow;
 
 export function DraggableCourseList({ rows: initialRows }: { rows: Row[] }) {
   const [rows, setRows] = useState(initialRows);

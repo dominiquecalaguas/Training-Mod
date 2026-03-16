@@ -2,12 +2,9 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { InferSelectModel } from "drizzle-orm";
-import { courses } from "@/db/schema";
 import { useDeviceToken } from "@//components/DeviceTokenProvider";
 import { trackCourseClicked } from "@/lib/analytics";
-
-type Course = InferSelectModel<typeof courses>;
+import type { CourseListItem } from "@/lib/courses";
 
 type ProgressMap = Record<
   number,
@@ -18,7 +15,7 @@ export function CourseGrid({
   courses,
   lessonCountByCourseId = {},
 }: {
-  courses: Course[];
+  courses: CourseListItem[];
   lessonCountByCourseId?: Record<number, number>;
 }) {
   const deviceToken = useDeviceToken();

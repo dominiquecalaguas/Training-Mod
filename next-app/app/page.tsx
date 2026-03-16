@@ -1,25 +1,16 @@
-import { cookies } from "next/headers";
-import { courses } from "@/db/schema";
+import { getPageSession } from "@/auth/lucia";
 import { CourseGrid } from "@//components/CourseGrid";
 import { DeviceTokenProvider } from "@//components/DeviceTokenProvider";
-import { apiUrl } from "@/lib/api";
+import { getCoursesList, type CourseListItem } from "@/lib/courses";
 
 export default async function Home() {
-  let allCourses: Array<typeof courses.$inferSelect> = [];
+  let allCourses: CourseListItem[] = [];
   const lessonCountByCourseId: Record<number, number> = {};
   let loadError = false;
 
   try {
-    const cookieStore = await cookies();
-    const res = await fetch(apiUrl("/api/courses"), {
-      cache: "no-store",
-      headers: { Cookie: cookieStore.toString() },
-    });
-    if (!res.ok) {
-      loadError = true;
-    } else {
-      allCourses = (await res.json()) as Array<typeof courses.$inferSelect>;
-    }
+    const { user } = await getPageSession();
+    allCourses = await getCoursesList(user);
   } catch {
     loadError = true;
   }

@@ -1,18 +1,19 @@
 import Link from "next/link";
 import { cookies } from "next/headers";
 import { Suspense } from "react";
-import { courses } from "@/db/schema";
 import { apiUrl } from "@/lib/api";
 import { DraggableCourseList } from "./DraggableCourseList";
 import { UserManagementTable } from "./UserManagementTable";
 
 export const dynamic = "force-dynamic";
 
+export type CoursePreviewRow = {
+  course: { id: number; title: string; order: number };
+  lessonCount: number;
+};
+
 async function CourseListView() {
-  let rows: Array<{
-    course: typeof courses.$inferSelect;
-    lessonCount: number;
-  }>;
+  let rows: CoursePreviewRow[];
 
   try {
     const cookieStore = await cookies();
@@ -29,10 +30,7 @@ async function CourseListView() {
       throw new Error(`${message}.${hint}`);
     }
 
-    rows = (await res.json()) as Array<{
-      course: typeof courses.$inferSelect;
-      lessonCount: number;
-    }>;
+    rows = (await res.json()) as CoursePreviewRow[];
   } catch (err) {
     const msg =
       err instanceof Error ? err.message : String(err);

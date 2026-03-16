@@ -1,46 +1,35 @@
 import { NextResponse } from "next/server";
-import { asc, count, eq, sql } from "drizzle-orm";
+import { asc, count, eq } from "drizzle-orm";
 import { requireAdmin } from "@/auth/require-admin";
 import { db } from "@/db/client";
 import { courses, lessons } from "@/db/schema";
-
-const lessonCounts = db
-  .select({
-    courseId: lessons.courseId,
-    lessonCount: count().as("lesson_count"),
-  })
-  .from(lessons)
-  .groupBy(lessons.courseId)
-  .as("lesson_counts");
 
 export async function GET() {
   const [, err] = await requireAdmin();
   if (err) return err;
   try {
-    const result = await db
+    const rows = await db
       .select({
         id: courses.id,
         title: courses.title,
-        description: courses.description,
-        thumbnailUrl: courses.thumbnailUrl,
         order: courses.order,
-        createdAt: courses.createdAt,
-        updatedAt: courses.updatedAt,
-        lessonCount: sql<number>`coalesce(${lessonCounts.lessonCount}, 0)`,
+        lessonCount: count(lessons.id),
       })
       .from(courses)
-      .leftJoin(lessonCounts, eq(courses.id, lessonCounts.courseId))
+      .leftJoin(lessons, eq(courses.id, lessons.courseId))
+      .groupBy(courses.id, courses.title, courses.order)
       .orderBy(asc(courses.order));
 
-    const rows = result.map((row) => {
-      const { lessonCount, ...course } = row;
-      return {
-        course,
-        lessonCount: Number(lessonCount),
-      };
-    });
+    const responseRows = rows.map((row) => ({
+      course: {
+        id: row.id,
+        title: row.title,
+        order: row.order,
+      },
+      lessonCount: Number(row.lessonCount),
+    }));
 
-    return NextResponse.json(rows);
+    return NextResponse.json(responseRows);
   } catch (err) {
     const message = err instanceof Error ? err.message : "Unknown error";
     const hint =

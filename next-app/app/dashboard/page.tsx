@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Suspense, cache } from "react";
 import { cookies } from "next/headers";
 import { apiUrl } from "@/lib/api";
 
@@ -34,7 +35,7 @@ interface AnalyticsResponse {
   byLesson?: ByLessonRow[];
 }
 
-async function getAnalytics(filter: Filter): Promise<AnalyticsResponse> {
+async function getAnalyticsImpl(filter: Filter): Promise<AnalyticsResponse> {
   const cookieStore = await cookies();
   const cookieHeader = cookieStore
     .getAll()
@@ -47,7 +48,7 @@ async function getAnalytics(filter: Filter): Promise<AnalyticsResponse> {
     cache: "no-store",
   });
   if (!res.ok) {
-    const body = await res.json().catch(() => ({})) as AnalyticsResponse;
+    const body = (await res.json().catch(() => ({}))) as AnalyticsResponse;
     return {
       ok: false,
       error: body.error ?? `Failed to load: ${res.status}`,
@@ -57,18 +58,44 @@ async function getAnalytics(filter: Filter): Promise<AnalyticsResponse> {
   return res.json() as Promise<AnalyticsResponse>;
 }
 
-export default async function DashboardPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ filter?: string }>;
-}) {
-  const { filter: filterParam } = await searchParams;
-  const filter: Filter =
-    filterParam === "active" || filterParam === "archived"
-      ? filterParam
-      : "all";
-  const data = await getAnalytics(filter);
+const getAnalytics = cache(getAnalyticsImpl);
 
+function StatsSkeleton() {
+  return (
+    <section className="grid gap-4 sm:grid-cols-3">
+      {[1, 2, 3].map((i) => (
+        <div
+          key={i}
+          className="rounded-xl border border-zinc-200 bg-white p-4 animate-pulse"
+        >
+          <div className="h-3 w-24 rounded bg-zinc-200" />
+          <div className="mt-2 h-8 w-16 rounded bg-zinc-200" />
+          <div className="mt-1 h-3 w-20 rounded bg-zinc-100" />
+        </div>
+      ))}
+    </section>
+  );
+}
+
+function TableSkeleton({ title }: { title: string }) {
+  return (
+    <section className="rounded-xl border border-zinc-200 bg-white">
+      <div className="border-b border-zinc-200 px-4 py-2 text-xs font-semibold uppercase tracking-wide text-zinc-500">
+        {title}
+      </div>
+      <div className="overflow-x-auto p-4">
+        <div className="space-y-2">
+          {[1, 2, 3, 4, 5].map((i) => (
+            <div key={i} className="h-10 rounded bg-zinc-100 animate-pulse" />
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+async function DashboardStats({ filter }: { filter: Filter }) {
+  const data = await getAnalytics(filter);
   if (!data.ok && data.error) {
     return (
       <section className="rounded-xl border border-zinc-200 bg-white p-6">
@@ -82,7 +109,6 @@ export default async function DashboardPage({
       </section>
     );
   }
-
   if (data.message) {
     return (
       <section className="rounded-xl border border-zinc-200 bg-white p-6">
@@ -91,47 +117,197 @@ export default async function DashboardPage({
       </section>
     );
   }
-
   const byCourse = data.byCourse ?? [];
-  const byLesson = data.byLesson ?? [];
-
   const totalCourseClicks = byCourse.reduce((s, r) => s + r.courseClicks, 0);
   const totalLessonClicks = byCourse.reduce((s, r) => s + r.lessonClicks, 0);
   const totalLessonViews = byCourse.reduce((s, r) => s + r.lessonViews, 0);
+  return (
+    <section className="grid gap-4 sm:grid-cols-3">
+      <div className="rounded-xl border border-zinc-200 bg-white p-4">
+        <p className="text-xs font-semibold uppercase tracking-wide text-zinc-500">
+          Course clicks
+        </p>
+        <p className="mt-1 text-2xl font-semibold tabular-nums text-zinc-900">
+          {totalCourseClicks}
+        </p>
+        <p className="mt-0.5 text-xs text-zinc-500">Last 30 days</p>
+      </div>
+      <div className="rounded-xl border border-zinc-200 bg-white p-4">
+        <p className="text-xs font-semibold uppercase tracking-wide text-zinc-500">
+          Lesson clicks
+        </p>
+        <p className="mt-1 text-2xl font-semibold tabular-nums text-zinc-900">
+          {totalLessonClicks}
+        </p>
+        <p className="mt-0.5 text-xs text-zinc-500">Last 30 days</p>
+      </div>
+      <div className="rounded-xl border border-zinc-200 bg-white p-4">
+        <p className="text-xs font-semibold uppercase tracking-wide text-zinc-500">
+          Lesson views
+        </p>
+        <p className="mt-1 text-2xl font-semibold tabular-nums text-zinc-900">
+          {totalLessonViews}
+        </p>
+        <p className="mt-0.5 text-xs text-zinc-500">Last 30 days</p>
+      </div>
+    </section>
+  );
+}
+
+async function DashboardByCourseTable({ filter }: { filter: Filter }) {
+  const data = await getAnalytics(filter);
+  if (!data.ok || data.message) return null;
+  const byCourse = data.byCourse ?? [];
+  return (
+    <section className="rounded-xl border border-zinc-200 bg-white">
+      <div className="border-b border-zinc-200 px-4 py-2 text-xs font-semibold uppercase tracking-wide text-zinc-500">
+        By course (last 30 days)
+      </div>
+      <div className="overflow-x-auto">
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="border-b border-zinc-200 text-left">
+              <th className="px-4 py-2 font-medium text-zinc-700">Course</th>
+              <th className="px-4 py-2 font-medium text-zinc-700">Status</th>
+              <th className="px-4 py-2 font-medium text-zinc-700">
+                Course clicks
+              </th>
+              <th className="px-4 py-2 font-medium text-zinc-700">
+                Lesson clicks
+              </th>
+              <th className="px-4 py-2 font-medium text-zinc-700">
+                Lesson views
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            {byCourse.length === 0 ? (
+              <tr>
+                <td
+                  colSpan={5}
+                  className="px-4 py-6 text-center text-zinc-500"
+                >
+                  No analytics data yet. Configure PostHog and generate some
+                  traffic.
+                </td>
+              </tr>
+            ) : (
+              byCourse.map((row) => (
+                <tr
+                  key={row.courseId}
+                  className="border-b border-zinc-100 last:border-0"
+                >
+                  <td className="px-4 py-2 text-zinc-900">{row.title}</td>
+                  <td className="px-4 py-2">
+                    <span
+                      className={
+                        row.archived ? "text-amber-600" : "text-zinc-500"
+                      }
+                    >
+                      {row.archived ? "Deleted/archived" : "Active"}
+                    </span>
+                  </td>
+                  <td className="px-4 py-2 tabular-nums text-zinc-700">
+                    {row.courseClicks}
+                  </td>
+                  <td className="px-4 py-2 tabular-nums text-zinc-700">
+                    {row.lessonClicks}
+                  </td>
+                  <td className="px-4 py-2 tabular-nums text-zinc-700">
+                    {row.lessonViews}
+                  </td>
+                </tr>
+              ))
+            )}
+          </tbody>
+        </table>
+      </div>
+    </section>
+  );
+}
+
+async function DashboardByLessonTable({ filter }: { filter: Filter }) {
+  const data = await getAnalytics(filter);
+  if (!data.ok || data.message) return null;
+  const byLesson = data.byLesson ?? [];
+  return (
+    <section className="rounded-xl border border-zinc-200 bg-white">
+      <div className="border-b border-zinc-200 px-4 py-2 text-xs font-semibold uppercase tracking-wide text-zinc-500">
+        By lesson (last 30 days)
+      </div>
+      <div className="overflow-x-auto">
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="border-b border-zinc-200 text-left">
+              <th className="px-4 py-2 font-medium text-zinc-700">Lesson</th>
+              <th className="px-4 py-2 font-medium text-zinc-700">Course</th>
+              <th className="px-4 py-2 font-medium text-zinc-700">Status</th>
+              <th className="px-4 py-2 font-medium text-zinc-700">Clicks</th>
+              <th className="px-4 py-2 font-medium text-zinc-700">Views</th>
+            </tr>
+          </thead>
+          <tbody>
+            {byLesson.length === 0 ? (
+              <tr>
+                <td
+                  colSpan={5}
+                  className="px-4 py-6 text-center text-zinc-500"
+                >
+                  No lesson analytics yet.
+                </td>
+              </tr>
+            ) : (
+              byLesson.map((row) => (
+                <tr
+                  key={row.lessonId}
+                  className="border-b border-zinc-100 last:border-0"
+                >
+                  <td className="px-4 py-2 text-zinc-900">{row.lessonTitle}</td>
+                  <td className="px-4 py-2 text-zinc-600">{row.courseTitle}</td>
+                  <td className="px-4 py-2">
+                    <span
+                      className={
+                        row.archived ? "text-amber-600" : "text-zinc-500"
+                      }
+                    >
+                      {row.archived ? "Deleted/archived" : "Active"}
+                    </span>
+                  </td>
+                  <td className="px-4 py-2 tabular-nums text-zinc-700">
+                    {row.lessonClicks}
+                  </td>
+                  <td className="px-4 py-2 tabular-nums text-zinc-700">
+                    {row.lessonViews}
+                  </td>
+                </tr>
+              ))
+            )}
+          </tbody>
+        </table>
+      </div>
+    </section>
+  );
+}
+
+export default async function DashboardPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ filter?: string }>;
+}) {
+  const { filter: filterParam } = await searchParams;
+  const filter: Filter =
+    filterParam === "active" || filterParam === "archived"
+      ? filterParam
+      : "all";
 
   return (
     <div className="flex flex-col gap-8">
-      <section className="grid gap-4 sm:grid-cols-3">
-        <div className="rounded-xl border border-zinc-200 bg-white p-4">
-          <p className="text-xs font-semibold uppercase tracking-wide text-zinc-500">
-            Course clicks
-          </p>
-          <p className="mt-1 text-2xl font-semibold tabular-nums text-zinc-900">
-            {totalCourseClicks}
-          </p>
-          <p className="mt-0.5 text-xs text-zinc-500">Last 30 days</p>
-        </div>
-        <div className="rounded-xl border border-zinc-200 bg-white p-4">
-          <p className="text-xs font-semibold uppercase tracking-wide text-zinc-500">
-            Lesson clicks
-          </p>
-          <p className="mt-1 text-2xl font-semibold tabular-nums text-zinc-900">
-            {totalLessonClicks}
-          </p>
-          <p className="mt-0.5 text-xs text-zinc-500">Last 30 days</p>
-        </div>
-        <div className="rounded-xl border border-zinc-200 bg-white p-4">
-          <p className="text-xs font-semibold uppercase tracking-wide text-zinc-500">
-            Lesson views
-          </p>
-          <p className="mt-1 text-2xl font-semibold tabular-nums text-zinc-900">
-            {totalLessonViews}
-          </p>
-          <p className="mt-0.5 text-xs text-zinc-500">Last 30 days</p>
-        </div>
-      </section>
+      <Suspense fallback={<StatsSkeleton />}>
+        <DashboardStats filter={filter} />
+      </Suspense>
       <p className="text-xs text-zinc-500">
-        All metrics above and in the tables below are queried from PostHog (events: course_clicked, lesson_clicked, lesson_viewed).
+        All metrics above and in the tables below are queried from PostHog
+        (events: course_clicked, lesson_clicked, lesson_viewed).
       </p>
       <nav className="flex gap-2" aria-label="Filter by status">
         {(
@@ -154,134 +330,12 @@ export default async function DashboardPage({
           </Link>
         ))}
       </nav>
-      <section className="rounded-xl border border-zinc-200 bg-white">
-        <div className="border-b border-zinc-200 px-4 py-2 text-xs font-semibold uppercase tracking-wide text-zinc-500">
-          By course (last 30 days)
-        </div>
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-zinc-200 text-left">
-                <th className="px-4 py-2 font-medium text-zinc-700">Course</th>
-                <th className="px-4 py-2 font-medium text-zinc-700">Status</th>
-                <th className="px-4 py-2 font-medium text-zinc-700">
-                  Course clicks
-                </th>
-                <th className="px-4 py-2 font-medium text-zinc-700">
-                  Lesson clicks
-                </th>
-                <th className="px-4 py-2 font-medium text-zinc-700">
-                  Lesson views
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {byCourse.length === 0 ? (
-                <tr>
-                  <td
-                    colSpan={5}
-                    className="px-4 py-6 text-center text-zinc-500"
-                  >
-                    No analytics data yet. Configure PostHog and generate some
-                    traffic.
-                  </td>
-                </tr>
-              ) : (
-                byCourse.map((row) => (
-                  <tr
-                    key={row.courseId}
-                    className="border-b border-zinc-100 last:border-0"
-                  >
-                    <td className="px-4 py-2 text-zinc-900">{row.title}</td>
-                    <td className="px-4 py-2">
-                      <span
-                        className={
-                          row.archived
-                            ? "text-amber-600"
-                            : "text-zinc-500"
-                        }
-                      >
-                        {row.archived ? "Deleted/archived" : "Active"}
-                      </span>
-                    </td>
-                    <td className="px-4 py-2 tabular-nums text-zinc-700">
-                      {row.courseClicks}
-                    </td>
-                    <td className="px-4 py-2 tabular-nums text-zinc-700">
-                      {row.lessonClicks}
-                    </td>
-                    <td className="px-4 py-2 tabular-nums text-zinc-700">
-                      {row.lessonViews}
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
-      </section>
-
-      <section className="rounded-xl border border-zinc-200 bg-white">
-        <div className="border-b border-zinc-200 px-4 py-2 text-xs font-semibold uppercase tracking-wide text-zinc-500">
-          By lesson (last 30 days)
-        </div>
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-zinc-200 text-left">
-                <th className="px-4 py-2 font-medium text-zinc-700">Lesson</th>
-                <th className="px-4 py-2 font-medium text-zinc-700">Course</th>
-                <th className="px-4 py-2 font-medium text-zinc-700">Status</th>
-                <th className="px-4 py-2 font-medium text-zinc-700">Clicks</th>
-                <th className="px-4 py-2 font-medium text-zinc-700">Views</th>
-              </tr>
-            </thead>
-            <tbody>
-              {byLesson.length === 0 ? (
-                <tr>
-                  <td
-                    colSpan={5}
-                    className="px-4 py-6 text-center text-zinc-500"
-                  >
-                    No lesson analytics yet.
-                  </td>
-                </tr>
-              ) : (
-                byLesson.map((row) => (
-                  <tr
-                    key={row.lessonId}
-                    className="border-b border-zinc-100 last:border-0"
-                  >
-                    <td className="px-4 py-2 text-zinc-900">
-                      {row.lessonTitle}
-                    </td>
-                    <td className="px-4 py-2 text-zinc-600">
-                      {row.courseTitle}
-                    </td>
-                    <td className="px-4 py-2">
-                      <span
-                        className={
-                          row.archived
-                            ? "text-amber-600"
-                            : "text-zinc-500"
-                        }
-                      >
-                        {row.archived ? "Deleted/archived" : "Active"}
-                      </span>
-                    </td>
-                    <td className="px-4 py-2 tabular-nums text-zinc-700">
-                      {row.lessonClicks}
-                    </td>
-                    <td className="px-4 py-2 tabular-nums text-zinc-700">
-                      {row.lessonViews}
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
-      </section>
+      <Suspense fallback={<TableSkeleton title="By course (last 30 days)" />}>
+        <DashboardByCourseTable filter={filter} />
+      </Suspense>
+      <Suspense fallback={<TableSkeleton title="By lesson (last 30 days)" />}>
+        <DashboardByLessonTable filter={filter} />
+      </Suspense>
     </div>
   );
 }
