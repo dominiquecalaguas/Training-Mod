@@ -33,7 +33,9 @@ export function LoginForm() {
       }
       posthog.identify(email, { email });
       posthog.capture("user_signed_in", { email });
-      const redirectTo = searchParams.get("from") ?? "/";
+      const from = searchParams.get("from") ?? "/";
+      const redirectTo =
+        from.startsWith("/login") || from.startsWith("/register") ? "/" : from;
       router.push(redirectTo);
       router.refresh();
     } catch {

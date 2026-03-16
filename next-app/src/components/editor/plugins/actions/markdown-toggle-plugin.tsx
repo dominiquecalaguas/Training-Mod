@@ -54,7 +54,6 @@ export function MarkdownTogglePlugin({
     <Button
       variant={"ghost"}
       onClick={handleMarkdownToggle}
-      title="Convert From Markdown"
       aria-label="Convert from markdown"
       size={"sm"}
       className="p-2"

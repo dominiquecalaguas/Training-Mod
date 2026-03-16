@@ -1,4 +1,6 @@
-import { notFound } from "next/navigation";
+import { cookies } from "next/headers";
+import { notFound, redirect } from "next/navigation";
+import { getPageSession } from "@/auth/lucia";
 import { courses, lessons } from "@/db/schema";
 import { apiUrl } from "@/lib/api";
 import { updateCourse } from "../../../actions";
@@ -6,25 +8,46 @@ import { ThumbnailUploadField } from "@/components/ThumbnailUploadField";
 import { AddLessonButton } from "./AddLessonButton";
 import { EditableLessonList } from "./EditableLessonList";
 
+export const dynamic = "force-dynamic";
+
 export default async function EditCoursePage({
   params,
 }: {
   params: Promise<{ courseId: string }>;
 }) {
+  const { user } = await getPageSession();
+  if (!user) {
+    redirect(`/login?from=${encodeURIComponent("/admin/courses")}`);
+  }
+  if (user.role !== "admin") {
+    redirect("/?forbidden=1");
+  }
+
   const { courseId: courseIdParam } = await params;
   const id = Number(courseIdParam);
   if (Number.isNaN(id)) notFound();
 
+  const cookieStore = await cookies();
+  const headers = { Cookie: cookieStore.toString() };
+
   const courseRes = await fetch(apiUrl(`/api/admin/courses/${id}`), {
     cache: "no-store",
+    headers,
   });
+  if (courseRes.status === 401) {
+    redirect(`/login?from=${encodeURIComponent(`/admin/courses/${id}/edit`)}`);
+  }
   if (!courseRes.ok || courseRes.status === 404) notFound();
 
   const course = (await courseRes.json()) as typeof courses.$inferSelect;
 
   const lessonsRes = await fetch(apiUrl(`/api/admin/courses/${id}/lessons`), {
     cache: "no-store",
+    headers,
   });
+  if (lessonsRes.status === 401) {
+    redirect(`/login?from=${encodeURIComponent(`/admin/courses/${id}/edit`)}`);
+  }
   if (!lessonsRes.ok) notFound();
 
   const courseLessons = (await lessonsRes.json()) as Array<

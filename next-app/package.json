@@ -9,7 +9,7 @@
     "start": "next start",
     "lint": "eslint && tsc --noEmit",
     "db:generate": "drizzle-kit generate",
-    "db:migrate": "drizzle-kit migrate"
+    "db:migrate": "node scripts/migrate.mjs"
   },
   "dependencies": {
     "@lexical/code": "^0.41.0",

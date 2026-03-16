@@ -1,3 +1,4 @@
+import { cookies } from "next/headers";
 import { notFound } from "next/navigation";
 import { courses, lessons } from "@/db/schema";
 import { apiUrl } from "@/lib/api";
@@ -13,13 +14,21 @@ export default async function EditLessonPage({
   const lessonId = Number(lessonIdParam);
   if (Number.isNaN(courseId) || Number.isNaN(lessonId)) notFound();
 
+  const cookieStore = await cookies();
+  const headers = { Cookie: cookieStore.toString() };
+
   const [courseRes, lessonRes, lessonsRes] = await Promise.all([
-    fetch(apiUrl(`/api/admin/courses/${courseId}`), { cache: "no-store" }),
+    fetch(apiUrl(`/api/admin/courses/${courseId}`), {
+      cache: "no-store",
+      headers,
+    }),
     fetch(apiUrl(`/api/admin/courses/${courseId}/lessons/${lessonId}`), {
       cache: "no-store",
+      headers,
     }),
     fetch(apiUrl(`/api/admin/courses/${courseId}/lessons`), {
       cache: "no-store",
+      headers,
     }),
   ]);
 

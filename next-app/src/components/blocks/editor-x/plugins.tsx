@@ -34,7 +34,6 @@ import { YouTubePlugin } from "@/components/editor/plugins/embeds/youtube-plugin
 import { EmojiPickerPlugin } from "@/components/editor/plugins/emoji-picker-plugin"
 import { EmojisPlugin } from "@/components/editor/plugins/emojis-plugin"
 import { FloatingLinkEditorPlugin } from "@/components/editor/plugins/floating-link-editor-plugin"
-import { FloatingTextFormatToolbarPlugin } from "@/components/editor/plugins/floating-text-format-plugin"
 import { ImagesPlugin } from "@/components/editor/plugins/images-plugin"
 import { KeywordsPlugin } from "@/components/editor/plugins/keywords-plugin"
 import { LayoutPlugin } from "@/components/editor/plugins/layout-plugin"
@@ -242,11 +241,6 @@ export function Plugins({}) {
           isLinkEditMode={isLinkEditMode}
           setIsLinkEditMode={setIsLinkEditMode}
         />
-        <FloatingTextFormatToolbarPlugin
-          anchorElem={floatingAnchorElem}
-          setIsLinkEditMode={setIsLinkEditMode}
-        />
-
         <ListMaxIndentLevelPlugin />
       </div>
     </div>

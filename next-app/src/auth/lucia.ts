@@ -63,26 +63,42 @@ export const getPageSession = cache(async () => {
   if (!sessionId) {
     return { user: null, session: null };
   }
-  const result = await lucia.validateSession(sessionId);
   try {
-    if (result.session?.fresh) {
-      const sessionCookie = lucia.createSessionCookie(result.session.id);
-      (await cookies()).set(
-        sessionCookie.name,
-        sessionCookie.value,
-        sessionCookie.attributes,
-      );
+    const result = await lucia.validateSession(sessionId);
+    try {
+      if (result.session?.fresh) {
+        const sessionCookie = lucia.createSessionCookie(result.session.id);
+        (await cookies()).set(
+          sessionCookie.name,
+          sessionCookie.value,
+          sessionCookie.attributes,
+        );
+      }
+      if (!result.session) {
+        const sessionCookie = lucia.createBlankSessionCookie();
+        (await cookies()).set(
+          sessionCookie.name,
+          sessionCookie.value,
+          sessionCookie.attributes,
+        );
+      }
+    } catch {
+      // Next.js throws when setting cookies during render
     }
-    if (!result.session) {
+    return result;
+  } catch {
+    // Session validation failed (e.g. DB error, invalid/expired session, missing session row)
+    // Clear the invalid session cookie and treat as logged out
+    try {
       const sessionCookie = lucia.createBlankSessionCookie();
       (await cookies()).set(
         sessionCookie.name,
         sessionCookie.value,
         sessionCookie.attributes,
       );
+    } catch {
+      // Ignore cookie errors during render
     }
-  } catch {
-    // Next.js throws when setting cookies during render
+    return { user: null, session: null };
   }
-  return result;
 });
