@@ -1,0 +1,138 @@
+"use client";
+
+import Link from "next/link";
+import { trackCourseClicked } from "@/lib/analytics";
+import type { CourseListItem } from "@/lib/courses";
+
+function statusBadge({
+  pct,
+  totalLessons,
+}: {
+  pct: number;
+  totalLessons: number;
+}) {
+  if (totalLessons === 0) {
+    return (
+      <span className="shrink-0 rounded-full bg-[#E8EDFE] px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wide text-[#2A5CF2]">
+        No lessons
+      </span>
+    );
+  }
+  if (pct === 0) {
+    return (
+      <span className="shrink-0 rounded-full bg-[#E8EDFE] px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wide text-[#2A5CF2]">
+        Not yet started
+      </span>
+    );
+  }
+  if (pct === 100) {
+    return (
+      <span className="shrink-0 rounded-full bg-[#4468D2] px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wide text-white">
+        100% done
+      </span>
+    );
+  }
+  return (
+    <span className="shrink-0 rounded-full bg-[#E8EDFE] px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wide text-[#2A5CF2]">
+      {pct}% done
+    </span>
+  );
+}
+
+export function CourseCard({
+  course,
+  totalLessons,
+  completedLessons,
+}: {
+  course: CourseListItem;
+  totalLessons: number;
+  completedLessons: number;
+}) {
+  const pct =
+    totalLessons > 0
+      ? Math.round((completedLessons / totalLessons) * 100)
+      : 0;
+  const showMastery =
+    totalLessons > 0 && completedLessons >= totalLessons;
+
+  return (
+    <Link
+      href={`/courses/${course.id}`}
+      onClick={() => trackCourseClicked(course.id)}
+      className="group flex flex-col overflow-hidden rounded-[20px] border border-neutral-200/90 bg-white shadow-[0_4px_24px_rgba(15,23,42,0.08)] transition hover:-translate-y-0.5 hover:border-neutral-300 hover:shadow-[0_8px_30px_rgba(15,23,42,0.12)]"
+    >
+      <div className="relative aspect-[388/160] w-full overflow-hidden bg-neutral-100">
+        {course.thumbnailUrl ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={course.thumbnailUrl}
+            alt={course.title}
+            className="h-full w-full object-cover transition-transform group-hover:scale-[1.02]"
+          />
+        ) : (
+          <div className="flex h-full items-center justify-center text-xs font-medium uppercase tracking-wide text-neutral-500">
+            No thumbnail yet
+          </div>
+        )}
+        <div className="pointer-events-none absolute left-3 top-3 z-10">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="/images/course-card/rectangle-8.svg"
+            alt=""
+            width={42}
+            height={76}
+            className="h-[52px] w-auto drop-shadow-sm"
+          />
+        </div>
+        {showMastery && (
+          <div className="pointer-events-none absolute right-3 top-3 z-10">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="/images/course-card/star-fall-mastery.svg"
+              alt=""
+              width={51}
+              height={52}
+              className="h-11 w-auto"
+            />
+          </div>
+        )}
+      </div>
+
+      <div className="flex flex-1 flex-col gap-3 p-4 pt-4">
+        <div className="flex items-start justify-between gap-3">
+          <h2 className="line-clamp-2 min-w-0 flex-1 text-base font-semibold leading-snug text-neutral-900">
+            {course.title}
+          </h2>
+          {statusBadge({ pct, totalLessons })}
+        </div>
+
+        {course.description && (
+          <p className="line-clamp-2 text-sm leading-relaxed text-neutral-800">
+            {course.description}
+          </p>
+        )}
+
+        {totalLessons > 0 && (
+          <div className="mt-auto space-y-2">
+            <div className="relative">
+              <div className="relative h-1.5 w-full overflow-hidden rounded-full bg-[#E8EDFE]">
+                <div
+                  className="absolute inset-y-0 left-0 rounded-full bg-gradient-to-r from-[#AEC2FF] to-[#4468D2] transition-all"
+                  style={{ width: `${pct}%` }}
+                />
+              </div>
+              <div
+                className="pointer-events-none absolute -top-3 h-4 w-2 -translate-x-1/2 rounded-full border border-[#7699FF] bg-[#CFDBFD] shadow-sm"
+                style={{ left: `${pct}%` }}
+                aria-hidden
+              />
+            </div>
+            <p className="text-[11px] text-neutral-500">
+              {completedLessons} out of {totalLessons} lessons completed
+            </p>
+          </div>
+        )}
+      </div>
+    </Link>
+  );
+}
