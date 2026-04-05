@@ -139,51 +139,82 @@ export async function createCourse(formData: FormData) {
   redirect(`/admin/courses/${newCourseId}/lessons?created=1`);
 }
 
-export async function updateCourse(formData: FormData) {
-  const id = Number(formData.get("id") || "0");
-  const title = String(formData.get("title") || "");
-  const description = String(formData.get("description") || "");
-  const thumbnailFile = formData.get("thumbnail") as File | null;
+export type UpdateCourseState =
+  | { ok: true }
+  | { ok: false; error: string };
 
-  if (!id || !title) return;
+function thumbnailFromFormData(formData: FormData): File | null {
+  const v = formData.get("thumbnail");
+  if (v == null || typeof v === "string") return null;
+  if (v instanceof File && v.size > 0) return v;
+  return null;
+}
 
-  const removeThumbnail = formData.get("removeThumbnail");
-  let thumbnailUrl: string | null | undefined = undefined;
-  if (removeThumbnail) {
-    thumbnailUrl = null;
-  } else if (thumbnailFile && thumbnailFile.size > 0) {
-    const saved = await saveThumbnailFile(thumbnailFile);
-    // If save failed (e.g. Vercel without BLOB_READ_WRITE_TOKEN), keep current
-    thumbnailUrl = saved ?? undefined;
+export async function updateCourse(
+  _prev: UpdateCourseState | null,
+  formData: FormData,
+): Promise<UpdateCourseState> {
+  try {
+    const id = Number(formData.get("id") || "0");
+    const title = String(formData.get("title") || "").trim();
+    let description = String(formData.get("description") || "").trim();
+    description = description.slice(0, DESCRIPTION_MAX_LENGTH);
+    const thumbnailFile = thumbnailFromFormData(formData);
+
+    if (!id || !title) {
+      return { ok: false, error: "Course title is required." };
+    }
+
+    const removeThumbnail = formData.get("removeThumbnail");
+    let thumbnailUrl: string | null | undefined = undefined;
+    if (removeThumbnail) {
+      thumbnailUrl = null;
+    } else if (thumbnailFile) {
+      const saved = await saveThumbnailFile(thumbnailFile);
+      if (saved === null) {
+        return {
+          ok: false,
+          error:
+            "Could not save thumbnail. On Vercel set BLOB_READ_WRITE_TOKEN; locally ensure public/course-thumbnails is writable.",
+        };
+      }
+      thumbnailUrl = saved;
+    }
+    if (thumbnailUrl === undefined) {
+      const [current] = await db
+        .select({ thumbnailUrl: courses.thumbnailUrl })
+        .from(courses)
+        .where(eq(courses.id, id))
+        .limit(1);
+      thumbnailUrl = current?.thumbnailUrl ?? null;
+    }
+
+    const isOnboarding = formData.get("isOnboarding") === "on";
+
+    if (isOnboarding) {
+      await db.update(courses).set({ isOnboarding: false }).where(ne(courses.id, id));
+    }
+
+    await db
+      .update(courses)
+      .set({
+        title,
+        description: description || null,
+        thumbnailUrl: thumbnailUrl ?? null,
+        isOnboarding,
+        updatedAt: new Date(),
+      })
+      .where(eq(courses.id, id));
+
+    revalidatePath("/admin/courses");
+    revalidatePath(`/admin/courses/${id}/edit`);
+    revalidatePath("/");
+
+    return { ok: true };
+  } catch (err) {
+    const message = err instanceof Error ? err.message : "Something went wrong.";
+    return { ok: false, error: message };
   }
-  if (thumbnailUrl === undefined) {
-    const [current] = await db
-      .select({ thumbnailUrl: courses.thumbnailUrl })
-      .from(courses)
-      .where(eq(courses.id, id))
-      .limit(1);
-    thumbnailUrl = current?.thumbnailUrl ?? null;
-  }
-
-  const isOnboarding = formData.get("isOnboarding") === "on";
-
-  if (isOnboarding) {
-    await db.update(courses).set({ isOnboarding: false }).where(ne(courses.id, id));
-  }
-
-  await db
-    .update(courses)
-    .set({
-      title,
-      description: description || null,
-      thumbnailUrl: thumbnailUrl ?? null,
-      isOnboarding,
-    })
-    .where(eq(courses.id, id));
-
-  revalidatePath("/admin/courses");
-  revalidatePath(`/admin/courses/${id}/edit`);
-  revalidatePath("/");
 }
 
 export async function deleteCourse(formData: FormData) {

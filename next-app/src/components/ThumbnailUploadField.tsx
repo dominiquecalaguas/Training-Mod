@@ -42,19 +42,23 @@ export function ThumbnailUploadField({
         if (prev) URL.revokeObjectURL(prev);
         return URL.createObjectURL(file);
       });
+      const input = fileInputRef.current;
+      if (input) {
+        const dt = new DataTransfer();
+        dt.items.add(file);
+        try {
+          input.files = dt.files;
+        } catch {
+          // Safari may reject assignment; browse path still works via onChange.
+        }
+      }
     }
   };
 
   const onDrop = (e: React.DragEvent) => {
     e.preventDefault();
     setIsDragging(false);
-    const file = e.dataTransfer.files?.[0];
-    if (file?.type.startsWith("image/") && fileInputRef.current) {
-      const dt = new DataTransfer();
-      dt.items.add(file);
-      fileInputRef.current.files = dt.files;
-      fileInputRef.current.dispatchEvent(new Event("change", { bubbles: true }));
-    }
+    handleFiles(e.dataTransfer.files);
   };
 
   const onDragOver = (e: React.DragEvent) => {
@@ -86,11 +90,9 @@ export function ThumbnailUploadField({
   return (
     <div className="sm:col-span-2 space-y-2">
       <label className="text-xs font-medium text-zinc-700">{label}</label>
-      <input
-        type="hidden"
-        name="removeThumbnail"
-        value={removedByUser && !selectedFile ? "1" : ""}
-      />
+      {removedByUser && !selectedFile ? (
+        <input type="hidden" name="removeThumbnail" value="1" />
+      ) : null}
       <input
         ref={fileInputRef}
         type="file"
@@ -101,23 +103,34 @@ export function ThumbnailUploadField({
         aria-label={label}
       />
       {showPreview && displayUrl ? (
-        <div className="flex items-center gap-3 rounded-lg border border-zinc-200 bg-zinc-50 p-3">
-          <img
-            src={displayUrl}
-            alt=""
-            className="size-16 shrink-0 rounded-md border border-zinc-200 object-cover"
-          />
-          <span className="min-w-0 flex-1 truncate text-sm text-zinc-700">
-            {displayLabel}
-          </span>
-          <button
-            type="button"
-            onClick={clearImage}
-            className="shrink-0 rounded-md p-1.5 text-zinc-500 hover:bg-zinc-200 hover:text-zinc-800"
-            aria-label="Remove image"
-          >
-            <X className="size-4" />
-          </button>
+        <div className="flex flex-col gap-2 rounded-lg border border-zinc-200 bg-zinc-50 p-3 sm:flex-row sm:items-center">
+          <div className="flex min-w-0 flex-1 items-center gap-3">
+            <img
+              src={displayUrl}
+              alt=""
+              className="size-16 shrink-0 rounded-md border border-zinc-200 object-cover"
+            />
+            <span className="min-w-0 flex-1 truncate text-sm text-zinc-700">
+              {displayLabel}
+            </span>
+          </div>
+          <div className="flex shrink-0 items-center gap-2">
+            <button
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              className="rounded-md border border-zinc-300 bg-white px-2.5 py-1.5 text-xs font-medium text-zinc-800 hover:bg-zinc-100"
+            >
+              Change
+            </button>
+            <button
+              type="button"
+              onClick={clearImage}
+              className="rounded-md p-1.5 text-zinc-500 hover:bg-zinc-200 hover:text-zinc-800"
+              aria-label="Remove image"
+            >
+              <X className="size-4" />
+            </button>
+          </div>
         </div>
       ) : (
         <button
