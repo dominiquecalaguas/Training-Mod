@@ -8,8 +8,12 @@ if (!connectionString) {
   throw new Error("DATABASE_URL is not set");
 }
 
+const parsedPoolMax = Number.parseInt(process.env.DATABASE_POOL_MAX ?? "", 10);
+const poolMax =
+  Number.isFinite(parsedPoolMax) && parsedPoolMax > 0 ? parsedPoolMax : 10;
+
 export const postgresClient = postgres(connectionString, {
-  max: 1,
+  max: poolMax,
   prepare: false,
   ssl: "require",
 });
