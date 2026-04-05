@@ -3,43 +3,35 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { and, eq, ne, sql } from "drizzle-orm";
-import { put } from "@vercel/blob";
 import { db } from "@/db/client";
 import { courses, lessons } from "@/db/schema";
-import { writeFile, mkdir } from "fs/promises";
-import path from "path";
 import { apiUrl } from "@/lib/api";
 
-async function saveThumbnailFile(file: File): Promise<string | null> {
-  const ext = path.extname(file.name) || ".jpg";
-  const safeExt = /^\.(jpe?g|png|gif|webp)$/i.test(ext) ? ext : ".jpg";
-  const pathname = `course-thumbnails/course-${Date.now()}${safeExt}`;
+/** Raw file size limit before base64 (server action body limit is 10mb in next.config). */
+const MAX_THUMBNAIL_BYTES = 6 * 1024 * 1024;
 
-  // Use Vercel Blob when token is set (required on Vercel; optional locally)
-  if (process.env.BLOB_READ_WRITE_TOKEN) {
-    const blob = await put(pathname, file, {
-      access: "public",
-      addRandomSuffix: true,
-      contentType: file.type || undefined,
-    });
-    return blob.url;
+function mimeForThumbnail(file: File): string {
+  const t = (file.type ?? "").toLowerCase();
+  if (/^image\/(jpeg|pjpeg|png|gif|webp)$/i.test(t)) {
+    return t === "image/pjpeg" ? "image/jpeg" : t;
   }
+  return "image/jpeg";
+}
 
-  // Local development: write to public/course-thumbnails
-  try {
-    const bytes = await file.arrayBuffer();
-    const buffer = Buffer.from(bytes);
-    const filename = `course-${Date.now()}-${Math.random().toString(36).slice(2, 9)}${safeExt}`;
-    const dir = path.join(process.cwd(), "public", "course-thumbnails");
-    await mkdir(dir, { recursive: true });
-    const filepath = path.join(dir, filename);
-    await writeFile(filepath, buffer);
-    return `/course-thumbnails/${filename}`;
-  } catch (err) {
-    // On Vercel without BLOB_READ_WRITE_TOKEN, filesystem is read-only
-    console.error("Thumbnail save failed (use BLOB_READ_WRITE_TOKEN on Vercel):", err);
-    return null;
-  }
+/** Store thumbnail as a data URL in `courses.thumbnail_url` (no blob or disk). */
+async function encodeThumbnailToDataUrl(file: File): Promise<string | null> {
+  if (file.size === 0 || file.size > MAX_THUMBNAIL_BYTES) return null;
+  const bytes = await file.arrayBuffer();
+  const buffer = Buffer.from(bytes);
+  const mime = mimeForThumbnail(file);
+  return `data:${mime};base64,${buffer.toString("base64")}`;
+}
+
+function thumbnailFromFormData(formData: FormData): File | null {
+  const v = formData.get("thumbnail");
+  if (v == null || typeof v === "string") return null;
+  if (v instanceof File && v.size > 0) return v;
+  return null;
 }
 
 type LessonInput = { title: string; order: number };
@@ -87,13 +79,13 @@ export async function createCourse(formData: FormData) {
   const title = String(formData.get("title") || "").trim();
   let description = String(formData.get("description") || "").trim();
   description = description.slice(0, DESCRIPTION_MAX_LENGTH);
-  const thumbnailFile = formData.get("thumbnail") as File | null;
+  const thumbnailFile = thumbnailFromFormData(formData);
 
   if (!title) return;
 
   let thumbnailUrl: string | null = null;
-  if (thumbnailFile && thumbnailFile.size > 0) {
-    thumbnailUrl = await saveThumbnailFile(thumbnailFile);
+  if (thumbnailFile) {
+    thumbnailUrl = await encodeThumbnailToDataUrl(thumbnailFile);
   }
 
   const [{ maxOrder }] = await db
@@ -143,13 +135,6 @@ export type UpdateCourseState =
   | { ok: true }
   | { ok: false; error: string };
 
-function thumbnailFromFormData(formData: FormData): File | null {
-  const v = formData.get("thumbnail");
-  if (v == null || typeof v === "string") return null;
-  if (v instanceof File && v.size > 0) return v;
-  return null;
-}
-
 export async function updateCourse(
   _prev: UpdateCourseState | null,
   formData: FormData,
@@ -170,15 +155,14 @@ export async function updateCourse(
     if (removeThumbnail) {
       thumbnailUrl = null;
     } else if (thumbnailFile) {
-      const saved = await saveThumbnailFile(thumbnailFile);
-      if (saved === null) {
+      const dataUrl = await encodeThumbnailToDataUrl(thumbnailFile);
+      if (dataUrl === null) {
         return {
           ok: false,
-          error:
-            "Could not save thumbnail. On Vercel set BLOB_READ_WRITE_TOKEN; locally ensure public/course-thumbnails is writable.",
+          error: `Could not store thumbnail. Use an image under ${MAX_THUMBNAIL_BYTES / (1024 * 1024)}MB.`,
         };
       }
-      thumbnailUrl = saved;
+      thumbnailUrl = dataUrl;
     }
     if (thumbnailUrl === undefined) {
       const [current] = await db
