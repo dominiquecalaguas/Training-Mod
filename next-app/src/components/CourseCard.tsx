@@ -59,46 +59,48 @@ export function CourseCard({
     <Link
       href={`/courses/${course.id}`}
       onClick={() => trackCourseClicked(course.id)}
-      className="group flex flex-col overflow-hidden rounded-[20px] border border-neutral-200/90 bg-white shadow-[0_4px_24px_rgba(15,23,42,0.08)] transition hover:-translate-y-0.5 hover:border-neutral-300 hover:shadow-[0_8px_30px_rgba(15,23,42,0.12)]"
+      className="group flex flex-col overflow-visible rounded-[20px] border border-neutral-200/90 bg-white shadow-[0_0_15px_rgba(174,194,255,0.45)] transition hover:-translate-y-0.5 hover:border-neutral-300 hover:shadow-[0_0_15px_rgba(174,194,255,0.5)]"
     >
-      <div className="relative aspect-[388/160] w-full overflow-hidden bg-neutral-100">
-        {course.thumbnailUrl ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={course.thumbnailUrl}
-            alt={course.title}
-            className="h-full w-full object-cover transition-transform group-hover:scale-[1.02]"
-          />
-        ) : (
-          <div className="flex h-full items-center justify-center text-xs font-medium uppercase tracking-wide text-neutral-500">
-            No thumbnail yet
-          </div>
-        )}
-        <div className="pointer-events-none absolute left-3 top-3 z-10">
+      <div className="relative w-full">
+        <div className="relative aspect-[388/160] w-full overflow-hidden rounded-t-[20px] bg-neutral-100">
+          {course.thumbnailUrl ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={course.thumbnailUrl}
+              alt={course.title}
+              className="h-full w-full object-cover transition-transform group-hover:scale-[1.02]"
+            />
+          ) : (
+            <div className="flex h-full min-h-[8rem] items-center justify-center text-xs font-medium uppercase tracking-wide text-neutral-500">
+              No thumbnail yet
+            </div>
+          )}
+          {showMastery && (
+            <div className="pointer-events-none absolute right-3 top-3 z-10">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src="/images/course-card/star-fall-mastery.svg"
+                alt=""
+                width={51}
+                height={52}
+                className="h-11 w-auto"
+              />
+            </div>
+          )}
+        </div>
+        <div className="pointer-events-none absolute left-[5%] top-0 z-20 flex h-1/2 max-h-[50%] w-[16.666%] min-w-[42px] max-w-[72px] -translate-y-[12%] items-start">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src="/images/course-card/rectangle-8.svg"
             alt=""
             width={42}
             height={76}
-            className="h-[52px] w-auto drop-shadow-sm"
+            className="h-full max-w-full w-auto object-contain object-left"
           />
         </div>
-        {showMastery && (
-          <div className="pointer-events-none absolute right-3 top-3 z-10">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src="/images/course-card/star-fall-mastery.svg"
-              alt=""
-              width={51}
-              height={52}
-              className="h-11 w-auto"
-            />
-          </div>
-        )}
       </div>
 
-      <div className="flex flex-1 flex-col gap-3 p-4 pt-4">
+      <div className="flex flex-1 flex-col gap-3 overflow-hidden rounded-b-[20px] bg-white p-4 pt-4">
         <div className="flex items-start justify-between gap-3">
           <h2 className="line-clamp-2 min-w-0 flex-1 text-base font-semibold leading-snug text-neutral-900">
             {course.title}
