@@ -34,7 +34,7 @@ export function LessonPageClient({
           currentLessonId={lesson.id}
           progressVersion={progressVersion}
         />
-        <section className="flex-1 rounded-2xl border border-neutral-200 bg-white p-6 shadow-sm">
+        <section className="flex-1 rounded-[20px] border border-neutral-200/90 bg-white p-6 shadow-[0_0_15px_rgba(174,194,255,0.45)]">
           <LessonContent
             courseId={course.id}
             lessonId={lesson.id}

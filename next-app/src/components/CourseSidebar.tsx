@@ -78,20 +78,27 @@ export function CourseSidebar({
       : 0;
 
   return (
-    <aside className="w-full rounded-2xl border border-neutral-200 bg-white p-4 shadow-sm lg:w-72">
+    <aside className="w-full rounded-[20px] border border-neutral-200/90 bg-white p-4 shadow-[0_0_15px_rgba(174,194,255,0.45)] lg:w-72">
       <h2 className="mb-2 text-sm font-semibold tracking-tight text-neutral-900 line-clamp-2">
         {courseTitle}
       </h2>
       {courseLessons.length > 0 && (
-        <div className="mb-4">
-          <div className="flex h-2 w-full overflow-hidden rounded-full bg-neutral-200">
+        <div className="mb-4 space-y-2">
+          <div className="relative">
+            <div className="relative h-1.5 w-full overflow-hidden rounded-full bg-[#E8EDFE]">
+              <div
+                className="absolute inset-y-0 left-0 rounded-full bg-gradient-to-r from-[#AEC2FF] to-[#4468D2] transition-all"
+                style={{ width: `${pct}%` }}
+              />
+            </div>
             <div
-              className="bg-emerald-500 transition-all duration-300"
-              style={{ width: `${pct}%` }}
+              className="pointer-events-none absolute -top-3 h-4 w-2 -translate-x-1/2 rounded-full border border-[#7699FF] bg-[#CFDBFD] shadow-sm"
+              style={{ left: `${pct}%` }}
+              aria-hidden
             />
           </div>
-          <p className="mt-1.5 text-xs font-medium text-neutral-500">
-            {pct}% complete
+          <p className="text-[11px] text-neutral-500">
+            {completedLessons} out of {totalLessons} lessons completed
           </p>
         </div>
       )}
@@ -112,9 +119,9 @@ export function CourseSidebar({
                 <Link
                   href={`/courses/${courseId}/lessons/${lesson.id}`}
                   onClick={() => trackLessonClicked(courseId, lesson.id)}
-                  className={`flex items-center gap-2 rounded-md px-2 py-1.5 text-neutral-700 hover:bg-neutral-100 ${
+                  className={`flex items-center gap-2 rounded-md px-2 py-1.5 text-neutral-700 hover:bg-[#E7EDFF]/75 ${
                     isCurrent
-                      ? "bg-amber-100 font-medium text-amber-900"
+                      ? "bg-[#E7EDFF]/75 font-medium text-neutral-900"
                       : ""
                   }`}
                 >
