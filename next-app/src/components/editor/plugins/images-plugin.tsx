@@ -9,11 +9,13 @@
  */
 import { JSX, useEffect, useRef, useState } from "react"
 import * as React from "react"
+import { createPortal } from "react-dom"
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext"
 import { $wrapNodeInElement, mergeRegister } from "@lexical/utils"
 import {
   $createParagraphNode,
   $createRangeSelection,
+  $getNodeByKey,
   $getSelection,
   $insertNodes,
   $isNodeSelection,
@@ -28,6 +30,7 @@ import {
   DROP_COMMAND,
   LexicalCommand,
   LexicalEditor,
+  NodeKey,
 } from "lexical"
 
 import {
@@ -57,6 +60,195 @@ const getDOMSelection = (targetWindow: Window | null): Selection | null =>
 
 export const INSERT_IMAGE_COMMAND: LexicalCommand<InsertImagePayload> =
   createCommand("INSERT_IMAGE_COMMAND")
+
+const TRANSPARENT_DRAG_IMAGE =
+  "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"
+
+/** Drag hotspot inside the preview: top-left-ish so the ghost sits down-right of the pointer and does not cover the drop caret. */
+const DRAG_GHOST_HOTSPOT_X = 14
+const DRAG_GHOST_HOTSPOT_Y = 22
+
+function dragGhostHotspot(w: number, h: number): [number, number] {
+  const x = Math.min(DRAG_GHOST_HOTSPOT_X, Math.max(0, w - 2))
+  const y = Math.min(DRAG_GHOST_HOTSPOT_Y, Math.max(0, h - 2))
+  return [Math.round(x), Math.round(y)]
+}
+
+/** Viewport-fixed I-beam at the same spot as `caretRangeFromPoint` / drop insertion. */
+type DropCaretRect = {
+  height: number
+  left: number
+  top: number
+}
+
+let imageDragGhostEl: HTMLElement | null = null
+
+function removeImageDragGhost(): void {
+  if (imageDragGhostEl?.isConnected) {
+    imageDragGhostEl.remove()
+  }
+  imageDragGhostEl = null
+}
+
+let setImageDropCaret: ((rect: DropCaretRect | null) => void) | null = null
+
+function setLexicalImageDropCaret(rect: DropCaretRect | null): void {
+  setImageDropCaret?.(rect)
+}
+
+declare global {
+  interface DragEvent {
+    rangeOffset?: number
+    rangeParent?: Node
+  }
+}
+
+function canDropImage(event: DragEvent): boolean {
+  const target = event.target
+  return !!(
+    target &&
+    target instanceof HTMLElement &&
+    !target.closest("code") &&
+    target.closest("div.ContentEditable__root")
+  )
+}
+
+/** Same range logic as drop (`getDragSelection`); used so the indicator matches insertion. */
+function getDropRangeFromEvent(event: DragEvent): Range | null {
+  const target = event.target as null | Element | Document
+  const targetWindow =
+    target == null
+      ? null
+      : target.nodeType === 9
+        ? (target as Document).defaultView
+        : (target as Element).ownerDocument.defaultView
+  const domSelection = getDOMSelection(targetWindow)
+  if (document.caretRangeFromPoint) {
+    return document.caretRangeFromPoint(event.clientX, event.clientY) ?? null
+  }
+  if (event.rangeParent && domSelection !== null) {
+    domSelection.collapse(event.rangeParent, event.rangeOffset || 0)
+    return domSelection.getRangeAt(0)
+  }
+  return null
+}
+
+function caretGeometryFromRange(
+  range: Range,
+  clientY: number,
+  root: HTMLElement
+): { left: number; top: number; height: number } | null {
+  const rects = [...range.getClientRects()].filter(
+    (r) => r.width >= 0 && r.height > 0
+  )
+  let r: DOMRect | null = null
+  if (rects.length === 0) {
+    const b = range.getBoundingClientRect()
+    if (b.height > 0 || b.width > 0) {
+      r = b
+    }
+  } else if (rects.length === 1) {
+    r = rects[0]!
+  } else {
+    let best = rects[0]!
+    let bestDist = Infinity
+    for (const rect of rects) {
+      const mid = rect.top + rect.height / 2
+      const d = Math.abs(clientY - mid)
+      if (d < bestDist) {
+        bestDist = d
+        best = rect
+      }
+    }
+    r = best
+  }
+
+  if (!r || (r.height <= 0 && r.width <= 0)) {
+    const sc = range.startContainer
+    const el =
+      sc.nodeType === Node.TEXT_NODE
+        ? sc.parentElement
+        : (sc as Element | null)
+    if (el?.getBoundingClientRect) {
+      const br = el.getBoundingClientRect()
+      if (br.height > 0) {
+        r = br
+      }
+    }
+  }
+
+  if (!r) {
+    return null
+  }
+
+  const fontSize = parseFloat(getComputedStyle(root).fontSize) || 16
+  const height = Math.max(r.height, fontSize * 0.9)
+
+  return { left: r.left, top: r.top, height }
+}
+
+function computeDropCaretRect(
+  event: DragEvent,
+  editor: LexicalEditor
+): DropCaretRect | null {
+  const root = editor.getRootElement()
+  if (!root || !canDropImage(event)) {
+    return null
+  }
+
+  const range = getDropRangeFromEvent(event)
+  if (!range || !root.contains(range.startContainer)) {
+    return null
+  }
+
+  const geom = caretGeometryFromRange(range, event.clientY, root)
+  if (!geom) {
+    return null
+  }
+
+  return {
+    left: geom.left,
+    top: geom.top,
+    height: geom.height,
+  }
+}
+
+function ImageDropCaretOverlay(): JSX.Element | null {
+  const [caret, setCaret] = useState<DropCaretRect | null>(null)
+
+  useEffect(() => {
+    setImageDropCaret = setCaret
+    return () => {
+      setImageDropCaret = null
+    }
+  }, [])
+
+  useEffect(() => {
+    const onDragEnd = () => {
+      removeImageDragGhost()
+      setCaret(null)
+    }
+    document.addEventListener("dragend", onDragEnd)
+    return () => document.removeEventListener("dragend", onDragEnd)
+  }, [])
+
+  if (!caret) {
+    return null
+  }
+
+  return createPortal(
+    <div
+      aria-hidden
+      className="pointer-events-none fixed z-[10001] w-0.5 animate-pulse rounded-sm bg-primary shadow-[0_0_0_1px_hsl(var(--background))]"
+      style={{
+        left: caret.left,
+        top: caret.top,
+        height: caret.height,
+      }}
+    />,
+    document.body
+  )
+}
 
 export function InsertImageUriDialogBody({
   onClick,
@@ -291,14 +483,14 @@ export function ImagesPlugin({
       editor.registerCommand<DragEvent>(
         DRAGSTART_COMMAND,
         (event) => {
-          return $onDragStart(event)
+          return $onDragStart(event, editor)
         },
         COMMAND_PRIORITY_HIGH
       ),
       editor.registerCommand<DragEvent>(
         DRAGOVER_COMMAND,
         (event) => {
-          return $onDragover(event)
+          return $onDragover(event, editor)
         },
         COMMAND_PRIORITY_LOW
       ),
@@ -312,10 +504,30 @@ export function ImagesPlugin({
     )
   }, [captionsEnabled, editor])
 
-  return null
+  return <ImageDropCaretOverlay />
 }
 
-function $onDragStart(event: DragEvent): boolean {
+type LexicalImageDragData = InsertImagePayload & { key: NodeKey }
+
+function $serializeImageForDrag(node: ImageNode): LexicalImageDragData {
+  const json = node.exportJSON()
+  return {
+    key: node.getKey(),
+    src: json.src,
+    altText: json.altText,
+    maxWidth: json.maxWidth,
+    showCaption: json.showCaption,
+    width: json.width === 0 ? undefined : json.width,
+    height: json.height === 0 ? undefined : json.height,
+  }
+}
+
+function $payloadForInsertFromDrag(data: LexicalImageDragData): InsertImagePayload {
+  const { key: _omit, ...rest } = data
+  return rest
+}
+
+function $onDragStart(event: DragEvent, editor: LexicalEditor): boolean {
   const node = $getImageNodeInSelection()
   if (!node) {
     return false
@@ -324,63 +536,123 @@ function $onDragStart(event: DragEvent): boolean {
   if (!dataTransfer) {
     return false
   }
-  const TRANSPARENT_IMAGE =
-    "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"
-  const img = document.createElement("img")
-  img.src = TRANSPARENT_IMAGE
+
+  removeImageDragGhost()
   dataTransfer.setData("text/plain", "_")
-  dataTransfer.setDragImage(img, 0, 0)
+
+  const serializable = $serializeImageForDrag(node)
   dataTransfer.setData(
     "application/x-lexical-drag",
     JSON.stringify({
-      data: {
-        altText: node.__altText,
-        caption: node.__caption,
-        height: node.__height,
-        key: node.getKey(),
-        maxWidth: node.__maxWidth,
-        showCaption: node.__showCaption,
-        src: node.__src,
-        width: node.__width,
-      },
+      data: serializable,
       type: "image",
     })
   )
 
+  const setFallbackDragImage = () => {
+    const img = document.createElement("img")
+    img.src = TRANSPARENT_DRAG_IMAGE
+    document.body.appendChild(img)
+    img.style.position = "fixed"
+    img.style.left = "-9999px"
+    dataTransfer.setDragImage(img, 0, 0)
+    imageDragGhostEl = img
+  }
+
+  const dom = editor.getElementByKey(node.getKey())
+  const sourceImg = dom?.querySelector("img")
+  if (sourceImg) {
+    const clone = sourceImg.cloneNode(true) as HTMLImageElement
+    clone.removeAttribute("width")
+    clone.removeAttribute("height")
+    clone.style.maxWidth = "120px"
+    clone.style.width = "auto"
+    clone.style.height = "auto"
+    clone.style.borderRadius = "8px"
+    clone.style.boxShadow = "0 4px 12px rgba(0,0,0,0.18)"
+    clone.draggable = false
+
+    const wrapper = document.createElement("div")
+    wrapper.style.position = "fixed"
+    wrapper.style.left = "-9999px"
+    wrapper.style.top = "0"
+    wrapper.style.zIndex = "10000"
+    wrapper.appendChild(clone)
+    document.body.appendChild(wrapper)
+    const w = Math.max(wrapper.offsetWidth, 48)
+    const h = Math.max(wrapper.offsetHeight, 36)
+    const [hx, hy] = dragGhostHotspot(w, h)
+    dataTransfer.setDragImage(wrapper, hx, hy)
+    imageDragGhostEl = wrapper
+  } else {
+    const pre = new Image()
+    pre.src = node.getSrc()
+    if (pre.complete && pre.naturalWidth > 0) {
+      pre.style.maxWidth = "120px"
+      pre.style.borderRadius = "8px"
+      pre.style.boxShadow = "0 4px 12px rgba(0,0,0,0.18)"
+      const wrapper = document.createElement("div")
+      wrapper.style.position = "fixed"
+      wrapper.style.left = "-9999px"
+      wrapper.style.top = "0"
+      wrapper.style.zIndex = "10000"
+      wrapper.appendChild(pre)
+      document.body.appendChild(wrapper)
+      const w = Math.max(wrapper.offsetWidth, 48)
+      const h = Math.max(wrapper.offsetHeight, 36)
+      const [hx, hy] = dragGhostHotspot(w, h)
+      dataTransfer.setDragImage(wrapper, hx, hy)
+      imageDragGhostEl = wrapper
+    } else {
+      setFallbackDragImage()
+    }
+  }
+
   return true
 }
 
-function $onDragover(event: DragEvent): boolean {
-  const node = $getImageNodeInSelection()
-  if (!node) {
+function $onDragover(event: DragEvent, editor: LexicalEditor): boolean {
+  const types = event.dataTransfer?.types
+  if (!types || !Array.from(types).includes("application/x-lexical-drag")) {
+    setLexicalImageDropCaret(null)
     return false
   }
-  if (!canDropImage(event)) {
+  if (canDropImage(event)) {
     event.preventDefault()
+    event.dataTransfer.dropEffect = "move"
+    setLexicalImageDropCaret(computeDropCaretRect(event, editor))
+  } else {
+    setLexicalImageDropCaret(null)
   }
   return true
 }
 
 function $onDrop(event: DragEvent, editor: LexicalEditor): boolean {
-  const node = $getImageNodeInSelection()
-  if (!node) {
-    return false
-  }
   const data = getDragImageData(event)
-  if (!data) {
+  if (!data || typeof data.key !== "string") {
     return false
   }
   event.preventDefault()
-  if (canDropImage(event)) {
+  if (!canDropImage(event)) {
+    setLexicalImageDropCaret(null)
+    return true
+  }
+
+  setLexicalImageDropCaret(null)
+
+  editor.update(() => {
+    const existing = $getNodeByKey(data.key)
+    if ($isImageNode(existing)) {
+      existing.remove()
+    }
     const range = getDragSelection(event)
-    node.remove()
     const rangeSelection = $createRangeSelection()
     if (range !== null && range !== undefined) {
       rangeSelection.applyDOMRange(range)
     }
     $setSelection(rangeSelection)
-    editor.dispatchCommand(INSERT_IMAGE_COMMAND, data)
-  }
+    editor.dispatchCommand(INSERT_IMAGE_COMMAND, $payloadForInsertFromDrag(data))
+  })
   return true
 }
 
@@ -394,55 +666,29 @@ function $getImageNodeInSelection(): ImageNode | null {
   return $isImageNode(node) ? node : null
 }
 
-function getDragImageData(event: DragEvent): null | InsertImagePayload {
+function getDragImageData(event: DragEvent): null | LexicalImageDragData {
   const dragData = event.dataTransfer?.getData("application/x-lexical-drag")
   if (!dragData) {
     return null
   }
-  const { type, data } = JSON.parse(dragData)
-  if (type !== "image") {
+  try {
+    const { type, data } = JSON.parse(dragData) as {
+      type: string
+      data: LexicalImageDragData
+    }
+    if (type !== "image" || data == null || typeof data.key !== "string") {
+      return null
+    }
+    return data
+  } catch {
     return null
   }
-
-  return data
-}
-
-declare global {
-  interface DragEvent {
-    rangeOffset?: number
-    rangeParent?: Node
-  }
-}
-
-function canDropImage(event: DragEvent): boolean {
-  const target = event.target
-  return !!(
-    target &&
-    target instanceof HTMLElement &&
-    !target.closest("code, span.editor-image") &&
-    target.parentElement &&
-    target.parentElement.closest("div.ContentEditable__root")
-  )
 }
 
 function getDragSelection(event: DragEvent): Range | null | undefined {
-  let range
-  const target = event.target as null | Element | Document
-  const targetWindow =
-    target == null
-      ? null
-      : target.nodeType === 9
-        ? (target as Document).defaultView
-        : (target as Element).ownerDocument.defaultView
-  const domSelection = getDOMSelection(targetWindow)
-  if (document.caretRangeFromPoint) {
-    range = document.caretRangeFromPoint(event.clientX, event.clientY)
-  } else if (event.rangeParent && domSelection !== null) {
-    domSelection.collapse(event.rangeParent, event.rangeOffset || 0)
-    range = domSelection.getRangeAt(0)
-  } else {
+  const range = getDropRangeFromEvent(event)
+  if (!range) {
     throw Error(`Cannot get the selection when dragging`)
   }
-
   return range
 }

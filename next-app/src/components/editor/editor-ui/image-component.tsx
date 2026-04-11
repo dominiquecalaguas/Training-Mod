@@ -1,7 +1,6 @@
 import * as React from "react"
 import { JSX, Suspense, useCallback, useEffect, useRef, useState } from "react"
 import { AutoFocusPlugin } from "@lexical/react/LexicalAutoFocusPlugin"
-import { useCollaborationContext } from "@lexical/react/LexicalCollaborationContext"
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext"
 import { LexicalErrorBoundary } from "@lexical/react/LexicalErrorBoundary"
 import { HistoryPlugin } from "@lexical/react/LexicalHistoryPlugin"
@@ -10,12 +9,7 @@ import { RichTextPlugin } from "@lexical/react/LexicalRichTextPlugin"
 import { useLexicalEditable } from "@lexical/react/useLexicalEditable"
 import { useLexicalNodeSelection } from "@lexical/react/useLexicalNodeSelection"
 import { mergeRegister } from "@lexical/utils"
-import type {
-  BaseSelection,
-  LexicalCommand,
-  LexicalEditor,
-  NodeKey,
-} from "lexical"
+import type { LexicalCommand, LexicalEditor, NodeKey } from "lexical"
 import {
   $getNodeByKey,
   $getSelection,
@@ -23,9 +17,9 @@ import {
   $isRangeSelection,
   $setSelection,
   CLICK_COMMAND,
+  COMMAND_PRIORITY_HIGH,
   COMMAND_PRIORITY_LOW,
   createCommand,
-  DRAGSTART_COMMAND,
   KEY_BACKSPACE_COMMAND,
   KEY_DELETE_COMMAND,
   KEY_ENTER_COMMAND,
@@ -123,7 +117,6 @@ export default function ImageComponent({
   resizable,
   showCaption,
   caption,
-  captionsEnabled,
 }: {
   altText: string
   caption: LexicalEditor
@@ -134,16 +127,12 @@ export default function ImageComponent({
   showCaption: boolean
   src: string
   width: "inherit" | number
-  captionsEnabled: boolean
 }): JSX.Element {
   const imageRef = useRef<null | HTMLImageElement>(null)
-  const buttonRef = useRef<HTMLButtonElement | null>(null)
   const [isSelected, setSelected, clearSelection] =
     useLexicalNodeSelection(nodeKey)
   const [isResizing, setIsResizing] = useState<boolean>(false)
-  const { isCollabActive } = useCollaborationContext()
   const [editor] = useLexicalComposerContext()
-  const [selection, setSelection] = useState<BaseSelection | null>(null)
   const activeEditorRef = useRef<LexicalEditor | null>(null)
   const [isLoadError, setIsLoadError] = useState<boolean>(false)
   const isEditable = useLexicalEditable()
@@ -170,26 +159,16 @@ export default function ImageComponent({
   const $onEnter = useCallback(
     (event: KeyboardEvent) => {
       const latestSelection = $getSelection()
-      const buttonElem = buttonRef.current
       if (
         isSelected &&
+        showCaption &&
         $isNodeSelection(latestSelection) &&
         latestSelection.getNodes().length === 1
       ) {
-        if (showCaption) {
-          // Move focus into nested editor
-          $setSelection(null)
-          event.preventDefault()
-          caption.focus()
-          return true
-        } else if (
-          buttonElem !== null &&
-          buttonElem !== document.activeElement
-        ) {
-          event.preventDefault()
-          buttonElem.focus()
-          return true
-        }
+        $setSelection(null)
+        event.preventDefault()
+        caption.focus()
+        return true
       }
       return false
     },
@@ -198,10 +177,7 @@ export default function ImageComponent({
 
   const $onEscape = useCallback(
     (event: KeyboardEvent) => {
-      if (
-        activeEditorRef.current === caption ||
-        buttonRef.current === event.target
-      ) {
+      if (activeEditorRef.current === caption) {
         $setSelection(null)
         editor.update(() => {
           setSelected(true)
@@ -224,7 +200,12 @@ export default function ImageComponent({
       if (isResizing) {
         return true
       }
-      if (event.target === imageRef.current) {
+      const img = imageRef.current
+      if (
+        img &&
+        (event.target === img ||
+          (event.target instanceof Node && img.contains(event.target)))
+      ) {
         if (event.shiftKey) {
           setSelected(!isSelected)
         } else {
@@ -237,6 +218,29 @@ export default function ImageComponent({
       return false
     },
     [isResizing, isSelected, setSelected, clearSelection]
+  )
+
+  /** Stops bubbling so the root contenteditable does not take the caret; omit preventDefault so HTML5 drag can start on the draggable wrapper. */
+  const onImagePointerDownCapture = useCallback(
+    (e: React.PointerEvent) => {
+      if (!isEditable || e.button !== 0) return
+      const img = imageRef.current
+      if (
+        !img ||
+        !(e.target instanceof Node) ||
+        (e.target !== img && !img.contains(e.target))
+      ) {
+        return
+      }
+      e.stopPropagation()
+      if (e.shiftKey) {
+        setSelected(!isSelected)
+      } else {
+        clearSelection()
+        setSelected(true)
+      }
+    },
+    [isEditable, isSelected, setSelected, clearSelection]
   )
 
   const onRightClick = useCallback(
@@ -257,14 +261,8 @@ export default function ImageComponent({
   )
 
   useEffect(() => {
-    let isMounted = true
     const rootElement = editor.getRootElement()
     const unregister = mergeRegister(
-      editor.registerUpdateListener(({ editorState }) => {
-        if (isMounted) {
-          setSelection(editorState.read(() => $getSelection()))
-        }
-      }),
       editor.registerCommand(
         SELECTION_CHANGE_COMMAND,
         (_, activeEditor) => {
@@ -276,25 +274,12 @@ export default function ImageComponent({
       editor.registerCommand<MouseEvent>(
         CLICK_COMMAND,
         onClick,
-        COMMAND_PRIORITY_LOW
+        COMMAND_PRIORITY_HIGH
       ),
       editor.registerCommand<MouseEvent>(
         RIGHT_CLICK_IMAGE_COMMAND,
         onClick,
-        COMMAND_PRIORITY_LOW
-      ),
-      editor.registerCommand(
-        DRAGSTART_COMMAND,
-        (event) => {
-          if (event.target === imageRef.current) {
-            // TODO This is just a temporary workaround for FF to behave like other browsers.
-            // Ideally, this handles drag & drop too (and all browsers).
-            event.preventDefault()
-            return true
-          }
-          return false
-        },
-        COMMAND_PRIORITY_LOW
+        COMMAND_PRIORITY_HIGH
       ),
       editor.registerCommand(
         KEY_DELETE_COMMAND,
@@ -317,7 +302,6 @@ export default function ImageComponent({
     rootElement?.addEventListener("contextmenu", onRightClick)
 
     return () => {
-      isMounted = false
       unregister()
       rootElement?.removeEventListener("contextmenu", onRightClick)
     }
@@ -334,15 +318,6 @@ export default function ImageComponent({
     onRightClick,
     setSelected,
   ])
-
-  const setShowCaption = () => {
-    editor.update(() => {
-      const node = $getNodeByKey(nodeKey)
-      if ($isImageNode(node)) {
-        node.setShowCaption(true)
-      }
-    })
-  }
 
   const onResizeEnd = (
     nextWidth: "inherit" | number,
@@ -365,19 +340,22 @@ export default function ImageComponent({
     setIsResizing(true)
   }
 
-  const draggable = isSelected && $isNodeSelection(selection) && !isResizing
+  const draggable = isSelected && isEditable && !isResizing
   const isFocused = (isSelected || isResizing) && isEditable
   return (
     <Suspense fallback={null}>
       <>
-        <div draggable={draggable}>
+        <div
+          draggable={draggable}
+          onPointerDownCapture={onImagePointerDownCapture}
+        >
           {isLoadError ? (
             <BrokenImage />
           ) : (
             <LazyImage
               className={`max-w-full cursor-default ${
                 isFocused
-                  ? `${$isNodeSelection(selection) ? "draggable cursor-grab active:cursor-grabbing" : ""} focused ring-primary ring-2 ring-offset-2`
+                  ? `${isSelected ? "draggable cursor-grab active:cursor-grabbing" : ""} focused ring-primary ring-2 ring-offset-2`
                   : null
               }`}
               src={src}
@@ -412,17 +390,13 @@ export default function ImageComponent({
             </LexicalNestedComposer>
           </div>
         )}
-        {resizable && $isNodeSelection(selection) && isFocused && (
+        {resizable && isSelected && isFocused && (
           <ImageResizer
-            showCaption={showCaption}
-            setShowCaption={setShowCaption}
             editor={editor}
-            buttonRef={buttonRef}
             imageRef={imageRef}
             maxWidth={maxWidth}
             onResizeStart={onResizeStart}
             onResizeEnd={onResizeEnd}
-            captionsEnabled={!isLoadError && captionsEnabled}
           />
         )}
       </>
