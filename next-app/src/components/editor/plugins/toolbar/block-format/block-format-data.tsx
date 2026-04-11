@@ -2,7 +2,6 @@ import {
   CodeIcon,
   Heading1Icon,
   Heading2Icon,
-  Heading3Icon,
   ListIcon,
   ListOrderedIcon,
   ListTodoIcon,
@@ -25,10 +24,6 @@ export const blockTypeToBlockName: Record<
   h2: {
     label: "Heading 2",
     icon: <Heading2Icon className="size-4" />,
-  },
-  h3: {
-    label: "Heading 3",
-    icon: <Heading3Icon className="size-4" />,
   },
   number: {
     label: "Numbered List",

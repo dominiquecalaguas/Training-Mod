@@ -13,6 +13,30 @@ import {
 } from "@/components/ui/dialog";
 import { setLessonsOrder, deleteLesson, updateLesson } from "../../../actions";
 
+/** Distinguishes lesson-row reorder drags from in-editor (e.g. Lexical block) drags. */
+const LESSON_REORDER_MIME = "application/x-training-mod-lesson-reorder";
+
+function isLessonReorderDrag(dataTransfer: DataTransfer): boolean {
+  return Array.from(dataTransfer.types).includes(LESSON_REORDER_MIME);
+}
+
+function readDraggedLessonId(
+  e: React.DragEvent,
+  lessons: Lesson[],
+): number | null {
+  const fromMime = e.dataTransfer.getData(LESSON_REORDER_MIME);
+  if (fromMime) {
+    const id = Number(fromMime);
+    if (Number.isFinite(id) && lessons.some((l) => l.id === id)) return id;
+    return null;
+  }
+  const plain = e.dataTransfer.getData("text/plain");
+  if (!plain) return null;
+  const id = Number(plain);
+  if (!Number.isFinite(id) || !lessons.some((l) => l.id === id)) return null;
+  return id;
+}
+
 type Lesson = {
   id: number;
   courseId: number;
@@ -143,7 +167,9 @@ export function EditableLessonList({
 
   const handleDragStart = useCallback(
     (e: React.DragEvent, index: number) => {
-      e.dataTransfer.setData("text/plain", String(lessons[index].id));
+      const id = String(lessons[index].id);
+      e.dataTransfer.setData(LESSON_REORDER_MIME, id);
+      e.dataTransfer.setData("text/plain", id);
       e.dataTransfer.effectAllowed = "move";
       setDraggedIndex(index);
 
@@ -185,6 +211,7 @@ export function EditableLessonList({
 
   const handleDragOver = useCallback(
     (e: React.DragEvent, index: number) => {
+      if (!isLessonReorderDrag(e.dataTransfer)) return;
       e.preventDefault();
       e.dataTransfer.dropEffect = "move";
       const insertBefore = Math.min(
@@ -198,9 +225,11 @@ export function EditableLessonList({
 
   const handleDrop = useCallback(
     (e: React.DragEvent, dropIndex: number) => {
+      if (!isLessonReorderDrag(e.dataTransfer)) {
+        return;
+      }
       e.preventDefault();
-      const idStr = e.dataTransfer.getData("text/plain");
-      const draggedId = idStr ? Number(idStr) : null;
+      const draggedId = readDraggedLessonId(e, lessons);
       if (draggedId == null) {
         setDraggedIndex(null);
         setDropIndicatorBeforeIndex(null);

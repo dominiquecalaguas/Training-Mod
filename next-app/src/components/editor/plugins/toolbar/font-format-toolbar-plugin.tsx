@@ -1,4 +1,4 @@
-import { useCallback, useState } from "react"
+import { useCallback, useRef, useState } from "react"
 import { $isTableSelection } from "@lexical/table"
 import {
   $isRangeSelection,
@@ -30,6 +30,8 @@ const FORMATS = [
 export function FontFormatToolbarPlugin() {
   const { activeEditor } = useToolbarContext()
   const [activeFormats, setActiveFormats] = useState<string[]>([])
+  const activeFormatsRef = useRef<string[]>([])
+  activeFormatsRef.current = activeFormats
 
   const $updateToolbar = useCallback((selection: BaseSelection) => {
     if ($isRangeSelection(selection) || $isTableSelection(selection)) {
@@ -54,26 +56,29 @@ export function FontFormatToolbarPlugin() {
 
   useUpdateToolbarHandler($updateToolbar)
 
+  const handleFormatValueChange = useCallback(
+    (next: string[]) => {
+      const prev = activeFormatsRef.current
+      const turnedOn = next.find((f) => !prev.includes(f))
+      const turnedOff = prev.find((f) => !next.includes(f))
+      const format = (turnedOn ?? turnedOff) as TextFormatType | undefined
+      if (format) {
+        activeEditor.dispatchCommand(FORMAT_TEXT_COMMAND, format)
+      }
+    },
+    [activeEditor]
+  )
+
   return (
     <ToggleGroup
       type="multiple"
       value={activeFormats}
-      onValueChange={setActiveFormats}
+      onValueChange={handleFormatValueChange}
       variant="outline"
       size="sm"
     >
       {FORMATS.map(({ format, icon: Icon, label }) => (
-        <ToggleGroupItem
-          key={format}
-          value={format}
-          aria-label={label}
-          onClick={() => {
-            activeEditor.dispatchCommand(
-              FORMAT_TEXT_COMMAND,
-              format as TextFormatType
-            )
-          }}
-        >
+        <ToggleGroupItem key={format} value={format} aria-label={label}>
           <Icon className="size-4" />
         </ToggleGroupItem>
       ))}

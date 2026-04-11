@@ -1,5 +1,6 @@
 import { useEffect } from "react"
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext"
+import { mergeRegister } from "@lexical/utils"
 import {
   $getSelection,
   BaseSelection,
@@ -16,19 +17,29 @@ export function useUpdateToolbarHandler(
   const { activeEditor } = useToolbarContext()
 
   useEffect(() => {
-    return activeEditor.registerCommand(
-      SELECTION_CHANGE_COMMAND,
-      () => {
-        const selection = $getSelection()
-        if (selection) {
-          callback(selection)
-        }
-        return false
-      },
-      COMMAND_PRIORITY_CRITICAL
+    return mergeRegister(
+      activeEditor.registerCommand(
+        SELECTION_CHANGE_COMMAND,
+        () => {
+          const selection = $getSelection()
+          if (selection) {
+            callback(selection)
+          }
+          return false
+        },
+        COMMAND_PRIORITY_CRITICAL
+      ),
+      activeEditor.registerUpdateListener(({ editorState }) => {
+        editorState.read(() => {
+          const selection = $getSelection()
+          if (selection) {
+            callback(selection)
+          }
+        })
+      })
     )
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [editor, callback])
+  }, [editor, activeEditor, callback])
 
   useEffect(() => {
     activeEditor.getEditorState().read(() => {

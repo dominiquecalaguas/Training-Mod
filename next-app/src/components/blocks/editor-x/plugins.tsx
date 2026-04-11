@@ -26,8 +26,8 @@ import { CodeActionMenuPlugin } from "@/components/editor/plugins/code-action-me
 import { CodeHighlightPlugin } from "@/components/editor/plugins/code-highlight-plugin"
 import { ComponentPickerMenuPlugin } from "@/components/editor/plugins/component-picker-menu-plugin"
 import { ContextMenuPlugin } from "@/components/editor/plugins/context-menu-plugin"
+import { DemoteHeading3Plugin } from "@/components/editor/plugins/demote-heading3-plugin"
 import { DragDropPastePlugin } from "@/components/editor/plugins/drag-drop-paste-plugin"
-import { DraggableBlockPlugin } from "@/components/editor/plugins/draggable-block-plugin"
 import { AutoEmbedPlugin } from "@/components/editor/plugins/embeds/auto-embed-plugin"
 import { TwitterPlugin } from "@/components/editor/plugins/embeds/twitter-plugin"
 import { YouTubePlugin } from "@/components/editor/plugins/embeds/youtube-plugin"
@@ -76,7 +76,6 @@ import { CodeLanguageToolbarPlugin } from "@/components/editor/plugins/toolbar/c
 import { ElementFormatToolbarPlugin } from "@/components/editor/plugins/toolbar/element-format-toolbar-plugin"
 import { FontBackgroundToolbarPlugin } from "@/components/editor/plugins/toolbar/font-background-toolbar-plugin"
 import { FontColorToolbarPlugin } from "@/components/editor/plugins/toolbar/font-color-toolbar-plugin"
-import { FontFamilyToolbarPlugin } from "@/components/editor/plugins/toolbar/font-family-toolbar-plugin"
 import { FontFormatToolbarPlugin } from "@/components/editor/plugins/toolbar/font-format-toolbar-plugin"
 import { FontSizeToolbarPlugin } from "@/components/editor/plugins/toolbar/font-size-toolbar-plugin"
 import { HistoryToolbarPlugin } from "@/components/editor/plugins/toolbar/history-toolbar-plugin"
@@ -111,7 +110,7 @@ export function Plugins({}) {
             <Separator orientation="vertical" className="!h-7" />
             <BlockFormatDropDown>
               <FormatParagraph />
-              <FormatHeading levels={["h1", "h2", "h3"]} />
+              <FormatHeading levels={["h1", "h2"]} />
               <FormatNumberedList />
               <FormatBulletedList />
               <FormatCheckList />
@@ -122,7 +121,6 @@ export function Plugins({}) {
               <CodeLanguageToolbarPlugin />
             ) : (
               <>
-                <FontFamilyToolbarPlugin />
                 <FontSizeToolbarPlugin />
                 <Separator orientation="vertical" className="!h-7" />
                 <FontFormatToolbarPlugin />
@@ -156,7 +154,7 @@ export function Plugins({}) {
               <div className="h-full w-full overflow-hidden" ref={onRef}>
                 <ContentEditable
                   placeholder={placeholder}
-                  className="ContentEditable__root relative block h-full min-h-0 overflow-auto px-6 py-4 focus:outline-none bg-white text-zinc-900"
+                  className="ContentEditable__root editor-content-default-font relative block h-full min-h-0 overflow-auto px-6 py-4 focus:outline-none bg-white text-zinc-900"
                 />
               </div>
             </div>
@@ -172,9 +170,9 @@ export function Plugins({}) {
         <TabIndentationPlugin />
         <HashtagPlugin />
         <HistoryPlugin />
+        <DemoteHeading3Plugin />
 
         <MentionsPlugin />
-        <DraggableBlockPlugin anchorElem={floatingAnchorElem} />
         <KeywordsPlugin />
         <EmojisPlugin />
         <ImagesPlugin />
@@ -212,7 +210,6 @@ export function Plugins({}) {
             ParagraphPickerPlugin(),
             HeadingPickerPlugin({ n: 1 }),
             HeadingPickerPlugin({ n: 2 }),
-            HeadingPickerPlugin({ n: 3 }),
             TablePickerPlugin(),
             CheckListPickerPlugin(),
             NumberedListPickerPlugin(),

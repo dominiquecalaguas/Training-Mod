@@ -50,9 +50,10 @@ export function BlockFormatDropDown({
             : element.getListType()
           setBlockType(type)
         } else {
-          const type = $isHeadingNode(element)
+          let type: string = $isHeadingNode(element)
             ? element.getTag()
             : element.getType()
+          if (type === "h3") type = "h2"
           if (type in blockTypeToBlockName) {
             setBlockType(type as keyof typeof blockTypeToBlockName)
           }
