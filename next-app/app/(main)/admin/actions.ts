@@ -6,6 +6,7 @@ import { and, eq, ne, sql } from "drizzle-orm";
 import { db } from "@/db/client";
 import { courses, lessons } from "@/db/schema";
 import { apiUrl } from "@/lib/api";
+import { lexicalJsonToSearchText } from "@/lib/lexical-search-text";
 
 /** Raw file size limit before base64 (server action body limit is 10mb in next.config). */
 const MAX_THUMBNAIL_BYTES = 6 * 1024 * 1024;
@@ -119,6 +120,7 @@ export async function createCourse(formData: FormData) {
         courseId: newCourseId,
         title: l.title,
         content: "",
+        searchText: "",
         order: l.order,
       })),
     );
@@ -295,6 +297,7 @@ export async function updateLesson(formData: FormData) {
     .set({
       title,
       content,
+      searchText: lexicalJsonToSearchText(content),
       order,
       updatedAt: new Date(),
     })

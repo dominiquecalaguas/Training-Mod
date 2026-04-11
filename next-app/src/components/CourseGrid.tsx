@@ -2,8 +2,9 @@
 
 import { useEffect, useState } from "react";
 import { CourseCard } from "@/components/CourseCard";
-import { useDeviceToken } from "@//components/DeviceTokenProvider";
-import type { CourseListItem } from "@/lib/courses";
+import { useDeviceToken } from "@/components/DeviceTokenProvider";
+import type { CourseWithLessonsForSearch } from "@/lib/courses";
+import type { CourseSearchResult } from "@/lib/search-courses";
 
 type ProgressMap = Record<
   number,
@@ -13,9 +14,14 @@ type ProgressMap = Record<
 export function CourseGrid({
   courses,
   lessonCountByCourseId = {},
+  searchResults,
+  searchKeywords,
 }: {
-  courses: CourseListItem[];
+  courses: CourseWithLessonsForSearch[];
   lessonCountByCourseId?: Record<number, number>;
+  /** When set (active search), drives order and matched-lesson rows on cards. */
+  searchResults?: CourseSearchResult[];
+  searchKeywords?: readonly string[];
 }) {
   const deviceToken = useDeviceToken();
   const [progress, setProgress] = useState<ProgressMap>({});
@@ -56,10 +62,17 @@ export function CourseGrid({
     );
   }
 
+  const rows: CourseSearchResult[] =
+    searchResults ??
+    courses.map((c) => ({
+      course: c,
+      matchedLessons: [],
+    }));
+
   return (
     <section>
       <div className="grid grid-cols-1 gap-x-[35px] gap-y-10 sm:grid-cols-2 lg:grid-cols-3">
-        {courses.map((course) => {
+        {rows.map(({ course, matchedLessons }) => {
           const stats = progress[course.id];
           const totalLessons =
             lessonCountByCourseId[course.id] ?? stats?.totalLessons ?? 0;
@@ -71,6 +84,12 @@ export function CourseGrid({
               course={course}
               totalLessons={totalLessons}
               completedLessons={completedLessons}
+              matchedLessons={
+                searchResults && matchedLessons.length > 0
+                  ? matchedLessons
+                  : undefined
+              }
+              searchKeywords={searchResults ? searchKeywords : undefined}
             />
           );
         })}

@@ -1,0 +1,1 @@
+ALTER TABLE "lessons" ADD COLUMN IF NOT EXISTS "search_text" text DEFAULT '' NOT NULL;

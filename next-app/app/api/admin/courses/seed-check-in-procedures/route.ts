@@ -3,6 +3,7 @@ import { asc, eq } from "drizzle-orm";
 import { requireAdmin } from "@/auth/require-admin";
 import { db } from "@/db/client";
 import { courses, lessons } from "@/db/schema";
+import { lexicalJsonToSearchText } from "@/lib/lexical-search-text";
 
 export async function POST() {
   const [, err] = await requireAdmin();
@@ -192,6 +193,7 @@ Then move onto the next step.`,
           .set({
             title: config.title,
             content: config.content,
+            searchText: lexicalJsonToSearchText(config.content),
             order: config.order,
           })
           .where(eq(lessons.id, match.id));
@@ -200,6 +202,7 @@ Then move onto the next step.`,
           courseId,
           title: config.title,
           content: config.content,
+          searchText: lexicalJsonToSearchText(config.content),
           order: config.order,
         });
       }

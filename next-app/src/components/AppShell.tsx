@@ -6,6 +6,8 @@ import posthog from "posthog-js";
 import { useState } from "react";
 import { LogIn, Menu, UserPlus, X } from "lucide-react";
 import { BrandMark } from "@/components/BrandMark";
+import { SearchQueryProvider } from "@/components/SearchQueryContext";
+import { TopNav } from "@/components/TopNav";
 
 function NavLinkLucide({
   href,
@@ -314,6 +316,7 @@ export function AppShell({
   );
 
   return (
+    <SearchQueryProvider>
     <div className="flex min-h-screen bg-white text-neutral-900">
       <aside className="hidden w-56 shrink-0 flex-col border-r border-neutral-800 bg-[#2a2a2e] md:flex">
         {sidebar}
@@ -348,16 +351,18 @@ export function AppShell({
         <header className="sticky top-0 z-40 flex h-14 items-center gap-3 border-b border-neutral-200 bg-white px-4 md:hidden">
           <button
             type="button"
-            className="rounded-md p-2 text-neutral-700 hover:bg-neutral-100"
+            className="shrink-0 rounded-md p-2 text-neutral-700 hover:bg-neutral-100"
             aria-label="Open menu"
             onClick={() => setMobileOpen(true)}
           >
             <Menu className="h-6 w-6" />
           </button>
-          <BrandMark variant="onLight" className="max-h-8 max-w-[7rem]" />
+          <TopNav />
+          <BrandMark variant="onLight" className="max-h-8 max-w-[7rem] shrink-0" />
         </header>
         <div className="flex-1">{children}</div>
       </div>
     </div>
+    </SearchQueryProvider>
   );
 }

@@ -64,6 +64,13 @@
       "when": 1773610764798,
       "tag": "0008_user_roles_and_onboarding",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1775836118109,
+      "tag": "0009_mushy_valeria_richards",
+      "breakpoints": true
     }
   ]
 }

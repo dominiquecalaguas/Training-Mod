@@ -34,6 +34,7 @@ export const lessons = pgTable(
       .references(() => courses.id, { onDelete: "cascade" }),
     title: text("title").notNull(),
     content: text("content").notNull(),
+    searchText: text("search_text").notNull().default(""),
     order: integer("order").notNull(),
     archivedAt: timestamp("archived_at", { withTimezone: true }),
     createdAt: timestamp("created_at", { withTimezone: true })

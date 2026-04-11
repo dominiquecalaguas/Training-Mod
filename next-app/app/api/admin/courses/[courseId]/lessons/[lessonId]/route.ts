@@ -3,6 +3,7 @@ import { and, eq } from "drizzle-orm";
 import { requireAdmin } from "@/auth/require-admin";
 import { db } from "@/db/client";
 import { lessons } from "@/db/schema";
+import { lexicalJsonToSearchText } from "@/lib/lexical-search-text";
 
 export async function GET(
   _req: NextRequest,
@@ -72,6 +73,7 @@ export async function PATCH(
       .set({
         title,
         content,
+        searchText: lexicalJsonToSearchText(content),
         order,
         ...(archived !== undefined
           ? { archivedAt: archived ? new Date() : null }

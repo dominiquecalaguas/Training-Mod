@@ -2,7 +2,11 @@
 
 import Link from "next/link";
 import { trackCourseClicked } from "@/lib/analytics";
+import { KeywordHighlight } from "@/components/KeywordHighlight";
 import type { CourseListItem } from "@/lib/courses";
+import type { MatchedLessonResult } from "@/lib/search-courses";
+
+const MATCHED_LESSON_PREVIEW = 3;
 
 function statusBadge({
   pct,
@@ -43,10 +47,15 @@ export function CourseCard({
   course,
   totalLessons,
   completedLessons,
+  matchedLessons,
+  searchKeywords,
 }: {
   course: CourseListItem;
   totalLessons: number;
   completedLessons: number;
+  matchedLessons?: MatchedLessonResult[];
+  /** When empty, snippets render without highlights. */
+  searchKeywords?: readonly string[];
 }) {
   const pct =
     totalLessons > 0
@@ -54,6 +63,10 @@ export function CourseCard({
       : 0;
   const showMastery =
     totalLessons > 0 && completedLessons >= totalLessons;
+
+  const showHighlight =
+    Array.isArray(searchKeywords) && searchKeywords.length > 0;
+  const kw = searchKeywords ?? [];
 
   return (
     <Link
@@ -103,15 +116,75 @@ export function CourseCard({
       <div className="flex flex-1 flex-col gap-3 overflow-hidden rounded-b-[20px] bg-white p-4 pt-4">
         <div className="flex items-start justify-between gap-3">
           <h2 className="line-clamp-2 min-w-0 flex-1 text-base font-semibold leading-snug text-neutral-900">
-            {course.title}
+            {showHighlight ? (
+              <KeywordHighlight
+                text={course.title}
+                keywords={kw}
+                variant="yellow"
+                className="text-neutral-900"
+              />
+            ) : (
+              course.title
+            )}
           </h2>
           {statusBadge({ pct, totalLessons })}
         </div>
 
         {course.description && (
           <p className="line-clamp-2 text-sm leading-relaxed text-neutral-800">
-            {course.description}
+            {showHighlight ? (
+              <KeywordHighlight
+                text={course.description}
+                keywords={kw}
+                variant="yellow"
+                className="text-neutral-800"
+              />
+            ) : (
+              course.description
+            )}
           </p>
+        )}
+
+        {matchedLessons && matchedLessons.length > 0 && (
+          <div className="mt-1 space-y-2.5 border-t border-neutral-100 pt-3">
+            {matchedLessons.slice(0, MATCHED_LESSON_PREVIEW).map(({ lesson, snippet }) => (
+              <div key={lesson.id}>
+                <p className="text-[11px] font-medium uppercase tracking-wide text-neutral-500">
+                  Lesson {lesson.order}
+                </p>
+                <p className="mt-0.5 text-xs font-medium leading-snug text-neutral-900">
+                  {showHighlight ? (
+                    <KeywordHighlight
+                      text={lesson.title}
+                      keywords={kw}
+                      variant="yellow"
+                      className="text-neutral-900"
+                    />
+                  ) : (
+                    lesson.title
+                  )}
+                </p>
+                {snippet.trim() ? (
+                  <p className="mt-1 text-xs leading-relaxed">
+                    <KeywordHighlight
+                      text={snippet}
+                      keywords={kw}
+                      variant="yellow"
+                      className="text-neutral-500"
+                    />
+                  </p>
+                ) : null}
+              </div>
+            ))}
+            {matchedLessons.length > MATCHED_LESSON_PREVIEW && (
+              <p className="text-xs text-neutral-500">
+                and {matchedLessons.length - MATCHED_LESSON_PREVIEW} more
+                {matchedLessons.length - MATCHED_LESSON_PREVIEW === 1
+                  ? " lesson"
+                  : " lessons"}
+              </p>
+            )}
+          </div>
         )}
 
         {totalLessons > 0 && (
