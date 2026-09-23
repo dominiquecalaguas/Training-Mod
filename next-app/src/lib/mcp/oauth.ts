@@ -1,4 +1,4 @@
-import { createHash, randomBytes, randomUUID } from "node:crypto";
+import { createHash, randomBytes, randomUUID, timingSafeEqual } from "node:crypto";
 
 export const MCP_CLIENT_ID = "domkatsu-mcp";
 export const MCP_SCOPE = "mcp:read";
@@ -35,6 +35,11 @@ export function sha256(value: string) {
 
 export function challenge(value: string) {
   return createHash("sha256").update(value).digest("base64url");
+}
+
+export function matchesChallenge(verifier: string, expected: string) {
+  if (!/^[A-Za-z0-9._~-]{43,128}$/.test(verifier) || !/^[A-Za-z0-9_-]{43}$/.test(expected)) return false;
+  return timingSafeEqual(Buffer.from(challenge(verifier)), Buffer.from(expected));
 }
 
 export function randomToken() {
