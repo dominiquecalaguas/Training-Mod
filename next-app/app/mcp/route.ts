@@ -1,6 +1,7 @@
-import { timingSafeEqual } from "node:crypto";
 import { createMcpHandler } from "@modelcontextprotocol/server";
 import { createDominiquePortfolioMcpServer } from "@/lib/mcp/dominique-portfolio";
+import { authenticateMcpRequest } from "@/lib/mcp/authenticate";
+import { MCP_SCOPE, publicOrigin } from "@/lib/mcp/oauth";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -12,44 +13,19 @@ const handler = createMcpHandler(createDominiquePortfolioMcpServer, {
   },
 });
 
-function unauthorized(message: string, status: 401 | 500) {
+function unauthorized() {
   return Response.json(
-    { error: message },
+    { error: "Unauthorized" },
     {
-      status,
-      headers:
-        status === 401
-          ? { "WWW-Authenticate": 'Bearer realm="mcp"' }
-          : undefined,
+      status: 401,
+      headers: { "WWW-Authenticate": `Bearer resource_metadata="${publicOrigin()}/.well-known/oauth-protected-resource", scope="${MCP_SCOPE}"` },
     },
   );
 }
 
-function hasValidBearerToken(request: Request, expectedToken: string) {
-  const authorization = request.headers.get("authorization");
-  const prefix = "Bearer ";
-
-  if (!authorization?.startsWith(prefix)) {
-    return false;
-  }
-
-  const suppliedToken = authorization.slice(prefix.length);
-  const supplied = Buffer.from(suppliedToken);
-  const expected = Buffer.from(expectedToken);
-
-  return supplied.length === expected.length && timingSafeEqual(supplied, expected);
-}
-
 async function serveMcp(request: Request) {
-  const apiKey = process.env.MCP_API_KEY?.trim();
-
-  if (!apiKey) {
-    return unauthorized("MCP_API_KEY is not configured", 500);
-  }
-
-  if (!hasValidBearerToken(request, apiKey)) {
-    return unauthorized("Unauthorized", 401);
-  }
+  const identity = await authenticateMcpRequest(request);
+  if (!identity) return unauthorized();
 
   return handler.fetch(request);
 }

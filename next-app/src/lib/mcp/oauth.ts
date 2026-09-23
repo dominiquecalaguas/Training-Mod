@@ -59,6 +59,13 @@ export function validClientRedirect(value: string) {
   }
 }
 
+export function bearerToken(request: Request) {
+  const header = request.headers.get("authorization");
+  if (!header) return null;
+  const match = /^Bearer ([A-Za-z0-9_-]{43})$/.exec(header);
+  return match?.[1] ?? null;
+}
+
 export function oauthError(error: string, status = 400) {
   return Response.json({ error }, { status, headers: { "Cache-Control": "no-store" } });
 }
