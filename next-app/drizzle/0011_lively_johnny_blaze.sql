@@ -1,0 +1,1 @@
+ALTER TABLE "oauth_grants" ADD COLUMN "client_state" text;

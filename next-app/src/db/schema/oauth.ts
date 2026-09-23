@@ -26,6 +26,7 @@ export const oauthGrants = pgTable(
     redirectUri: text("redirect_uri"),
     tokenHash: text("token_hash"),
     stateHash: text("state_hash"),
+    clientState: text("client_state"),
     codeChallenge: text("code_challenge"),
     auth0CodeVerifier: text("auth0_code_verifier"),
     auth0Nonce: text("auth0_nonce"),
