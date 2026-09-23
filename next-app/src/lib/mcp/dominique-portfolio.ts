@@ -1,6 +1,7 @@
 import { McpServer } from "@modelcontextprotocol/server";
 import { connect, type CollectionItem, type Field } from "framer-api";
 import { z } from "zod";
+import { loggedToolCall } from "./tool-logging";
 
 type FramerData = {
   projectFields: Field[];
@@ -135,7 +136,7 @@ export function createDominiquePortfolioMcpServer() {
       title: "List projects",
       description: "List Dominique's Framer portfolio projects",
     },
-    async () => {
+    async (context) => loggedToolCall("list_projects", context, async () => {
       const { projects, projectFields } = await getFramerData();
       return {
         content: [
@@ -149,7 +150,7 @@ export function createDominiquePortfolioMcpServer() {
           },
         ],
       };
-    },
+    }),
   );
 
   server.registerTool(
@@ -161,7 +162,7 @@ export function createDominiquePortfolioMcpServer() {
         slug: z.string().min(1).describe("Project slug, e.g. mochihealth"),
       }),
     },
-    async ({ slug }) => {
+    async ({ slug }, context) => loggedToolCall("get_project", context, async () => {
       const { projects, projectFields, copyItems, copyFields } =
         await getFramerData();
       const project = projects.find((candidate) => candidate.slug === slug);
@@ -206,7 +207,7 @@ export function createDominiquePortfolioMcpServer() {
           },
         ],
       };
-    },
+    }),
   );
 
   return server;
