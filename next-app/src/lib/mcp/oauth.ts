@@ -4,6 +4,7 @@ export const MCP_CLIENT_ID = "domkatsu-mcp";
 export const CLAUDE_CLIENT_ID = "https://claude.ai/api/oauth/mcp-oauth-client-metadata";
 export const CLAUDE_REDIRECT_URI = "https://claude.ai/api/mcp/auth_callback";
 export const MCP_SCOPE = "mcp:read";
+const AUTH0_STATE_COOKIE = "mcp_auth0_state";
 
 export function publicOrigin() {
   const configured = process.env.MCP_PUBLIC_ORIGIN;
@@ -46,6 +47,17 @@ export function matchesChallenge(verifier: string, expected: string) {
 
 export function randomToken() {
   return randomBytes(32).toString("base64url");
+}
+
+export function auth0StateCookie(state: string, clear = false) {
+  const secure = publicOrigin().startsWith("https:") ? "; Secure" : "";
+  return `${AUTH0_STATE_COOKIE}=${clear ? "" : state}; Path=/oauth/auth0/callback; HttpOnly; SameSite=Lax; Max-Age=${clear ? 0 : 600}${secure}`;
+}
+
+export function matchesAuth0StateCookie(request: Request, state: string) {
+  if (!/^[A-Za-z0-9_-]{43}$/.test(state)) return false;
+  const stored = request.headers.get("cookie")?.split(";").map((part) => part.trim()).find((part) => part.startsWith(`${AUTH0_STATE_COOKIE}=`))?.slice(AUTH0_STATE_COOKIE.length + 1);
+  return stored?.length === state.length && timingSafeEqual(Buffer.from(stored), Buffer.from(state));
 }
 
 export function newId() {

@@ -1,6 +1,6 @@
 import { db } from "@/db/client";
 import { oauthGrants } from "@/db/schema";
-import { auth0Config, challenge, MCP_SCOPE, mcpResource, newId, oauthError, publicOrigin, randomToken, sha256, validClientRedirect } from "@/lib/mcp/oauth";
+import { auth0Config, auth0StateCookie, challenge, MCP_SCOPE, mcpResource, newId, oauthError, publicOrigin, randomToken, sha256, validClientRedirect } from "@/lib/mcp/oauth";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -44,5 +44,8 @@ export async function GET(request: Request) {
   authorizeUrl.searchParams.set("nonce", nonce);
   authorizeUrl.searchParams.set("code_challenge", challenge(verifier));
   authorizeUrl.searchParams.set("code_challenge_method", "S256");
-  return Response.redirect(authorizeUrl, 302);
+  const response = Response.redirect(authorizeUrl, 302);
+  response.headers.set("Set-Cookie", auth0StateCookie(state));
+  response.headers.set("Cache-Control", "no-store");
+  return response;
 }
