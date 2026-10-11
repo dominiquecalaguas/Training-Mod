@@ -1,6 +1,8 @@
 import { createHash, randomBytes, randomUUID, timingSafeEqual } from "node:crypto";
 
 export const MCP_CLIENT_ID = "domkatsu-mcp";
+export const CLAUDE_CLIENT_ID = "https://claude.ai/api/oauth/mcp-oauth-client-metadata";
+export const CLAUDE_REDIRECT_URI = "https://claude.ai/api/mcp/auth_callback";
 export const MCP_SCOPE = "mcp:read";
 
 export function publicOrigin() {
@@ -50,7 +52,9 @@ export function newId() {
   return randomUUID();
 }
 
-export function validClientRedirect(value: string) {
+export function validClientRedirect(clientId: string, value: string) {
+  if (clientId === CLAUDE_CLIENT_ID) return value === CLAUDE_REDIRECT_URI;
+  if (clientId !== MCP_CLIENT_ID) return false;
   try {
     const uri = new URL(value);
     return uri.protocol === "http:" && uri.hostname === "localhost" && uri.pathname === "/callback" && !uri.username && !uri.password && !uri.search && !uri.hash && uri.href === value;

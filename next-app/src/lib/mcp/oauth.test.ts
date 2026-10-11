@@ -1,14 +1,18 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { bearerToken, challenge, matchesChallenge, sha256, validClientRedirect } from "./oauth";
+import { bearerToken, challenge, CLAUDE_CLIENT_ID, CLAUDE_REDIRECT_URI, matchesChallenge, MCP_CLIENT_ID, sha256, validClientRedirect } from "./oauth";
 
 test("localhost callbacks keep their exact path while allowing varying ports", () => {
-  assert.equal(validClientRedirect("http://localhost:3000/callback"), true);
-  assert.equal(validClientRedirect("http://localhost:47291/callback"), true);
-  assert.equal(validClientRedirect("http://localhost:3000/other"), false);
-  assert.equal(validClientRedirect("http://127.0.0.1:3000/callback"), false);
-  assert.equal(validClientRedirect("https://example.com/callback"), false);
-  assert.equal(validClientRedirect("http://localhost:3000/callback?next=https://example.com"), false);
+  assert.equal(validClientRedirect(MCP_CLIENT_ID, "http://localhost:3000/callback"), true);
+  assert.equal(validClientRedirect(MCP_CLIENT_ID, "http://localhost:47291/callback"), true);
+  assert.equal(validClientRedirect(MCP_CLIENT_ID, "http://localhost:3000/other"), false);
+  assert.equal(validClientRedirect(MCP_CLIENT_ID, "http://127.0.0.1:3000/callback"), false);
+  assert.equal(validClientRedirect(MCP_CLIENT_ID, "https://example.com/callback"), false);
+  assert.equal(validClientRedirect(MCP_CLIENT_ID, "http://localhost:3000/callback?next=https://example.com"), false);
+  assert.equal(validClientRedirect(CLAUDE_CLIENT_ID, CLAUDE_REDIRECT_URI), true);
+  assert.equal(validClientRedirect(CLAUDE_CLIENT_ID, `${CLAUDE_REDIRECT_URI}?next=https://example.com`), false);
+  assert.equal(validClientRedirect(CLAUDE_CLIENT_ID, "http://localhost:3000/callback"), false);
+  assert.equal(validClientRedirect("unknown", CLAUDE_REDIRECT_URI), false);
 });
 
 test("PKCE and stored token hashes use SHA-256", () => {
