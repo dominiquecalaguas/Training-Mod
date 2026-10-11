@@ -1,7 +1,7 @@
-import { and, eq, gt, isNull } from "drizzle-orm";
+import { and, eq, gt, inArray, isNull } from "drizzle-orm";
 import { db } from "@/db/client";
 import { oauthGrants } from "@/db/schema";
-import { bearerToken, MCP_CLIENT_ID, mcpResource, sha256 } from "./oauth";
+import { bearerToken, CLAUDE_CLIENT_ID, MCP_CLIENT_ID, mcpResource, sha256 } from "./oauth";
 
 export async function authenticateMcpRequest(request: Request) {
   const token = bearerToken(request);
@@ -11,7 +11,7 @@ export async function authenticateMcpRequest(request: Request) {
     .where(and(
       eq(oauthGrants.kind, "access"),
       eq(oauthGrants.tokenHash, sha256(token)),
-      eq(oauthGrants.clientId, MCP_CLIENT_ID),
+      inArray(oauthGrants.clientId, [MCP_CLIENT_ID, CLAUDE_CLIENT_ID]),
       eq(oauthGrants.resource, mcpResource()),
       gt(oauthGrants.expiresAt, new Date()),
       isNull(oauthGrants.consumedAt),
