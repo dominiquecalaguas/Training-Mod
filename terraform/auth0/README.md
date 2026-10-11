@@ -16,4 +16,4 @@ Set `TF_VAR_login_domain` only to a hostname whose DNS you control (for example 
 
 `TF_VAR_login_logo_url` and `TF_VAR_login_primary_color` optionally configure basic tenant-wide Universal Login branding. Review the existing tenant branding before setting them; branding affects the whole Auth0 tenant.
 
-The existing Google connection is already enabled for the web application. If it uses Auth0 development keys, configure your own Google OAuth credentials before using a custom domain. To add GitHub, create a GitHub OAuth application with callback `https://<runtime-auth0-domain>/login/callback`, then set both `TF_VAR_github_client_id` and `TF_VAR_github_client_secret`. Keep those values out of Git.
+The existing Google connection is already enabled for the web application. If it uses Auth0 development keys, configure your own Google OAuth credentials before using a custom domain. GitHub sign-in is on hold: leave `TF_VAR_github_client_id` and `TF_VAR_github_client_secret` unset. When ready, register a GitHub OAuth application with callback `https://<runtime-auth0-domain>/login/callback` and set both variables outside Git.

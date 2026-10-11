@@ -10,7 +10,7 @@ export function publicOrigin() {
   const configured = process.env.MCP_PUBLIC_ORIGIN;
   if (!configured) throw new Error("MCP_PUBLIC_ORIGIN is not configured");
   const url = new URL(configured);
-  if ((url.protocol !== "https:" && url.hostname !== "localhost") || url.pathname !== "/" || url.search || url.hash) {
+  if ((url.protocol !== "https:" && !(url.protocol === "http:" && url.hostname === "localhost")) || url.username || url.password || url.pathname !== "/" || url.search || url.hash) {
     throw new Error("MCP_PUBLIC_ORIGIN must be an HTTPS origin or localhost origin");
   }
   return url.origin;

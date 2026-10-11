@@ -1,6 +1,23 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { auth0StateCookie, bearerToken, challenge, CLAUDE_CLIENT_ID, CLAUDE_REDIRECT_URI, matchesAuth0StateCookie, matchesChallenge, MCP_CLIENT_ID, sha256, validClientRedirect } from "./oauth";
+import { auth0StateCookie, bearerToken, challenge, CLAUDE_CLIENT_ID, CLAUDE_REDIRECT_URI, matchesAuth0StateCookie, matchesChallenge, MCP_CLIENT_ID, publicOrigin, sha256, validClientRedirect } from "./oauth";
+
+test("public origin permits HTTPS and local HTTP only", () => {
+  const original = process.env.MCP_PUBLIC_ORIGIN;
+  try {
+    process.env.MCP_PUBLIC_ORIGIN = "https://example.com";
+    assert.equal(publicOrigin(), "https://example.com");
+    process.env.MCP_PUBLIC_ORIGIN = "http://localhost:3000";
+    assert.equal(publicOrigin(), "http://localhost:3000");
+    for (const invalid of ["ftp://localhost", "http://example.com", "https://user:pass@example.com"]) {
+      process.env.MCP_PUBLIC_ORIGIN = invalid;
+      assert.throws(() => publicOrigin());
+    }
+  } finally {
+    if (original === undefined) delete process.env.MCP_PUBLIC_ORIGIN;
+    else process.env.MCP_PUBLIC_ORIGIN = original;
+  }
+});
 
 test("localhost callbacks keep their exact path while allowing varying ports", () => {
   assert.equal(validClientRedirect(MCP_CLIENT_ID, "http://localhost:3000/callback"), true);

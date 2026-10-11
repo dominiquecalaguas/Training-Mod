@@ -138,6 +138,7 @@ import {
   id = "con_l4K3tQD2wpVFoSQn::s03JHbzj8E3dhTRcZg7S5nC82fCcAw7t"
 }
 
+# Deferred: leave github_client_id and github_client_secret unset until we register a GitHub OAuth app.
 resource "auth0_connection" "github" {
   count    = var.github_client_id == null ? 0 : 1
   name     = "domkatsu-github"

@@ -1,46 +1,14 @@
 
 
-OAuth - Prisma
+# MCP OAuth rollout notes
 
+The MCP server uses our own OAuth broker. MCP clients discover `/authorize` and `/token` through the well-known metadata. The browser signs in with Auth0 Universal Login, then Auth0 returns to the fixed Next.js callback at `/oauth/auth0/callback`. Our broker issues a single-use authorization code and an opaque, one-hour access token. The client sees the Training Mod OAuth endpoints; Auth0 is an upstream identity provider.
 
-Reqs
-Vanilla OAuth (/authorize, /token)
-Social sign-in via Auth0
-Separate from the regular Prisma users
+MCP identities live in `oauth_users`, separate from regular application users. `oauth_grants` stores pending login transactions, authorization codes, and access token hashes. Authorization codes are bound to a client, redirect URI, resource, and PKCE challenge. A consumed code cannot mint another token.
 
+The existing Dominique's Web Portfolio Auth0 application is reused as a confidential Regular Web application. Its Google connection remains enabled. The Auth0 tenant hostname is used for Universal Login for now; a custom domain is optional. GitHub sign-in is on hold until a GitHub OAuth application is registered and its credentials are provided outside Git.
 
+Allowed MCP clients are `domkatsu-mcp` with an exact `http://localhost:<port>/callback` redirect and Claude's published OAuth client identity with its exact callback. Dynamic client registration, refresh tokens, and arbitrary redirect URIs are out of scope.
 
-Non-functional reqs
-None really, lets just get a V0 out there
-
-Monitoring
-Log MCP server tool calls
-
-
-Steps for the user
-User hits our MCP server with /authorize, gets auth code back
-User hits our /token endpoint and gets an OAuth token back
-^Somewhere in this, we would need to upsert to the oauth_users table.
-
-Steps for us
-Ping Auth0 and get an auth code back. We should upsert to the oauth_users table here.
-After the user cashes iin
-
-Implementation plan
-Create our Auth0 account (web)
-Configure terraform/auth0 subrepo of Training-Mod repo (code)
-Create an application with Terraform, allow social sign-in (code)
-Allow any localhost callbacks
-Redirect URI should just be on the production URL
-Do terraform plan (CLI)
-Create a universal login page for the MCP server (code)
-
-Create oauth_users table
-Create oauth_grants table
-
-Create the .well-known OAuth advertising endpoints
-Gate mcp endpoint by client ID, hardcoded as domkatsu-mcp
-Scaffold the middleware to check OAuth
-Create the authn for accepting OAuth in the mcp server
-
+Before rollout, review and apply the Auth0 Terraform import plan, configure the web application's secret and public origin in the Next.js deployment, and run an end-to-end login from each client. Confirm that an unauthenticated `/mcp` request advertises OAuth metadata, an authenticated request can call a tool, and replaying an authorization code returns `invalid_grant`. See `terraform/auth0/README.md` and `next-app/README.md` for setup details.
 
