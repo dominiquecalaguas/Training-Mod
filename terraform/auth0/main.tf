@@ -16,36 +16,24 @@ variable "production_origin" {
   description = "HTTPS origin of the deployed Next.js app, without a trailing slash."
 }
 
-variable "google_client_id" {
-  type      = string
-  sensitive = true
-}
-
-variable "google_client_secret" {
-  type      = string
-  sensitive = true
-}
-
-variable "github_client_id" {
-  type      = string
-  sensitive = true
-}
-
-variable "github_client_secret" {
-  type      = string
-  sensitive = true
-}
-
 resource "auth0_client" "mcp_login" {
-  name            = "Domkatsu MCP Login"
+  name            = "Dominique's Web Portfolio"
   app_type        = "regular_web"
   is_first_party  = true
   oidc_conformant = true
   grant_types     = ["authorization_code"]
   callbacks = [
+    "https://training-mod-three.vercel.app/",
     "${var.production_origin}/oauth/auth0/callback",
     "http://localhost:3000/oauth/auth0/callback",
   ]
+  allowed_logout_urls = ["https://training-mod-three.vercel.app/"]
+  web_origins         = ["https://training-mod-three.vercel.app/"]
+}
+
+import {
+  to = auth0_client.mcp_login
+  id = "s03JHbzj8E3dhTRcZg7S5nC82fCcAw7t"
 }
 
 resource "auth0_client_credentials" "mcp_login" {
@@ -53,36 +41,25 @@ resource "auth0_client_credentials" "mcp_login" {
   authentication_method = "client_secret_post"
 }
 
-resource "auth0_connection" "google" {
-  name     = "domkatsu-google"
-  strategy = "google-oauth2"
-
-  options {
-    client_id     = var.google_client_id
-    client_secret = var.google_client_secret
-    scopes        = ["email", "profile"]
-  }
+import {
+  to = auth0_client_credentials.mcp_login
+  id = "s03JHbzj8E3dhTRcZg7S5nC82fCcAw7t"
 }
 
-resource "auth0_connection" "github" {
-  name     = "domkatsu-github"
-  strategy = "github"
-
-  options {
-    client_id     = var.github_client_id
-    client_secret = var.github_client_secret
-    scopes        = ["email"]
-  }
+data "auth0_connection" "google" {
+  connection_id        = "con_l4K3tQD2wpVFoSQn"
+  hide_client_secret   = true
+  skip_enabled_clients = true
 }
 
 resource "auth0_connection_client" "google_mcp_login" {
-  connection_id = auth0_connection.google.id
+  connection_id = data.auth0_connection.google.id
   client_id     = auth0_client.mcp_login.id
 }
 
-resource "auth0_connection_client" "github_mcp_login" {
-  connection_id = auth0_connection.github.id
-  client_id     = auth0_client.mcp_login.id
+import {
+  to = auth0_connection_client.google_mcp_login
+  id = "con_l4K3tQD2wpVFoSQn::s03JHbzj8E3dhTRcZg7S5nC82fCcAw7t"
 }
 
 output "auth0_client_id" {

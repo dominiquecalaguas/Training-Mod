@@ -4,5 +4,6 @@
 *.tfplan
 *.tfvars
 *.tfvars.json
+.env.local
 crash.log
 crash.*.log
