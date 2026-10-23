@@ -4,18 +4,30 @@ import { NextRequest, NextResponse } from "next/server"
 export const runtime = "nodejs"
 export const dynamic = "force-dynamic"
 
-const ALLOWED_ORIGIN = "https://dominiquecalaguas.framer.website"
+const SITE_ORIGIN = "https://dominiquecalaguas.framer.website"
 
-const corsHeaders = {
-    "Access-Control-Allow-Origin": ALLOWED_ORIGIN,
-    "Access-Control-Allow-Methods": "GET, OPTIONS",
-    "Access-Control-Allow-Headers": "Content-Type",
+function getCorsHeaders(request: Request) {
+    const origin = request.headers.get("origin")
+
+    const allowed =
+        origin === SITE_ORIGIN ||
+        (origin !== null &&
+            /^https:\/\/[a-z0-9-]+\.framercanvas\.com$/.test(origin))
+
+    return {
+        ...(allowed && origin
+            ? { "Access-Control-Allow-Origin": origin }
+            : {}),
+        "Access-Control-Allow-Methods": "GET, OPTIONS",
+        "Access-Control-Allow-Headers": "Content-Type",
+        Vary: "Origin",
+    }
 }
 
-export async function OPTIONS() {
+export async function OPTIONS(request: Request) {
     return new NextResponse(null, {
         status: 204,
-        headers: corsHeaders,
+        headers: getCorsHeaders(request),
     })
 }
 
@@ -26,7 +38,7 @@ export async function GET(
     const { slug } = await context.params
 
     try {
-        // Reuse the existing portfolio endpoint
+        // Reuse our existing, working portfolio endpoint
         const origin = new URL(request.url).origin
 
         const response = await fetch(
@@ -51,7 +63,7 @@ export async function GET(
                 { error: "Project not found" },
                 {
                     status: 404,
-                    headers: corsHeaders,
+                    headers: getCorsHeaders(request),
                 }
             )
         }
@@ -60,7 +72,7 @@ export async function GET(
             { project },
             {
                 headers: {
-                    ...corsHeaders,
+                    ...getCorsHeaders(request),
                     "Cache-Control": "no-store",
                 },
             }
@@ -72,7 +84,7 @@ export async function GET(
             { error: "Unable to load project" },
             {
                 status: 500,
-                headers: corsHeaders,
+                headers: getCorsHeaders(request),
             }
         )
     }

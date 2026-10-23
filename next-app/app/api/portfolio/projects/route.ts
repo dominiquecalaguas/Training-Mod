@@ -5,12 +5,21 @@ import { connect } from "framer-api"
 export const runtime = "nodejs"
 export const dynamic = "force-dynamic"
 
+
 const ALLOWED_ORIGIN = "https://dominiquecalaguas.framer.website"
 
-const corsHeaders = {
-    "Access-Control-Allow-Origin": ALLOWED_ORIGIN,
-    "Access-Control-Allow-Methods": "GET, OPTIONS",
-    "Access-Control-Allow-Headers": "Content-Type",
+function getCorsHeaders(origin: string | null) {
+    const isAllowed =
+        origin === ALLOWED_ORIGIN ||
+        (origin !== null &&
+            /^https:\/\/[a-z0-9-]+\.framercanvas\.com$/.test(origin))
+
+    return {
+        "Access-Control-Allow-Origin": isAllowed ? origin! : ALLOWED_ORIGIN,
+        "Access-Control-Allow-Methods": "GET, OPTIONS",
+        "Access-Control-Allow-Headers": "Content-Type",
+        Vary: "Origin",
+    }
 }
 
 export async function OPTIONS() {
