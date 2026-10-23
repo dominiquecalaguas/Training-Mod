@@ -4,6 +4,21 @@ import { NextRequest, NextResponse } from "next/server"
 export const runtime = "nodejs"
 export const dynamic = "force-dynamic"
 
+const ALLOWED_ORIGIN = "https://dominiquecalaguas.framer.website"
+
+const corsHeaders = {
+    "Access-Control-Allow-Origin": ALLOWED_ORIGIN,
+    "Access-Control-Allow-Methods": "GET, OPTIONS",
+    "Access-Control-Allow-Headers": "Content-Type",
+}
+
+export async function OPTIONS() {
+    return new NextResponse(null, {
+        status: 204,
+        headers: corsHeaders,
+    })
+}
+
 export async function GET(
     request: NextRequest,
     context: { params: Promise<{ slug: string }> }
@@ -11,7 +26,7 @@ export async function GET(
     const { slug } = await context.params
 
     try {
-        // Reuse our existing, working portfolio endpoint.
+        // Reuse the existing portfolio endpoint
         const origin = new URL(request.url).origin
 
         const response = await fetch(
@@ -34,7 +49,10 @@ export async function GET(
         if (!project) {
             return NextResponse.json(
                 { error: "Project not found" },
-                { status: 404 }
+                {
+                    status: 404,
+                    headers: corsHeaders,
+                }
             )
         }
 
@@ -42,6 +60,7 @@ export async function GET(
             { project },
             {
                 headers: {
+                    ...corsHeaders,
                     "Cache-Control": "no-store",
                 },
             }
@@ -51,7 +70,10 @@ export async function GET(
 
         return NextResponse.json(
             { error: "Unable to load project" },
-            { status: 500 }
+            {
+                status: 500,
+                headers: corsHeaders,
+            }
         )
     }
 }
