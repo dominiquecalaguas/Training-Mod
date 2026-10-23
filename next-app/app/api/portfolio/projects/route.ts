@@ -5,27 +5,30 @@ import { connect } from "framer-api"
 export const runtime = "nodejs"
 export const dynamic = "force-dynamic"
 
+const SITE_ORIGIN = "https://dominiquecalaguas.framer.website"
 
-const ALLOWED_ORIGIN = "https://dominiquecalaguas.framer.website"
+function getCorsHeaders(request: Request) {
+    const origin = request.headers.get("origin")
 
-function getCorsHeaders(origin: string | null) {
-    const isAllowed =
-        origin === ALLOWED_ORIGIN ||
+    const allowed =
+        origin === SITE_ORIGIN ||
         (origin !== null &&
             /^https:\/\/[a-z0-9-]+\.framercanvas\.com$/.test(origin))
 
     return {
-        "Access-Control-Allow-Origin": isAllowed ? origin! : ALLOWED_ORIGIN,
+        ...(allowed && origin
+            ? { "Access-Control-Allow-Origin": origin }
+            : {}),
         "Access-Control-Allow-Methods": "GET, OPTIONS",
         "Access-Control-Allow-Headers": "Content-Type",
         Vary: "Origin",
     }
 }
 
-export async function OPTIONS() {
+export async function OPTIONS(request: Request) {
     return new NextResponse(null, {
         status: 204,
-        headers: corsHeaders,
+        headers: getCorsHeaders(request),
     })
 }
 
@@ -43,7 +46,7 @@ function cleanText(value: unknown): string {
         .trim()
 }
 
-export async function GET() {
+export async function GET(request: Request) {
     const projectUrl = process.env.FRAMER_PROJECT_URL
     const apiKey = process.env.FRAMER_API_KEY
 
@@ -52,7 +55,7 @@ export async function GET() {
             { error: "Framer credentials are not configured" },
             {
                 status: 500,
-                headers: corsHeaders,
+                headers: getCorsHeaders(request),
             }
         )
     }
@@ -179,7 +182,7 @@ export async function GET() {
             { projects: result },
             {
                 headers: {
-                    ...corsHeaders,
+                    ...getCorsHeaders(request),
                     "Cache-Control": "no-store",
                 },
             }
@@ -191,7 +194,7 @@ export async function GET() {
             { error: "Unable to load portfolio data" },
             {
                 status: 500,
-                headers: corsHeaders,
+                headers: getCorsHeaders(request),
             }
         )
     } finally {
