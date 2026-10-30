@@ -1,0 +1,76 @@
+@font-face {
+  font-family: "Bolto Inter";
+  src: url("/bolto/fonts/InterVariable.woff2") format("woff2");
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Bolto Inter";
+  src: url("/bolto/fonts/InterVariable-Italic.woff2") format("woff2");
+  font-style: italic;
+  font-weight: 100 900;
+  font-display: swap;
+}
+
+/* Figma brand kit 2050:393. Apply only to Bolto and its dialog portals. */
+.scope {
+  --bolto-background: #fff;
+  --bolto-text: #1a1a1a;
+  --bolto-secondary: #595961;
+  --bolto-tertiary: #9d9d9d;
+  --bolto-outline-soft: #ededed;
+  --bolto-outline: #d3d3d3;
+  --bolto-surface: #f4f4f1;
+  --bolto-surface-blue: #e8effe;
+  --bolto-primary: #2966ff;
+  --bolto-hover: #5283ff;
+  --bolto-focus: #7ba0ff;
+  --bolto-disabled: #a3beff;
+  --bolto-link: #1a60f8;
+  --bolto-pill-background: #ccdbff;
+  --bolto-success: #1b873f;
+  --bolto-success-background: #ddfdcf;
+  --bolto-warning: #f87a1a;
+  --bolto-warning-background: #fdeee0;
+  --bolto-error: #f84131;
+  --bolto-error-outline: #ff6a50;
+  --bolto-error-background: #f8e3e0;
+  --bolto-radius-sm: 8px;
+  --bolto-radius-md: 10px;
+  --bolto-radius-lg: 12px;
+  --bolto-radius-xl: 24px;
+  --bolto-radius-pill: 999px;
+  --bolto-space-1: 4px;
+  --bolto-space-2: 8px;
+  --bolto-space-3: 12px;
+  --bolto-space-4: 16px;
+  --bolto-space-6: 24px;
+  --bolto-space-8: 32px;
+  --bolto-font: "Bolto Inter", Inter, Arial, sans-serif;
+  --bolto-text-xs: 12px;
+  --bolto-text-sm: 14px;
+  --bolto-text-md: 16px;
+  --bolto-text-lg: 20px;
+  --bolto-text-xl: 24px;
+  --bolto-text-heading: 40px;
+
+  /* Adapt existing shadcn primitives inside this scope only. */
+  --background: var(--bolto-background);
+  --foreground: var(--bolto-text);
+  --primary: var(--bolto-primary);
+  --primary-foreground: var(--bolto-background);
+  --muted-foreground: var(--bolto-secondary);
+  --border: var(--bolto-outline);
+  --input: var(--bolto-outline);
+  --ring: var(--bolto-focus);
+
+  color-scheme: light;
+  color: var(--bolto-text);
+  font-family: var(--bolto-font);
+  font-size: var(--bolto-text-sm);
+  font-weight: 400;
+  line-height: 20px;
+  font-synthesis: none;
+}

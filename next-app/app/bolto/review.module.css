@@ -1,0 +1,125 @@
+.root { min-height: 100vh; background: var(--bolto-background); }
+/* Figma uses Inter's default metrics rather than automatic optical-size changes. */
+.root, .dialog { font-optical-sizing: none; }
+/* Authored screen 2136:815 controls geometry; do not normalize these values to the brand kit. */
+.container { max-width: 1536px; margin-inline: auto; border: 1px solid #000; padding: 56px clamp(23px, calc(7.03125vw - 1px), 107px); }
+.logo { display: block; width: 148.5px; height: 32px; }
+.progress { margin-top: var(--bolto-space-8); }
+.steps { display: flex; flex-wrap: wrap; align-items: center; gap: var(--bolto-space-3); padding: 0; margin: 0; list-style: none; font-size: var(--bolto-text-lg); line-height: 26px; }
+.step { display: flex; align-items: center; gap: var(--bolto-space-3); color: var(--bolto-disabled); }
+.step[aria-current="step"] { color: var(--bolto-focus); font-weight: 500; }
+.intro { margin-top: var(--bolto-space-8); }
+.title { margin: 0; font-size: var(--bolto-text-heading); line-height: 44px; font-weight: 400; letter-spacing: -0.8px; }
+.subtitle { margin: var(--bolto-space-2) 0 0; font-size: var(--bolto-text-lg); line-height: 26px; }
+.columns { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 60px; max-width: 1316px; margin-top: var(--bolto-space-8); align-items: start; }
+.column { min-width: 0; }
+.sectionHeader { display: flex; align-items: center; justify-content: space-between; gap: var(--bolto-space-4); min-height: 32px; margin-bottom: var(--bolto-space-8); }
+.sectionTitle { margin: 0; font-size: var(--bolto-text-xl); line-height: 32px; letter-spacing: -0.48px; font-weight: 500; }
+.complete { color: var(--bolto-success); font-weight: 500; white-space: nowrap; }
+.cards { display: flex; flex-direction: column; gap: var(--bolto-space-3); }
+.card { min-width: 0; border: 1px solid var(--bolto-outline); border-radius: var(--bolto-radius-xl); padding: var(--bolto-space-8); background: var(--bolto-background); }
+.titleActions { display: flex; align-items: center; gap: 12px; min-width: 0; }
+.editLink { border: 0; padding: 0; color: var(--bolto-link); background: transparent; font: inherit; cursor: pointer; }
+.editLink:hover { text-decoration: underline; }
+.cardHeading { display: flex; justify-content: space-between; align-items: center; gap: var(--bolto-space-3); }
+.cardHeading > img, .titleActions .editLink { flex-shrink: 0; }
+.cardTitle { margin: 0; font-size: var(--bolto-text-md); font-weight: 500; line-height: 32px; }
+.divider { height: 1.415613px; margin: 12px 0; }
+.divider img { display: block; max-width: 100%; transform: rotate(-0.14432deg); }
+.letterDivider { height: 1.209064px; margin-bottom: 0; }
+.stack { display: flex; flex-direction: column; gap: var(--bolto-space-2); }
+.group { margin-top: 19px; }
+.name { margin: 0; font-size: var(--bolto-text-xl); line-height: 20px; font-weight: 500; }
+.text { margin: 0; overflow-wrap: anywhere; }
+.medium { font-weight: 500; }
+.row { display: flex; align-items: start; justify-content: space-between; gap: var(--bolto-space-4); margin: 0; }
+.row dt { font-weight: 500; }
+.row dd { margin: 0; text-align: right; overflow-wrap: anywhere; }
+.amount { color: var(--bolto-success); font-weight: 500; }
+.salary { margin: 0; font-size: var(--bolto-text-xl); line-height: 32px; }
+.money { font-size: var(--bolto-text-md); line-height: 22px; }
+.bonusNote { margin: 14px 0 0; }
+.equity { display: flex; flex-direction: column; align-items: start; gap: 13px; margin-top: 12px; }
+.tag { display: inline-flex; min-width: 109px; justify-content: center; padding: 2px 8px; border-radius: 40.197px; color: var(--bolto-success); background: var(--bolto-success-background); font-size: 14px; line-height: 20px; font-weight: 500; }
+.equityGrid { display: grid; grid-template-columns: 194px 1fr; gap: var(--bolto-space-6); max-width: 100%; }
+.metric { display: flex; flex-direction: column; gap: var(--bolto-space-1); font-size: var(--bolto-text-xs); line-height: 16px; }
+.vesting { margin-top: var(--bolto-space-3); }
+.rightColumn { display: flex; flex-direction: column; gap: var(--bolto-space-8); position: relative; top: -4px; }
+.rightColumn .sectionHeader { margin-bottom: 36px; }
+.iconButton { display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; padding: 4px; margin: -4px; border: 0; background: transparent; cursor: pointer; border-radius: var(--bolto-radius-sm); }
+.documentArea { position: relative; width: min(546px, calc(100% - 74px)); margin-left: 37px; }
+.documentTrigger { position: absolute; inset: 0; border: 0; border-radius: var(--bolto-radius-sm); background: transparent; cursor: zoom-in; }
+.documentTrigger:hover { box-shadow: 0 0 0 2px var(--bolto-surface-blue); }
+.letter { padding: var(--bolto-space-8); border: 1px solid var(--bolto-focus); border-radius: var(--bolto-radius-sm); background: var(--bolto-background); }
+.letterCompany { margin: 0; font-size: var(--bolto-text-md); font-weight: 500; line-height: 32px; }
+.letterBody { margin-top: 19px; }
+.letterDate { margin: 0 0 var(--bolto-space-3); }
+.letterParagraph { margin: 0 0 20px; overflow-wrap: anywhere; }
+.letterParagraph:last-child { margin-bottom: 0; }
+.compensationParagraph { min-height: 45px; margin-bottom: 12px; }
+.letterHighlight { font-size: var(--bolto-text-md); line-height: 22px; font-weight: 500; color: var(--bolto-success); }
+.letterLines { display: block; max-width: 100%; height: auto; margin-top: var(--bolto-space-3); }
+.signature { margin-top: var(--bolto-space-3); }
+.signature p { margin: 0; }
+.signature p:first-child { margin-bottom: 20px; }
+.expandCaption { display: block; margin: var(--bolto-space-3) auto 0; border: 0; background: transparent; color: inherit; padding: 0; font: inherit; text-align: center; cursor: zoom-in; }
+.noteHelp { margin: 0 0 var(--bolto-space-2); }
+.root .noteInput { display: block; field-sizing: fixed; min-height: 48px; height: 48px; resize: vertical; padding: var(--bolto-space-3); border: 0; border-radius: var(--bolto-radius-md); background: var(--bolto-surface); color: var(--bolto-text); box-shadow: none; font: inherit; line-height: 24px; }
+.root .noteInput::placeholder { color: var(--bolto-tertiary); font-style: italic; }
+.root .noteInput:focus-visible { outline: 2px solid var(--bolto-primary); outline-offset: 2px; }
+.callout { display: flex; align-items: start; gap: var(--bolto-space-3); padding: var(--bolto-space-4); background: var(--bolto-success-background); border-radius: var(--bolto-radius-lg); line-height: 24px; }
+.callout img { flex-shrink: 0; }
+.calloutTitle { margin: 0; font-weight: 500; }
+.calloutBody { margin: var(--bolto-space-1) 0 0; color: var(--bolto-secondary); }
+.footer { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--bolto-space-4); max-width: 1316px; margin-top: 31.5px; }
+.root .button, .dialog .button { min-height: 40px; height: 40px; padding: 0 var(--bolto-space-4); border-radius: var(--bolto-radius-md); box-shadow: none; font-family: var(--bolto-font); font-size: var(--bolto-text-sm); line-height: 24px; font-weight: 400; cursor: pointer; }
+.footer > .button:first-child { min-width: 122px; }
+.footer > .button:last-child { min-width: 169px; }
+.root .primaryButton, .dialog .primaryButton { background: var(--bolto-primary); color: var(--bolto-background); border: 0; }
+.root .primaryButton:hover, .dialog .primaryButton:hover { background: var(--bolto-hover); }
+.root .secondaryButton, .dialog .secondaryButton { border: 1px solid var(--bolto-outline); background: var(--bolto-background); color: var(--bolto-secondary); }
+.root .secondaryButton:hover, .dialog .secondaryButton:hover { background: var(--bolto-surface); }
+.feedback { margin: 0; color: var(--bolto-secondary); }
+.root button:focus-visible, .dialog button:focus-visible { outline: 2px solid var(--bolto-primary); outline-offset: 4px; }
+.dialog.dialog { width: min(760px, calc(100vw - 32px)); max-width: 760px; max-height: calc(100dvh - 48px); overflow-y: auto; padding: var(--bolto-space-8); border: 1px solid var(--bolto-outline); border-radius: var(--bolto-radius-xl); background: var(--bolto-background); color: var(--bolto-text); gap: var(--bolto-space-6); }
+.dialogHeader { display: flex; justify-content: space-between; align-items: start; gap: var(--bolto-space-4); }
+.dialog .dialogTitle { margin: 0; font: inherit; font-size: var(--bolto-text-xl); line-height: 32px; letter-spacing: -0.48px; }
+.dialog .dialogDescription { margin: var(--bolto-space-2) 0 0; font: inherit; color: var(--bolto-secondary); }
+.dialog .letter { width: min(546px, 100%); margin-inline: auto; }
+.dialogActions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: var(--bolto-space-3); margin-top: var(--bolto-space-6); }
+.fields { display: grid; gap: var(--bolto-space-4); }
+.field { display: grid; gap: 6px; }
+.dialog .fieldInput { height: 44px; border: 1px solid transparent; border-radius: var(--bolto-radius-md); padding: 0 var(--bolto-space-3); background: var(--bolto-surface); color: var(--bolto-text); box-shadow: none; font: inherit; }
+.dialog .fieldInput:focus-visible { background: var(--bolto-background); border-color: var(--bolto-primary); outline: 0; }
+.dialog .fieldInput:invalid:not(:placeholder-shown) { border-color: var(--bolto-error-outline); }
+@media (min-width: 1101px) {
+  .step:nth-child(1) { min-width: 163px; }
+  .step:nth-child(2) { min-width: 169px; }
+  .step:nth-child(3) { min-width: 132px; }
+  .step:nth-child(4) { min-width: 230px; }
+  .step:nth-child(5) { min-width: 172px; }
+}
+@media (max-width: 1100px) {
+  .container { border: 0; padding: 57px 32px; }
+  .columns { gap: 32px; }
+  .card { padding: 24px; }
+  .documentArea { width: 100%; margin-left: 0; }
+  .letter { padding: 24px; }
+  .equityGrid { grid-template-columns: 1fr 1fr; }
+  .steps { font-size: 16px; line-height: 22px; }
+}
+@media (max-width: 760px) {
+  .container { padding: 32px 20px; }
+  .columns { grid-template-columns: minmax(0, 1fr); }
+  .rightColumn { top: 0; }
+  .steps { gap: 8px 12px; font-size: 14px; line-height: 20px; }
+  .step { gap: 8px; }
+  .title { font-size: 32px; line-height: 36px; }
+  .subtitle { font-size: 16px; line-height: 22px; }
+  .sectionHeader, .rightColumn .sectionHeader { margin-bottom: 24px; }
+  .card { padding: 24px; }
+  .row { gap: 12px; }
+  .footer { align-items: stretch; }
+  .feedback { order: 3; width: 100%; }
+  .dialog.dialog { padding: 24px; }
+}

@@ -1,0 +1,8 @@
+.progress { margin-top:var(--bolto-space-8); max-width:100%; overflow-x:auto; }
+.steps { display:flex; flex-wrap:nowrap; align-items:center; gap:var(--bolto-space-3); padding:0; margin:0; list-style:none; font-size:var(--bolto-text-lg); line-height:26px; width:max-content; }
+.step { display:flex; align-items:center; gap:var(--bolto-space-3); flex-shrink:0; }
+.step a { color:var(--bolto-disabled); text-decoration:none; white-space:nowrap; }
+.step a[aria-current="step"] { color:var(--bolto-focus); font-weight:500; }
+.step a:focus-visible { outline:2px solid var(--bolto-primary); outline-offset:-2px; border-radius:2px; }
+@media(max-width:1100px) { .steps { font-size:16px; } }
+@media(max-width:760px) { .steps { font-size:14px; line-height:20px; } .step { gap:8px; } }
