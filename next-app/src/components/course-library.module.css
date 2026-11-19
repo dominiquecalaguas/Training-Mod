@@ -8,6 +8,10 @@
   isolation: isolate;
   flex: 1;
   color: var(--sky-text);
+  color-scheme: dark;
+}
+
+.nightSurface {
   background:
     radial-gradient(
       ellipse clamp(300px, 42vw, 690px) clamp(170px, 23vw, 320px)
@@ -31,7 +35,6 @@
       #080d1b 78%,
       #040711 100%
     );
-  color-scheme: dark;
 }
 
 .sky {
@@ -240,9 +243,14 @@
   box-shadow:
     0 0 18px rgb(184 164 255 / 40%),
     0 5px 28px rgb(130 155 255 / 29%),
-    inset 0 1px 0 rgb(239 234 255 / 28%);
-  outline: 2px solid rgb(213 202 255 / 75%);
-  outline-offset: 3px;
+    inset 0 0 0 1px #d2c7ff;
+}
+
+@media (forced-colors: active) {
+  .search:focus-within {
+    outline: 2px solid Highlight;
+    outline-offset: -2px;
+  }
 }
 
 @supports (backdrop-filter: blur(12px)) or (-webkit-backdrop-filter: blur(12px)) {
@@ -331,7 +339,7 @@
     box-shadow 300ms ease-out;
 }
 
-.card:is(:hover, :focus-visible) {
+.card:is(:hover, :has(:focus-visible)) {
   z-index: 1;
   border-color: rgb(201 182 255 / 54%);
   border-top-color: rgb(236 225 255 / 61%);
@@ -349,7 +357,7 @@
     backdrop-filter: blur(12px);
   }
 
-  .card:is(:hover, :focus-visible) { background: rgb(42 49 80 / 80%); }
+  .card:is(:hover, :has(:focus-visible)) { background: rgb(42 49 80 / 80%); }
 }
 
 @property --prisma-course-glow-angle {
@@ -391,8 +399,8 @@
   .card::after { padding: 1px; }
 
   @media (prefers-reduced-motion: no-preference) {
-    .card:is(:hover, :focus-visible)::before,
-    .card:is(:hover, :focus-visible)::after {
+    .card:is(:hover, :has(:focus-visible))::before,
+    .card:is(:hover, :has(:focus-visible))::after {
       content: "";
       animation: coursePerimeter 5.2s linear infinite;
     }
@@ -400,10 +408,10 @@
 }
 
 @media (prefers-reduced-motion: no-preference) {
-  .card:is(:hover, :focus-visible) { transform: translateY(-2px) scale(1.015); }
+  .card:is(:hover, :has(:focus-visible)) { transform: translateY(-2px) scale(1.015); }
 }
 
-.card:focus-visible {
+.card:has(.cardLink:focus-visible) {
   outline: 2px solid #c7c2ff;
   outline-offset: 3px;
 }
@@ -413,6 +421,28 @@
 .starJar summary:focus-visible {
   outline: 2px solid #c7c2ff;
   outline-offset: 3px;
+}
+
+.cardLink {
+  position: absolute;
+  z-index: 1;
+  inset: 0;
+}
+
+.cardLink:focus-visible { outline: none; }
+
+.matchLink {
+  position: relative;
+  z-index: 2;
+  display: block;
+  border-radius: 4px;
+}
+
+.matchLink:hover .matchTitle { text-decoration: underline; }
+
+.matchLink:focus-visible {
+  outline: 2px solid #c7c2ff;
+  outline-offset: 2px;
 }
 
 .cover {
@@ -446,7 +476,7 @@
   transition: background-color 280ms ease-out;
 }
 
-.card:is(:hover, :focus-visible) .cardBody {
+.card:is(:hover, :has(:focus-visible)) .cardBody {
   background-color: rgb(105 119 164 / 26%);
 }
 

@@ -1,12 +1,13 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
-import { Check } from "lucide-react";
+import { useEffect, useId, useState } from "react";
+import { Check, ChevronDown } from "lucide-react";
 import { InferSelectModel } from "drizzle-orm";
 import { lessons } from "@/db/schema";
 import { useDeviceToken } from "@//components/DeviceTokenProvider";
 import { trackLessonClicked } from "@/lib/analytics";
+import styles from "./course-outline.module.css";
 
 type Lesson = InferSelectModel<typeof lessons>;
 
@@ -32,6 +33,8 @@ export function CourseSidebar({
   progressVersion?: number;
 }) {
   const deviceToken = useDeviceToken();
+  const listId = useId();
+  const [outlineExpanded, setOutlineExpanded] = useState(false);
   const [lessonProgress, setLessonProgress] = useState<LessonProgressMap>({});
   const [courseProgress, setCourseProgress] = useState<CourseProgressMap>({});
 
@@ -72,77 +75,76 @@ export function CourseSidebar({
   const stats = courseProgress[courseId];
   const totalLessons = stats?.totalLessons ?? courseLessons.length;
   const completedLessons = stats?.completedLessons ?? 0;
-  const pct =
-    totalLessons > 0
-      ? Math.round((completedLessons / totalLessons) * 100)
-      : 0;
-
   return (
-    <aside className="w-full rounded-[20px] border border-neutral-200/90 bg-white p-4 shadow-[0_0_15px_rgba(174,194,255,0.45)] lg:w-72">
-      <h2 className="mb-2 text-sm font-semibold tracking-tight text-neutral-900 line-clamp-2">
+    <aside className={`w-full rounded-[20px] p-4 ${styles.outline}`}>
+      <h2 className="mb-1 text-sm font-semibold tracking-tight text-neutral-900 line-clamp-2">
         {courseTitle}
       </h2>
       {courseLessons.length > 0 && (
-        <div className="mb-4 space-y-2">
-          <div className="relative">
-            <div className="relative h-1.5 w-full overflow-hidden rounded-full bg-[#E8EDFE]">
-              <div
-                className="absolute inset-y-0 left-0 rounded-full bg-gradient-to-r from-[#AEC2FF] to-[#4468D2] transition-all"
-                style={{ width: `${pct}%` }}
-              />
-            </div>
-            <div
-              className="pointer-events-none absolute -top-3 h-4 w-2 -translate-x-1/2 rounded-full border border-[#7699FF] bg-[#CFDBFD] shadow-sm"
-              style={{ left: `${pct}%` }}
-              aria-hidden
-            />
-          </div>
-          <p className="text-[11px] text-neutral-500">
-            {completedLessons} out of {totalLessons} lessons completed
-          </p>
-        </div>
+        <p className="mb-5 text-xs text-neutral-600">
+          {completedLessons} out of {totalLessons} lessons completed
+        </p>
       )}
-      <h3 className="mb-3 text-xs font-semibold uppercase tracking-wide text-neutral-500">
+      <button
+        type="button"
+        className="flex min-h-11 w-full items-center justify-between gap-3 rounded-md px-2.5 text-left text-sm font-semibold text-neutral-800 hover:bg-[#E7EDFF]/75 focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-[#48608f] lg:hidden"
+        aria-expanded={outlineExpanded}
+        aria-controls={listId}
+        onClick={() => setOutlineExpanded((expanded) => !expanded)}
+      >
+        Lessons
+        <ChevronDown
+          className={outlineExpanded ? "size-4 rotate-180" : "size-4"}
+          aria-hidden="true"
+        />
+      </button>
+      <h3 className="mb-3.5 hidden text-xs font-semibold uppercase tracking-wide text-neutral-500 lg:block">
         Lessons
       </h3>
-      {courseLessons.length === 0 ? (
-        <p className="text-sm text-neutral-600">
-          This course has no lessons yet.
-        </p>
-      ) : (
-        <ol className="space-y-1 text-sm">
-          {courseLessons.map((lesson) => {
-            const isCurrent = lesson.id === currentLessonId;
-            const isDone = lessonProgress[lesson.id];
-            return (
-              <li key={lesson.id}>
-                <Link
-                  href={`/courses/${courseId}/lessons/${lesson.id}`}
-                  onClick={() => trackLessonClicked(courseId, lesson.id)}
-                  className={`flex items-center gap-2 rounded-md px-2 py-1.5 text-neutral-700 hover:bg-[#E7EDFF]/75 ${
-                    isCurrent
-                      ? "bg-[#E7EDFF]/75 font-medium text-neutral-900"
-                      : ""
-                  }`}
-                >
-                  <span
-                    className={`inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full ${
-                      isDone
-                        ? "bg-emerald-500 text-white"
-                        : "border-2 border-neutral-300 bg-transparent"
+      <div id={listId} className={outlineExpanded ? "mt-2 lg:mt-0" : "hidden lg:block"}>
+        {courseLessons.length === 0 ? (
+          <p className="text-sm text-neutral-600">
+            This course has no lessons yet.
+          </p>
+        ) : (
+          <ol className="space-y-1 text-sm">
+            {courseLessons.map((lesson) => {
+              const isCurrent = lesson.id === currentLessonId;
+              const isDone = lessonProgress[lesson.id];
+              return (
+                <li key={lesson.id}>
+                  <Link
+                    href={`/courses/${courseId}/lessons/${lesson.id}`}
+                    onClick={() => trackLessonClicked(courseId, lesson.id)}
+                    title={lesson.title}
+                    aria-label={isDone ? `${lesson.title}, completed` : undefined}
+                    aria-current={isCurrent ? "page" : undefined}
+                    className={`flex h-auto min-h-11 items-center gap-2.5 rounded-md px-2.5 py-2.5 text-neutral-700 hover:bg-[#E7EDFF]/75 focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-[#48608f] ${
+                      isCurrent
+                        ? "bg-[#E7EDFF]/75 font-medium text-neutral-900"
+                        : ""
                     }`}
                   >
-                    {isDone ? (
-                      <Check className="size-3.5" strokeWidth={2.5} />
-                    ) : null}
-                  </span>
-                  <span className="flex-1 truncate">{lesson.title}</span>
-                </Link>
-              </li>
-            );
-          })}
-        </ol>
-      )}
+                    <span
+                      aria-hidden="true"
+                      className={`inline-flex size-[22px] shrink-0 items-center justify-center rounded-full ${
+                        isDone
+                          ? styles.completed
+                          : "border-2 border-neutral-300 bg-transparent"
+                      }`}
+                    >
+                      {isDone ? (
+                        <Check className="size-3.5" strokeWidth={2.5} />
+                      ) : null}
+                    </span>
+                    <span className="min-w-0 flex-1 whitespace-normal [overflow-wrap:break-word]">{lesson.title}</span>
+                  </Link>
+                </li>
+              );
+            })}
+          </ol>
+        )}
+      </div>
     </aside>
   );
 }

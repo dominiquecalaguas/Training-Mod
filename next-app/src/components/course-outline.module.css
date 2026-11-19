@@ -1,0 +1,19 @@
+.outline {
+  border: 1px solid #e1e8f7;
+  background: #fcfdff;
+  box-shadow: 0 6px 24px rgb(77 102 155 / 12%);
+}
+
+@supports (backdrop-filter: blur(14px)) or (-webkit-backdrop-filter: blur(14px)) {
+  .outline {
+    border-color: rgb(255 255 255 / 76%);
+    background: rgb(255 255 255 / 78%);
+    -webkit-backdrop-filter: blur(14px);
+    backdrop-filter: blur(14px);
+  }
+}
+
+.completed {
+  background-color: var(--prisma-nav-active-border);
+  color: #fff;
+}

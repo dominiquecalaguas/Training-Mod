@@ -24,7 +24,7 @@ export default async function Home() {
 
   return (
     <DeviceTokenProvider>
-      <main className={styles.library}>
+      <main className={`${styles.library} ${styles.nightSurface}`}>
         <div className={styles.sky} aria-hidden="true">
           <span />
           <span />
