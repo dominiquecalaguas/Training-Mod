@@ -1,47 +1,14 @@
 "use client";
 
 import Link from "next/link";
+import { BookOpen } from "lucide-react";
+import styles from "./course-library.module.css";
 import { trackCourseClicked } from "@/lib/analytics";
 import { KeywordHighlight } from "@/components/KeywordHighlight";
 import type { CourseListItem } from "@/lib/courses";
 import type { MatchedLessonResult } from "@/lib/search-courses";
 
 const MATCHED_LESSON_PREVIEW = 3;
-
-function statusBadge({
-  pct,
-  totalLessons,
-}: {
-  pct: number;
-  totalLessons: number;
-}) {
-  if (totalLessons === 0) {
-    return (
-      <span className="shrink-0 rounded-full bg-[#E8EDFE] px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wide text-[#2A5CF2]">
-        No lessons
-      </span>
-    );
-  }
-  if (pct === 0) {
-    return (
-      <span className="shrink-0 rounded-full bg-[#E8EDFE] px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wide text-[#2A5CF2]">
-        Not yet started
-      </span>
-    );
-  }
-  if (pct === 100) {
-    return (
-      <span className="shrink-0 rounded-full bg-[#4468D2] px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wide text-white">
-        100% done
-      </span>
-    );
-  }
-  return (
-    <span className="shrink-0 rounded-full bg-[#E8EDFE] px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wide text-[#2A5CF2]">
-      {pct}% done
-    </span>
-  );
-}
 
 export function CourseCard({
   course,
@@ -61,8 +28,10 @@ export function CourseCard({
     totalLessons > 0
       ? Math.round((completedLessons / totalLessons) * 100)
       : 0;
-  const showMastery =
-    totalLessons > 0 && completedLessons >= totalLessons;
+  const showMastery = totalLessons > 0 && completedLessons >= totalLessons;
+  const status = totalLessons === 0
+    ? "No lessons"
+    : pct === 0 ? "Not started" : `${pct}% done`;
 
   const showHighlight =
     Array.isArray(searchKeywords) && searchKeywords.length > 0;
@@ -72,72 +41,57 @@ export function CourseCard({
     <Link
       href={`/courses/${course.id}`}
       onClick={() => trackCourseClicked(course.id)}
-      className="group flex flex-col overflow-visible rounded-[20px] border border-neutral-200/90 bg-white shadow-[0_0_15px_rgba(174,194,255,0.45)] transition hover:-translate-y-0.5 hover:border-neutral-300 hover:shadow-[0_0_15px_rgba(174,194,255,0.5)]"
+      className={styles.card}
     >
-      <div className="relative w-full">
-        <div className="relative aspect-[388/160] w-full overflow-hidden rounded-t-[20px] bg-neutral-100">
-          {course.thumbnailUrl ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={course.thumbnailUrl}
-              alt={course.title}
-              className="h-full w-full object-cover transition-transform group-hover:scale-[1.02]"
-            />
-          ) : (
-            <div className="flex h-full min-h-[8rem] items-center justify-center text-xs font-medium uppercase tracking-wide text-neutral-500">
-              No thumbnail yet
-            </div>
-          )}
-          {showMastery && (
-            <div className="pointer-events-none absolute right-3 top-3 z-10">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src="/images/course-card/star-fall-mastery.svg"
-                alt=""
-                width={51}
-                height={52}
-                className="h-11 w-auto"
-              />
-            </div>
-          )}
-        </div>
-        <div className="pointer-events-none absolute left-[5%] top-0 z-20 flex h-1/2 max-h-[50%] w-[16.666%] min-w-[42px] max-w-[72px] -translate-y-[12%] items-start">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
+      <div className={styles.cover}>
+        {course.thumbnailUrl ? (
+          // eslint-disable-next-line @next/next/no-img-element
           <img
-            src="/images/course-card/rectangle-8.svg"
-            alt=""
-            width={42}
-            height={76}
-            className="h-full max-w-full w-auto object-contain object-left"
+            src={course.thumbnailUrl}
+            alt={course.title}
+            className={styles.thumbnail}
+            loading="lazy"
           />
-        </div>
+        ) : (
+          <BookOpen size={34} strokeWidth={1.25} className={styles.coverPlaceholder} aria-hidden="true" />
+        )}
+        {showMastery && (
+          <div className="pointer-events-none absolute right-3 top-3 z-10">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="/images/course-card/star-fall-mastery.svg"
+              alt=""
+              width={51}
+              height={52}
+              className="h-11 w-auto"
+            />
+          </div>
+        )}
       </div>
 
-      <div className="flex flex-1 flex-col gap-3 overflow-hidden rounded-b-[20px] bg-white p-4 pt-4">
-        <div className="flex items-start justify-between gap-3">
-          <h2 className="line-clamp-2 min-w-0 flex-1 text-base font-semibold leading-snug text-neutral-900">
+      <div className={styles.cardBody}>
+        <div className={styles.cardHeader}>
+          <h3 className={styles.cardTitle}>
             {showHighlight ? (
               <KeywordHighlight
                 text={course.title}
                 keywords={kw}
                 variant="yellow"
-                className="text-neutral-900"
               />
             ) : (
               course.title
             )}
-          </h2>
-          {statusBadge({ pct, totalLessons })}
+          </h3>
+          <span className={styles.status} data-complete={showMastery}>{status}</span>
         </div>
 
         {course.description && (
-          <p className="line-clamp-2 text-sm leading-relaxed text-neutral-800">
+          <p className={styles.description}>
             {showHighlight ? (
               <KeywordHighlight
                 text={course.description}
                 keywords={kw}
                 variant="yellow"
-                className="text-neutral-800"
               />
             ) : (
               course.description
@@ -146,38 +100,36 @@ export function CourseCard({
         )}
 
         {matchedLessons && matchedLessons.length > 0 && (
-          <div className="mt-1 space-y-2.5 border-t border-neutral-100 pt-3">
+          <div className={styles.matches}>
             {matchedLessons.slice(0, MATCHED_LESSON_PREVIEW).map(({ lesson, snippet }) => (
               <div key={lesson.id}>
-                <p className="text-[11px] font-medium uppercase tracking-wide text-neutral-500">
+                <p className={styles.matchLabel}>
                   Lesson {lesson.order}
                 </p>
-                <p className="mt-0.5 text-xs font-medium leading-snug text-neutral-900">
+                <p className={styles.matchTitle}>
                   {showHighlight ? (
                     <KeywordHighlight
                       text={lesson.title}
                       keywords={kw}
                       variant="yellow"
-                      className="text-neutral-900"
                     />
                   ) : (
                     lesson.title
                   )}
                 </p>
                 {snippet.trim() ? (
-                  <p className="mt-1 text-xs leading-relaxed">
+                  <p className={styles.matchSnippet}>
                     <KeywordHighlight
                       text={snippet}
                       keywords={kw}
                       variant="yellow"
-                      className="text-neutral-500"
                     />
                   </p>
                 ) : null}
               </div>
             ))}
             {matchedLessons.length > MATCHED_LESSON_PREVIEW && (
-              <p className="text-xs text-neutral-500">
+              <p className={styles.matchSnippet}>
                 and {matchedLessons.length - MATCHED_LESSON_PREVIEW} more
                 {matchedLessons.length - MATCHED_LESSON_PREVIEW === 1
                   ? " lesson"
@@ -188,23 +140,13 @@ export function CourseCard({
         )}
 
         {totalLessons > 0 && (
-          <div className="mt-auto space-y-2">
-            <div className="relative">
-              <div className="relative h-1.5 w-full overflow-hidden rounded-full bg-[#E8EDFE]">
-                <div
-                  className="absolute inset-y-0 left-0 rounded-full bg-gradient-to-r from-[#AEC2FF] to-[#4468D2] transition-all"
-                  style={{ width: `${pct}%` }}
-                />
-              </div>
-              <div
-                className="pointer-events-none absolute -top-3 h-4 w-2 -translate-x-1/2 rounded-full border border-[#7699FF] bg-[#CFDBFD] shadow-sm"
-                style={{ left: `${pct}%` }}
-                aria-hidden
-              />
-            </div>
-            <p className="text-[11px] text-neutral-500">
-              {completedLessons} out of {totalLessons} lessons completed
-            </p>
+          <div className={styles.cardProgress}>
+            <progress
+              value={Math.min(completedLessons, totalLessons)}
+              max={totalLessons}
+              aria-label={`Progress for ${course.title}`}
+            />
+            <p>{completedLessons} out of {totalLessons} lessons completed</p>
           </div>
         )}
       </div>

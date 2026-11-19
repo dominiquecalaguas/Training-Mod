@@ -38,6 +38,15 @@ export type CourseWithLessonsForSearch = CourseListItem & {
   lessons: readonly CourseLessonForSearch[];
 };
 
+export type LessonUpdate = {
+  lessonId: number;
+  courseId: number;
+  lessonTitle: string;
+  courseTitle: string;
+  date: string;
+  kind: "Added" | "Updated";
+};
+
 export async function getCoursesList(user: {
   role?: string;
 } | null): Promise<CourseListItem[]> {
@@ -62,9 +71,12 @@ export async function getCoursesList(user: {
 }
 
 /** Courses with non-archived lessons (for client-side search). */
-export async function getCoursesWithLessonsForSearch(user: {
+export async function getCourseLibrary(user: {
   role?: string;
-} | null): Promise<CourseWithLessonsForSearch[]> {
+} | null): Promise<{
+  courses: CourseWithLessonsForSearch[];
+  recentLessonUpdates: LessonUpdate[];
+}> {
   const isNewHire = user?.role === "new_hire";
 
   const courseRows = await db
@@ -82,7 +94,7 @@ export async function getCoursesWithLessonsForSearch(user: {
     )
     .orderBy(asc(courses.order));
 
-  if (courseRows.length === 0) return [];
+  if (courseRows.length === 0) return { courses: [], recentLessonUpdates: [] };
 
   const courseIds = courseRows.map((c) => c.id);
 
@@ -94,6 +106,8 @@ export async function getCoursesWithLessonsForSearch(user: {
       searchText: lessons.searchText,
       content: lessons.content,
       order: lessons.order,
+      createdAt: lessons.createdAt,
+      updatedAt: lessons.updatedAt,
     })
     .from(lessons)
     .where(
@@ -114,8 +128,27 @@ export async function getCoursesWithLessonsForSearch(user: {
     byCourse.set(l.courseId, list);
   }
 
-  return courseRows.map((c) => ({
-    ...c,
-    lessons: byCourse.get(c.id) ?? [],
-  }));
+  const courseTitles = new Map(courseRows.map((course) => [course.id, course.title]));
+  const recentLessonUpdates = lessonRows
+    .map((lesson): LessonUpdate => {
+      const edited = lesson.updatedAt > lesson.createdAt;
+      return {
+        lessonId: lesson.id,
+        courseId: lesson.courseId,
+        lessonTitle: lesson.title,
+        courseTitle: courseTitles.get(lesson.courseId)!,
+        date: (edited ? lesson.updatedAt : lesson.createdAt).toISOString(),
+        kind: edited ? "Updated" : "Added",
+      };
+    })
+    .sort((a, b) => b.date.localeCompare(a.date) || b.lessonId - a.lessonId)
+    .slice(0, 3);
+
+  return {
+    courses: courseRows.map((course) => ({
+      ...course,
+      lessons: byCourse.get(course.id) ?? [],
+    })),
+    recentLessonUpdates,
+  };
 }

@@ -1,6 +1,7 @@
 "use client";
 
 import { CourseGrid } from "@/components/CourseGrid";
+import styles from "./course-library.module.css";
 import { useSearchQuery } from "@/components/SearchQueryContext";
 import type { CourseWithLessonsForSearch } from "@/lib/courses";
 import { getSearchKeywords, searchCourses } from "@/lib/search-courses";
@@ -28,8 +29,8 @@ export function CoursesPage({
 
   if (searchResults.length === 0 && hasActiveSearch) {
     return (
-      <div className="flex min-h-[12rem] flex-col items-center justify-center rounded-2xl border border-dashed border-neutral-300 bg-white px-6 py-16 text-center shadow-sm">
-        <p className="max-w-md text-sm text-neutral-600">
+      <div role="status" className={styles.empty}>
+        <p>
           No courses match &ldquo;{searchQuery}&rdquo;
         </p>
       </div>
