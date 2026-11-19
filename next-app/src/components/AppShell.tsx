@@ -3,11 +3,12 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import posthog from "posthog-js";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { LogIn, Menu, UserPlus, X } from "lucide-react";
 import { BrandMark } from "@/components/BrandMark";
 import { SearchQueryProvider } from "@/components/SearchQueryContext";
 import { TopNav } from "@/components/TopNav";
+import styles from "./library-navigation.module.css";
 
 function NavLinkLucide({
   href,
@@ -29,6 +30,7 @@ function NavLinkLucide({
     <Link
       href={href}
       onClick={onClick}
+      aria-current={active ? "page" : undefined}
       className={`group flex flex-col items-center gap-1.5 rounded-lg px-2 py-2.5 text-center text-xs font-medium transition ${
         active
           ? "bg-white/10 text-white"
@@ -175,6 +177,7 @@ function NavLink({
     <Link
       href={href}
       onClick={onClick}
+      aria-current={active ? "page" : undefined}
       className={`group flex flex-col items-center gap-1.5 rounded-lg px-2 py-2.5 text-center text-xs font-medium transition ${
         active
           ? "bg-white/10 text-white"
@@ -213,7 +216,7 @@ function SidebarNav({
   const isAdmin = user?.role === "admin";
 
   return (
-    <div className="flex flex-1 flex-col gap-1 px-2 py-4">
+    <nav aria-label="Prisma" className={`flex flex-1 flex-col gap-1 px-2 py-4 ${styles.nav}`}>
       <NavLink
         href="/"
         iconSrc={SIDEBAR_ICONS.home}
@@ -286,7 +289,7 @@ function SidebarNav({
           />
         </>
       )}
-    </div>
+    </nav>
   );
 }
 
@@ -297,17 +300,25 @@ export function AppShell({
   user: AppShellUser;
   children: React.ReactNode;
 }) {
+  const isLibrary = usePathname() === "/";
   const [mobileOpen, setMobileOpen] = useState(false);
-  const close = () => setMobileOpen(false);
+  const menuButton = useRef<HTMLButtonElement>(null);
+  const closeButton = useRef<HTMLButtonElement>(null);
+
+  useEffect(() => {
+    if (mobileOpen) closeButton.current?.focus();
+  }, [mobileOpen]);
+
+  function close() {
+    if (!mobileOpen) return;
+    setMobileOpen(false);
+    menuButton.current?.focus();
+  }
 
   const sidebar = (
     <>
-      <div className="border-b border-neutral-700/80 px-4 py-5">
-        <Link
-          href="/"
-          className="flex justify-center"
-          onClick={close}
-        >
+      <div className={`border-b border-neutral-700/80 px-4 py-5 ${styles.brand}`}>
+        <Link href="/" className="flex justify-center" onClick={close}>
           <BrandMark variant="onDark" className="mx-auto max-h-14 max-w-[9rem]" />
         </Link>
       </div>
@@ -317,52 +328,69 @@ export function AppShell({
 
   return (
     <SearchQueryProvider>
-    <div className="flex min-h-screen bg-white text-neutral-900">
-      <aside className="hidden w-56 shrink-0 flex-col border-r border-neutral-800 bg-[#2a2a2e] md:flex">
-        {sidebar}
-      </aside>
+      <div className={`flex min-h-screen bg-white text-neutral-900 ${isLibrary ? styles.shell : ""}`}>
+        <aside className={`hidden w-56 shrink-0 flex-col border-r border-neutral-800 bg-[#2a2a2e] md:flex ${styles.desktop}`}>
+          {sidebar}
+        </aside>
 
-      {mobileOpen && (
-        <div
-          className="fixed inset-0 z-50 bg-black/50 md:hidden"
-          aria-hidden
-          onClick={close}
-        />
-      )}
-      <aside
-        className={`fixed inset-y-0 left-0 z-50 flex w-56 flex-col border-r border-neutral-800 bg-[#2a2a2e] shadow-xl transition-transform duration-200 ease-out md:hidden ${
-          mobileOpen ? "translate-x-0" : "pointer-events-none -translate-x-full"
-        }`}
-      >
-        <div className="flex items-center justify-end border-b border-neutral-700/80 px-2 py-2">
-          <button
-            type="button"
-            className="rounded-md p-2 text-neutral-400 hover:bg-white/10 hover:text-white"
-            aria-label="Close menu"
+        {mobileOpen && (
+          <div
+            className="fixed inset-0 z-50 bg-black/50 md:hidden"
+            aria-hidden
             onClick={close}
-          >
-            <X className="h-5 w-5" />
-          </button>
-        </div>
-        {sidebar}
-      </aside>
+          />
+        )}
+        <aside
+          id="prisma-mobile-navigation"
+          inert={!mobileOpen}
+          onKeyDown={(event) => {
+            if (event.key === "Escape") close();
+          }}
+          className={`fixed inset-y-0 left-0 z-50 flex w-56 flex-col overflow-y-auto border-r border-neutral-800 bg-[#2a2a2e] shadow-xl transition-transform duration-200 ease-out motion-reduce:transition-none md:hidden ${styles.drawer} ${
+            mobileOpen ? "translate-x-0" : "pointer-events-none -translate-x-full"
+          }`}
+        >
+          <div className={`flex items-center justify-end border-b border-neutral-700/80 px-2 py-2 ${styles.drawerActions}`}>
+            <button
+              ref={closeButton}
+              type="button"
+              className="rounded-md p-2 text-neutral-400 hover:bg-white/10 hover:text-white"
+              aria-label="Close menu"
+              onClick={close}
+            >
+              <X className="h-5 w-5" />
+            </button>
+          </div>
+          {sidebar}
+        </aside>
 
-      <div className="flex min-h-screen min-w-0 flex-1 flex-col">
-        <header className="sticky top-0 z-40 flex h-14 items-center gap-3 border-b border-neutral-200 bg-white px-4 md:hidden">
-          <button
-            type="button"
-            className="shrink-0 rounded-md p-2 text-neutral-700 hover:bg-neutral-100"
-            aria-label="Open menu"
-            onClick={() => setMobileOpen(true)}
-          >
-            <Menu className="h-6 w-6" />
-          </button>
-          <TopNav />
-          <BrandMark variant="onLight" className="max-h-8 max-w-[7rem] shrink-0" />
-        </header>
-        <div className="flex-1">{children}</div>
+        <div className={`flex min-h-screen min-w-0 flex-1 flex-col ${styles.content}`}>
+          <header className={`sticky top-0 z-40 flex h-14 items-center gap-3 border-b border-neutral-200 bg-white px-4 md:hidden ${styles.mobileHeader}`}>
+            <button
+              ref={menuButton}
+              type="button"
+              className="shrink-0 rounded-md p-2 text-neutral-700 hover:bg-neutral-100"
+              aria-label="Open menu"
+              aria-expanded={mobileOpen}
+              aria-controls="prisma-mobile-navigation"
+              onClick={() => setMobileOpen(true)}
+            >
+              <Menu className="h-6 w-6" />
+            </button>
+            {isLibrary ? (
+              <Link href="/" className={styles.mobileBrand}>
+                <BrandMark className="max-h-8 max-w-[7rem] shrink-0" />
+              </Link>
+            ) : (
+              <>
+                <TopNav />
+                <BrandMark variant="onLight" className="max-h-8 max-w-[7rem] shrink-0" />
+              </>
+            )}
+          </header>
+          <div className={isLibrary ? "flex flex-1 flex-col" : "flex-1"}>{children}</div>
+        </div>
       </div>
-    </div>
     </SearchQueryProvider>
   );
 }
