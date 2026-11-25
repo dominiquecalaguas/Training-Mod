@@ -2,6 +2,7 @@
   --library-accent: #615389;
   --library-border: #ddd6eb;
   --library-focus: #6b5aa6;
+  --library-light-blue: #85e8ff;
   position: relative;
   isolation: isolate;
   flex: 1;
@@ -377,7 +378,7 @@
 }
 
 .cardProgress {
-  --progress-fill: #85e8ff;
+  --progress-fill: var(--library-light-blue);
   display: grid;
   gap: 6px;
   margin-top: auto;
@@ -570,10 +571,10 @@
   position: absolute;
   left: 8px;
   bottom: 9px;
-  color: #9e670e;
+  color: var(--library-light-blue);
   font-size: 17px;
   line-height: 1;
-  text-shadow: 0 0 6px #ffdb80ad;
+  text-shadow: 0 0 3px rgb(34 94 153 / 55%);
 }
 
 .jarGlass span:nth-child(2) { left: 24px; bottom: 5px; font-size: 12px; }
