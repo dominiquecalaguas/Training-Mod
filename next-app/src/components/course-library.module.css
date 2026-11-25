@@ -574,7 +574,7 @@
   color: var(--library-light-blue);
   font-size: 17px;
   line-height: 1;
-  text-shadow: 0 0 3px rgb(34 94 153 / 55%);
+  text-shadow: 0 0 4px rgb(255 255 255 / 80%);
 }
 
 .jarGlass span:nth-child(2) { left: 24px; bottom: 5px; font-size: 12px; }
