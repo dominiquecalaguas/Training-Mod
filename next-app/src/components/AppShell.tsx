@@ -1,7 +1,8 @@
 "use client";
 
-import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+/* eslint-disable @next/next/no-html-link-for-pages -- Sidebar links intentionally use full document navigation. */
+
+import { usePathname } from "next/navigation";
 import posthog from "posthog-js";
 import { useEffect, useRef, useState } from "react";
 import { LogIn, Menu, UserPlus, X } from "lucide-react";
@@ -28,7 +29,7 @@ function NavLinkLucide({
       ? pathname === "/"
       : pathname === href || pathname.startsWith(`${href}/`);
   return (
-    <Link
+    <a
       href={href}
       onClick={onClick}
       aria-current={active ? "page" : undefined}
@@ -47,7 +48,7 @@ function NavLinkLucide({
         aria-hidden
       />
       <span>{label}</span>
-    </Link>
+    </a>
   );
 }
 
@@ -175,7 +176,7 @@ function NavLink({
       ? pathname === "/" || pathname.startsWith("/courses/")
       : pathname === href || pathname.startsWith(`${href}/`);
   return (
-    <Link
+    <a
       href={href}
       onClick={onClick}
       aria-current={pathname === href ? "page" : active ? "location" : undefined}
@@ -192,7 +193,7 @@ function NavLink({
         active={active}
       />
       <span>{label}</span>
-    </Link>
+    </a>
   );
 }
 
@@ -203,15 +204,12 @@ function SidebarNav({
   user: AppShellUser;
   onNavigate?: () => void;
 }) {
-  const router = useRouter();
-
   async function handleLogout() {
     onNavigate?.();
     posthog.capture("user_signed_out");
     posthog.reset();
     await fetch("/api/auth/logout", { method: "POST" });
-    router.push("/");
-    router.refresh();
+    window.location.assign("/");
   }
 
   const isAdmin = user?.role === "admin";
@@ -336,9 +334,9 @@ export function AppShell({
     <>
       {navigationSky}
       <div className={`border-b border-neutral-700/80 px-4 py-5 ${styles.brand}`}>
-        <Link href="/" className="flex justify-center" onClick={close}>
+        <a href="/" className="flex justify-center" onClick={close}>
           <BrandMark variant="onDark" className="mx-auto max-h-14 max-w-[9rem]" />
-        </Link>
+        </a>
       </div>
       <SidebarNav user={user} onNavigate={close} />
     </>
@@ -397,9 +395,9 @@ export function AppShell({
               <Menu className="h-6 w-6" />
             </button>
             {!isLibrary && <TopNav />}
-            <Link href="/" className={styles.mobileBrand}>
+            <a href="/" className={styles.mobileBrand}>
               <BrandMark variant="onDark" className="max-h-8 max-w-[7rem] shrink-0" />
-            </Link>
+            </a>
           </header>
           <div className={isLibrary ? "flex flex-1 flex-col" : "flex-1"}>
             <PrismaSkyTransition>{children}</PrismaSkyTransition>
