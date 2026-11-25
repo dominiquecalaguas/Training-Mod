@@ -377,7 +377,10 @@
 }
 
 .cardProgress {
-  --progress-fill: #0089a8;
+  --progress-fill: linear-gradient(
+    180deg, #0757df 0%, #147bff 25%, #85e8ff 50%, #147bff 75%, #0757df 100%
+  );
+  --progress-glow: 0 0 5px 1px rgb(0 103 255 / 48%);
   display: grid;
   gap: 6px;
   margin-top: auto;
@@ -396,6 +399,13 @@
   background: #e7dfef;
 }
 
+.cardProgress progress {
+  height: 5px;
+  overflow: visible;
+}
+
+.cardProgress progress[value="0"] { --progress-glow: none; }
+
 .cardProgress progress::-webkit-progress-bar,
 .jarInfo progress::-webkit-progress-bar {
   border-radius: 4px;
@@ -406,12 +416,14 @@
 .jarInfo progress::-webkit-progress-value {
   border-radius: 4px;
   background: var(--progress-fill);
+  box-shadow: var(--progress-glow, none);
 }
 
 .cardProgress progress::-moz-progress-bar,
 .jarInfo progress::-moz-progress-bar {
   border-radius: 4px;
   background: var(--progress-fill);
+  box-shadow: var(--progress-glow, none);
 }
 
 .empty,
