@@ -10,7 +10,110 @@
 .shell .drawer {
   width: var(--library-nav-width);
   border-color: var(--library-nav-border);
-  background: var(--library-ink);
+}
+
+.shell :is(.desktop, .drawer, .mobileHeader) {
+  isolation: isolate;
+  background:
+    radial-gradient(
+      ellipse clamp(300px, 42vw, 690px) clamp(170px, 23vw, 320px)
+        at clamp(146px, 20vw, 380px) clamp(35px, 4.5vw, 70px),
+      rgb(169 155 255 / 10%),
+      rgb(169 155 255 / 5%) 38%,
+      transparent 100%
+    ),
+    radial-gradient(
+      ellipse clamp(280px, 42vw, 720px) clamp(170px, 25vw, 370px)
+        at 82% clamp(48px, 7vw, 120px),
+      rgb(120 150 232 / 7%),
+      rgb(169 155 255 / 3%) 48%,
+      transparent 100%
+    ),
+    linear-gradient(
+      180deg,
+      #222c50 0%,
+      #192441 27%,
+      #10182d 55%,
+      #080d1b 78%,
+      #040711 100%
+    );
+}
+
+.sky {
+  position: absolute;
+  z-index: -1;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.sky span {
+  position: absolute;
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 0 6px rgb(255 255 255 / 75%);
+  opacity: .45;
+}
+
+.sky span:nth-child(1) { top: 12%; left: 11%; }
+.sky span:nth-child(2) { top: 27%; left: 86%; animation-delay: -4s; }
+.sky span:nth-child(3) { top: 48%; left: 19%; animation-delay: -7s; }
+.sky span:nth-child(4) { top: 69%; left: 78%; animation-delay: -2s; }
+.sky span:nth-child(5) { top: 88%; left: 38%; animation-delay: -6s; }
+
+.shootingStars {
+  position: absolute;
+  inset: 0;
+  display: none;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .sky span { animation: twinkle 9s ease-in-out infinite alternate; }
+  .shootingStars { display: block; }
+
+  .shootingStars i {
+    position: absolute;
+    top: 18%;
+    left: 10%;
+    width: 23px;
+    height: 1px;
+    border-radius: 1px;
+    background: linear-gradient(90deg, transparent, #fff);
+    opacity: 0;
+    animation: shootingStar 8s linear infinite;
+  }
+
+  .shootingStars i::after {
+    position: absolute;
+    top: -.5px;
+    right: 0;
+    width: 2px;
+    height: 2px;
+    border-radius: 50%;
+    background: #fff;
+    box-shadow: 0 0 6px #fff;
+    content: "";
+  }
+
+  .shootingStars i:nth-child(2) { top: 38%; left: 37%; animation-delay: 2s; }
+  .shootingStars i:nth-child(3) { top: 63%; left: 15%; animation-delay: 4s; }
+  .shootingStars i:nth-child(4) { top: 83%; left: 31%; animation-delay: 6s; }
+
+  .mobileHeader .shootingStars i:nth-child(2) { left: 54%; }
+  .mobileHeader .shootingStars i:nth-child(4) { top: 42%; left: 75%; }
+
+  @keyframes twinkle {
+    0%, 26% { opacity: .25; }
+    76%, 100% { opacity: .9; }
+  }
+
+  @keyframes shootingStar {
+    0% { transform: translate3d(0, 0, 0) rotate(20deg); opacity: 0; }
+    3% { opacity: .82; }
+    13.5%, 100% { transform: translate3d(30px, 11px, 0) rotate(20deg); opacity: 0; }
+  }
 }
 
 .shell .brand {
@@ -79,7 +182,6 @@
   justify-content: space-between;
   padding-inline: 13px;
   border-color: var(--library-nav-border);
-  background: #111727;
 }
 
 .shell .mobileHeader button { color: var(--library-nav-text); }

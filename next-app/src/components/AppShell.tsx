@@ -294,6 +294,22 @@ function SidebarNav({
   );
 }
 
+const navigationSky = (
+  <div className={styles.sky} aria-hidden="true">
+    <span />
+    <span />
+    <span />
+    <span />
+    <span />
+    <div className={styles.shootingStars}>
+      <i />
+      <i />
+      <i />
+      <i />
+    </div>
+  </div>
+);
+
 export function AppShell({
   user,
   children,
@@ -318,6 +334,7 @@ export function AppShell({
 
   const sidebar = (
     <>
+      {navigationSky}
       <div className={`border-b border-neutral-700/80 px-4 py-5 ${styles.brand}`}>
         <Link href="/" className="flex justify-center" onClick={close}>
           <BrandMark variant="onDark" className="mx-auto max-h-14 max-w-[9rem]" />
@@ -330,7 +347,7 @@ export function AppShell({
   return (
     <SearchQueryProvider>
       <div className={`flex min-h-screen bg-white text-neutral-900 ${styles.shell}`}>
-        <aside className={`hidden w-56 shrink-0 flex-col border-r border-neutral-800 bg-[#2a2a2e] md:flex ${styles.desktop}`}>
+        <aside className={`hidden w-56 shrink-0 flex-col border-r border-neutral-800 md:flex ${styles.desktop}`}>
           {sidebar}
         </aside>
 
@@ -347,7 +364,7 @@ export function AppShell({
           onKeyDown={(event) => {
             if (event.key === "Escape") close();
           }}
-          className={`fixed inset-y-0 left-0 z-50 flex w-56 flex-col overflow-y-auto border-r border-neutral-800 bg-[#2a2a2e] shadow-xl transition-transform duration-200 ease-out motion-reduce:transition-none md:hidden ${styles.drawer} ${
+          className={`fixed inset-y-0 left-0 z-50 flex w-56 flex-col overflow-y-auto border-r border-neutral-800 shadow-xl transition-transform duration-200 ease-out motion-reduce:transition-none md:hidden ${styles.drawer} ${
             mobileOpen ? "translate-x-0" : "pointer-events-none -translate-x-full"
           }`}
         >
@@ -366,7 +383,8 @@ export function AppShell({
         </aside>
 
         <div className={`flex min-h-screen min-w-0 flex-1 flex-col ${styles.content}`}>
-          <header className={`sticky top-0 z-40 flex h-14 items-center gap-3 border-b border-neutral-200 bg-white px-4 md:hidden ${styles.mobileHeader}`}>
+          <header className={`sticky top-0 z-40 flex h-14 items-center gap-3 border-b border-neutral-200 px-4 md:hidden ${styles.mobileHeader}`}>
+            {navigationSky}
             <button
               ref={menuButton}
               type="button"
@@ -380,7 +398,7 @@ export function AppShell({
             </button>
             {!isLibrary && <TopNav />}
             <Link href="/" className={styles.mobileBrand}>
-              <BrandMark className="max-h-8 max-w-[7rem] shrink-0" />
+              <BrandMark variant="onDark" className="max-h-8 max-w-[7rem] shrink-0" />
             </Link>
           </header>
           <div className={isLibrary ? "flex flex-1 flex-col" : "flex-1"}>

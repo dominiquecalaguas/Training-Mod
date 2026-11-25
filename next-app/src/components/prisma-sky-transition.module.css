@@ -25,9 +25,6 @@
   background: #fff;
   animation: fadeWhite 1200ms ease-in-out both;
 }
-.starFade { animation: fadeStars 300ms ease-in-out both; }
-.starFade span { animation: none; }
-
 .cloudReveal {
   animation: revealClouds 500ms 600ms cubic-bezier(.22, 1, .36, 1) both;
 }
@@ -41,11 +38,6 @@
 @keyframes fadeWhite {
   0%, 20.833% { opacity: 1; }
   62.5%, 100% { opacity: 0; }
-}
-
-@keyframes fadeStars {
-  from { opacity: .61; }
-  to { opacity: 0; }
 }
 
 @keyframes revealClouds {

@@ -2,7 +2,6 @@
 
 import { usePathname } from "next/navigation";
 import { createContext, useCallback, useContext, useEffect, useRef, useState } from "react";
-import libraryStyles from "./course-library.module.css";
 import morningStyles from "../../app/(main)/courses/[courseId]/lessons/[lessonId]/morning-sky.module.css";
 import styles from "./prisma-sky-transition.module.css";
 
@@ -68,15 +67,7 @@ export function PrismaSkyTransition({ children }: { children: React.ReactNode })
               <span />
             </div>
           </div>
-          <div className={`${styles.scene} ${styles.white}`}>
-            <div className={`${libraryStyles.sky} ${styles.starFade}`}>
-              <span />
-              <span />
-              <span />
-              <span />
-              <span />
-            </div>
-          </div>
+          <div className={`${styles.scene} ${styles.white}`} />
         </div>
       )}
     </SkyTransition.Provider>

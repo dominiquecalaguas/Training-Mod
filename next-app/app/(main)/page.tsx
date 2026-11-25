@@ -25,19 +25,6 @@ export default async function Home() {
   return (
     <DeviceTokenProvider>
       <main className={styles.library}>
-        <div className={styles.sky} aria-hidden="true">
-          <span />
-          <span />
-          <span />
-          <span />
-          <span />
-          <div className={styles.shootingStars}>
-            <i />
-            <i />
-            <i />
-            <i />
-          </div>
-        </div>
         <div className={styles.layout}>
           <header className={styles.hero}>
             <h1>{greetingName ? `Welcome back, ${greetingName}` : "Welcome to Prisma"}</h1>

@@ -10,128 +10,6 @@
   color-scheme: light;
 }
 
-.sky {
-  --star-periwinkle: #8c80c5;
-  --star-peach: #FFD4BA;
-  position: absolute;
-  z-index: -1;
-  inset: 0;
-  overflow: hidden;
-  pointer-events: none;
-}
-
-.sky span {
-  position: absolute;
-  --star-color: var(--star-periwinkle);
-  width: 4px;
-  height: 4px;
-  border-radius: 50%;
-  background: var(--star-color);
-  box-shadow: 0 0 6px var(--star-color);
-  animation: twinkle 9s ease-in-out infinite alternate;
-}
-
-.sky span:nth-child(even) { --star-color: var(--star-peach); }
-
-.sky span:nth-child(1) { top: 56px; left: 48%; }
-.sky span:nth-child(2) { top: 178px; left: 78%; animation-delay: -4s; }
-.sky span:nth-child(3) { top: 103px; left: 90%; animation-delay: -7s; }
-.sky span:nth-child(4) { top: 440px; left: 97%; animation-delay: -2s; }
-.sky span:nth-child(5) { top: 230px; left: 61%; animation-delay: -6s; }
-
-@keyframes twinkle {
-  0%, 26% { opacity: .25; }
-  76%, 100% { opacity: .9; }
-}
-
-.shootingStars {
-  position: absolute;
-  inset: 0;
-  display: none;
-  pointer-events: none;
-}
-
-@media (prefers-reduced-motion: no-preference) {
-  .shootingStars { display: block; }
-
-  .shootingStars i {
-    --trail-width: clamp(36px, 5vw, 88px);
-    --travel-x: clamp(91px, 14vw, 220px);
-    --travel-y: clamp(23px, 3.5vw, 55px);
-    --tilt: 14deg;
-    --brightness: .9;
-    --star-color: var(--star-periwinkle);
-
-    position: absolute;
-    top: clamp(31px, 5vw, 90px);
-    left: 47%;
-    width: var(--trail-width);
-    height: 1px;
-    border-radius: 1px;
-    background: linear-gradient(90deg, transparent, var(--star-color));
-    opacity: 0;
-    /* Four trails staggered by two seconds, with a 1.08s visible phase. */
-    animation: shootingStar 8s linear infinite;
-  }
-
-  .shootingStars i::after {
-    position: absolute;
-    top: -0.5px;
-    right: 0;
-    width: 2px;
-    height: 2px;
-    border-radius: 50%;
-    background: var(--star-color);
-    box-shadow: 0 0 6px var(--star-color);
-    content: "";
-  }
-
-  .shootingStars i:nth-child(even) { --star-color: var(--star-peach); }
-
-  .shootingStars i:nth-child(2) {
-    --trail-width: clamp(28px, 3.8vw, 65px);
-    --travel-y: clamp(32px, 4.9vw, 77px);
-    --tilt: 19deg;
-    --brightness: .63;
-    top: clamp(57px, 7vw, 118px);
-    left: 63%;
-    animation-delay: 2s;
-  }
-
-  .shootingStars i:nth-child(3) {
-    --trail-width: clamp(41px, 5.7vw, 96px);
-    --travel-x: clamp(109px, 16vw, 250px);
-    --travel-y: clamp(18px, 2.8vw, 44px);
-    --tilt: 10deg;
-    --brightness: .74;
-    top: 21px;
-    left: 16%;
-    animation-delay: 4s;
-  }
-
-  .shootingStars i:nth-child(4) {
-    --trail-width: clamp(33px, 4.4vw, 79px);
-    --travel-y: clamp(28px, 4.3vw, 66px);
-    --tilt: 17deg;
-    --brightness: .69;
-    top: clamp(89px, 9vw, 143px);
-    left: 39%;
-    animation-delay: 6s;
-  }
-
-  @keyframes shootingStar {
-    0% {
-      transform: translate3d(0, 0, 0) rotate(var(--tilt));
-      opacity: 0;
-    }
-    3% { opacity: var(--brightness); }
-    13.5%, 100% {
-      transform: translate3d(var(--travel-x), var(--travel-y), 0) rotate(var(--tilt));
-      opacity: 0;
-    }
-  }
-}
-
 .layout {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
@@ -751,7 +629,6 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .sky span { animation: none; opacity: .45; }
   .search, .card, .cardBody, .jarArt, .jarChevron { transition: none; }
   .starJar summary:hover .jarArt { transform: none; }
 }
