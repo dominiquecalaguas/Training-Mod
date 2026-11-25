@@ -377,6 +377,7 @@
 }
 
 .cardProgress {
+  --progress-fill: #0089a8;
   display: grid;
   gap: 6px;
   margin-top: auto;
@@ -404,13 +405,13 @@
 .cardProgress progress::-webkit-progress-value,
 .jarInfo progress::-webkit-progress-value {
   border-radius: 4px;
-  background: linear-gradient(90deg, #6e67b0, #9171bd);
+  background: var(--progress-fill);
 }
 
 .cardProgress progress::-moz-progress-bar,
 .jarInfo progress::-moz-progress-bar {
   border-radius: 4px;
-  background: linear-gradient(90deg, #6e67b0, #9171bd);
+  background: var(--progress-fill);
 }
 
 .empty,
@@ -586,7 +587,11 @@
 
 .jarTitle { font-size: 1rem; font-weight: 650; line-height: 1.25; }
 .jarCount { font-size: .75rem; }
-.jarInfo progress { max-width: 108px; margin-top: 3px; }
+.jarInfo progress {
+  --progress-fill: linear-gradient(90deg, #6e67b0, #9171bd);
+  max-width: 108px;
+  margin-top: 3px;
+}
 
 .jarChevron {
   flex: none;
