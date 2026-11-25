@@ -1,84 +1,37 @@
 .library {
-  --sky-text: #f0eff9;
-  --sky-muted: #b0b8d0;
-  --sky-accent: #bcbaff;
-  --sky-border: #303b56;
-  --sky-surface: #141d32;
+  --library-accent: #615389;
+  --library-border: #ddd6eb;
+  --library-focus: #6b5aa6;
   position: relative;
   isolation: isolate;
   flex: 1;
-  color: var(--sky-text);
-  color-scheme: dark;
-}
-
-.nightSurface {
-  background:
-    radial-gradient(
-      ellipse clamp(300px, 42vw, 690px) clamp(170px, 23vw, 320px)
-        at clamp(146px, 20vw, 380px) clamp(35px, 4.5vw, 70px),
-      rgb(169 155 255 / 10%),
-      rgb(169 155 255 / 5%) 38%,
-      transparent 100%
-    ),
-    radial-gradient(
-      ellipse clamp(280px, 42vw, 720px) clamp(170px, 25vw, 370px)
-        at 82% clamp(48px, 7vw, 120px),
-      rgb(120 150 232 / 7%),
-      rgb(169 155 255 / 3%) 48%,
-      transparent 100%
-    ),
-    linear-gradient(
-      180deg,
-      #222c50 0%,
-      #192441 27%,
-      #10182d 55%,
-      #080d1b 78%,
-      #040711 100%
-    );
+  background: #fff;
+  color: var(--library-ink);
+  color-scheme: light;
 }
 
 .sky {
+  --star-periwinkle: #8c80c5;
+  --star-peach: #FFD4BA;
   position: absolute;
   z-index: -1;
   inset: 0;
   overflow: hidden;
   pointer-events: none;
-  background-image:
-    radial-gradient(1px 1px at 41px 49px, #d4d8ff 70%, transparent),
-    radial-gradient(1.2px 1.2px at 155px 126px, #bcbaff 60%, transparent),
-    radial-gradient(1px 1px at 275px 32px, #e4eaff 65%, transparent),
-    radial-gradient(1px 1px at 355px 225px, #809ed8 70%, transparent),
-    radial-gradient(.75px .75px at 486px 157px, #cfd8fc 70%, transparent),
-    radial-gradient(.8px .8px at 80px 282px, #e0e4ff 70%, transparent),
-    radial-gradient(1.2px 1.2px at 294px 291px, #a1b9ef 65%, transparent),
-    radial-gradient(.75px .75px at 400px 62px, #bec8ff 70%, transparent);
-  background-size: 513px 337px;
-  opacity: .61;
-}
-
-.sky::before {
-  position: absolute;
-  inset: 0;
-  content: "";
-  background-image:
-    radial-gradient(.9px .9px at 60px 174px, #adc4f3 70%, transparent),
-    radial-gradient(.8px .8px at 151px 42px, #b0bcee 65%, transparent),
-    radial-gradient(.75px .75px at 261px 238px, #e3d4f9 70%, transparent),
-    radial-gradient(1px 1px at 320px 96px, #bcc9fa 60%, transparent),
-    radial-gradient(.7px .7px at 195px 281px, #d1dbfc 70%, transparent);
-  background-size: 377px 309px;
-  opacity: .65;
 }
 
 .sky span {
   position: absolute;
-  width: 3px;
-  height: 3px;
+  --star-color: var(--star-periwinkle);
+  width: 4px;
+  height: 4px;
   border-radius: 50%;
-  background: #d6dcff;
-  box-shadow: 0 0 8px 2px #979aff71;
+  background: var(--star-color);
+  box-shadow: 0 0 6px var(--star-color);
   animation: twinkle 9s ease-in-out infinite alternate;
 }
+
+.sky span:nth-child(even) { --star-color: var(--star-peach); }
 
 .sky span:nth-child(1) { top: 56px; left: 48%; }
 .sky span:nth-child(2) { top: 178px; left: 78%; animation-delay: -4s; }
@@ -87,8 +40,8 @@
 .sky span:nth-child(5) { top: 230px; left: 61%; animation-delay: -6s; }
 
 @keyframes twinkle {
-  0%, 26% { opacity: .28; }
-  76%, 100% { opacity: .76; }
+  0%, 26% { opacity: .25; }
+  76%, 100% { opacity: .9; }
 }
 
 .shootingStars {
@@ -106,7 +59,8 @@
     --travel-x: clamp(91px, 14vw, 220px);
     --travel-y: clamp(23px, 3.5vw, 55px);
     --tilt: 14deg;
-    --brightness: .82;
+    --brightness: .9;
+    --star-color: var(--star-periwinkle);
 
     position: absolute;
     top: clamp(31px, 5vw, 90px);
@@ -114,7 +68,7 @@
     width: var(--trail-width);
     height: 1px;
     border-radius: 1px;
-    background: linear-gradient(90deg, transparent, #c6bcfc9c 68%, #f7f2ff);
+    background: linear-gradient(90deg, transparent, var(--star-color));
     opacity: 0;
     /* Four trails staggered by two seconds, with a 1.08s visible phase. */
     animation: shootingStar 8s linear infinite;
@@ -127,10 +81,12 @@
     width: 2px;
     height: 2px;
     border-radius: 50%;
-    background: #f7f2ff;
-    box-shadow: 0 0 6px 1px #c9baffaa;
+    background: var(--star-color);
+    box-shadow: 0 0 6px var(--star-color);
     content: "";
   }
+
+  .shootingStars i:nth-child(even) { --star-color: var(--star-peach); }
 
   .shootingStars i:nth-child(2) {
     --trail-width: clamp(28px, 3.8vw, 65px);
@@ -201,9 +157,26 @@
 
 .intro {
   margin-top: 12px;
-  color: var(--sky-muted);
   font-size: clamp(.875rem, 1.25vw, 1rem);
   line-height: 1.5;
+}
+
+.search,
+.card,
+.panel,
+.starJar {
+  background-color: #fff;
+}
+
+@supports (backdrop-filter: blur(12px)) or (-webkit-backdrop-filter: blur(12px)) {
+  .search,
+  .card,
+  .panel,
+  .starJar {
+    background-color: rgb(255 255 255 / var(--glass-opacity, .72));
+    -webkit-backdrop-filter: blur(12px);
+    backdrop-filter: blur(12px);
+  }
 }
 
 .search {
@@ -214,14 +187,13 @@
   min-height: 48px;
   margin-top: 25px;
   padding-inline: 15px 7px;
-  border: 1px solid rgb(222 214 255 / 37%);
+  border: 1px solid #8f83a9;
   border-radius: 10px;
-  background-color: #3f496e;
   box-shadow:
     0 0 14px rgb(184 164 255 / 24%),
     0 5px 25px rgb(130 155 255 / 22%),
-    inset 0 1px 0 rgb(239 234 255 / 18%);
-  color: var(--sky-accent);
+    inset 0 1px 0 rgb(255 255 255 / 90%);
+  color: var(--library-accent);
   transition:
     background-color 280ms ease-out,
     border-color 280ms ease-out,
@@ -229,21 +201,21 @@
 }
 
 .search:hover {
-  border-color: rgb(222 214 255 / 58%);
-  background-color: #465277;
+  --glass-opacity: .84;
+  border-color: var(--library-accent);
   box-shadow:
     0 0 16px rgb(184 164 255 / 31%),
     0 5px 28px rgb(130 155 255 / 25%),
-    inset 0 1px 0 rgb(239 234 255 / 23%);
+    inset 0 1px 0 #fff;
 }
 
 .search:focus-within {
-  border-color: #d2c7ff;
-  background-color: #49567e;
+  --glass-opacity: .9;
+  border-color: var(--library-focus);
   box-shadow:
     0 0 18px rgb(184 164 255 / 40%),
     0 5px 28px rgb(130 155 255 / 29%),
-    inset 0 0 0 1px #d2c7ff;
+    inset 0 0 0 1px var(--library-focus);
 }
 
 @media (forced-colors: active) {
@@ -251,17 +223,6 @@
     outline: 2px solid Highlight;
     outline-offset: -2px;
   }
-}
-
-@supports (backdrop-filter: blur(12px)) or (-webkit-backdrop-filter: blur(12px)) {
-  .search {
-    background-color: rgb(68 79 119 / 84%);
-    -webkit-backdrop-filter: blur(12px);
-    backdrop-filter: blur(12px);
-  }
-
-  .search:hover { background-color: rgb(76 88 130 / 86%); }
-  .search:focus-within { background-color: rgb(81 95 141 / 88%); }
 }
 
 .search svg { flex: none; }
@@ -272,11 +233,11 @@
   min-height: 46px;
   appearance: none;
   outline: none;
-  color: var(--sky-text);
+  color: var(--library-ink);
   font-size: .875rem;
 }
 
-.search input::placeholder { color: #d1d9f1; }
+.search input::placeholder { color: var(--library-ink); opacity: 1; }
 .search input::-webkit-search-cancel-button { appearance: none; }
 
 .search button {
@@ -288,7 +249,7 @@
   cursor: pointer;
 }
 
-.search button:hover { background: #282f4a; }
+.search button:hover { background: #f0eafa; }
 
 .courses {
   min-width: 0;
@@ -324,14 +285,11 @@
   min-width: 0;
   flex-direction: column;
   overflow: hidden;
-  border: 1px solid rgb(184 164 255 / 22%);
-  border-top-color: rgb(236 225 255 / 32%);
+  border: 1px solid var(--library-border);
   border-radius: var(--course-card-radius);
-  background: #1c243b;
   box-shadow:
     0 4px 23px rgb(184 164 255 / 13%),
-    inset 0 1px 0 rgb(227 218 255 / 10%);
-  color: var(--sky-text);
+    inset 0 1px 0 #fff;
   transition:
     transform 300ms ease-out,
     background-color 280ms ease-out,
@@ -340,24 +298,13 @@
 }
 
 .card:is(:hover, :has(:focus-visible)) {
+  --glass-opacity: .86;
   z-index: 1;
-  border-color: rgb(201 182 255 / 54%);
-  border-top-color: rgb(236 225 255 / 61%);
-  background: #222943;
+  border-color: #bda9e5;
   box-shadow:
     0 5px 29px rgb(184 164 255 / 25%),
     0 0 11px rgb(184 164 255 / 13%),
-    inset 0 1px 0 rgb(227 218 255 / 16%);
-}
-
-@supports (backdrop-filter: blur(12px)) or (-webkit-backdrop-filter: blur(12px)) {
-  .card {
-    background: rgb(35 43 71 / 72%);
-    -webkit-backdrop-filter: blur(12px);
-    backdrop-filter: blur(12px);
-  }
-
-  .card:is(:hover, :has(:focus-visible)) { background: rgb(42 49 80 / 80%); }
+    inset 0 1px 0 #fff;
 }
 
 @property --prisma-course-glow-angle {
@@ -412,14 +359,14 @@
 }
 
 .card:has(.cardLink:focus-visible) {
-  outline: 2px solid #c7c2ff;
+  outline: 2px solid var(--library-focus);
   outline-offset: 3px;
 }
 
 .search button:focus-visible,
 .lessonUpdates a:focus-visible,
 .starJar summary:focus-visible {
-  outline: 2px solid #c7c2ff;
+  outline: 2px solid var(--library-focus);
   outline-offset: 3px;
 }
 
@@ -441,7 +388,7 @@
 .matchLink:hover .matchTitle { text-decoration: underline; }
 
 .matchLink:focus-visible {
-  outline: 2px solid #c7c2ff;
+  outline: 2px solid var(--library-focus);
   outline-offset: 2px;
 }
 
@@ -451,8 +398,8 @@
   aspect-ratio: 388 / 163;
   place-items: center;
   overflow: hidden;
-  border-bottom: 1px solid var(--sky-border);
-  background: linear-gradient(135deg, #253455, #232442);
+  border-bottom: 1px solid var(--library-border);
+  background: linear-gradient(135deg, rgb(237 233 250 / 68%), rgb(219 210 245 / 48%));
 }
 
 .thumbnail {
@@ -463,7 +410,7 @@
   object-fit: cover;
 }
 
-.coverPlaceholder { color: #a6afd8; }
+.coverPlaceholder { color: var(--library-accent); }
 
 .cardBody {
   display: flex;
@@ -472,12 +419,12 @@
   gap: 9px;
   padding: 14px;
   overflow-wrap: anywhere;
-  background-color: rgb(105 119 164 / 22%);
+  background-color: rgb(239 234 249 / 22%);
   transition: background-color 280ms ease-out;
 }
 
 .card:is(:hover, :has(:focus-visible)) .cardBody {
-  background-color: rgb(105 119 164 / 26%);
+  background-color: rgb(239 234 249 / 48%);
 }
 
 .cardHeader {
@@ -505,10 +452,9 @@
 .status {
   flex: none;
   padding: 3px 6px;
-  border: 1px solid #3b4665;
+  border: 1px solid var(--library-border);
   border-radius: 4px;
-  background: #222c48;
-  color: #d4d9f7;
+  background: #f6f3fb;
   font-size: .64rem;
   font-weight: 650;
   line-height: 1.15;
@@ -516,13 +462,11 @@
 }
 
 .status[data-complete="true"] {
-  border-color: #5b5290;
-  background: #372f5a;
-  color: #ebe4ff;
+  border-color: #c9b8ec;
+  background: #ebe0fa;
 }
 
 .description {
-  color: var(--sky-muted);
   font-size: .8125rem;
   line-height: 1.46;
 }
@@ -531,13 +475,12 @@
   display: grid;
   gap: 9px;
   padding-top: 10px;
-  border-top: 1px solid var(--sky-border);
+  border-top: 1px solid var(--library-border);
 }
 
 .matchLabel,
 .matchSnippet,
 .cardProgress {
-  color: var(--sky-muted);
   font-size: .72rem;
   line-height: 1.4;
 }
@@ -551,8 +494,8 @@
 .matchSnippet { margin-top: 3px; }
 
 .card mark {
-  background: #41436a;
-  color: #f8edff;
+  background: #f9e5aa;
+  color: inherit;
 }
 
 .cardProgress {
@@ -571,25 +514,25 @@
   overflow: hidden;
   border: 0;
   border-radius: 4px;
-  background: #333e59;
+  background: #e7dfef;
 }
 
 .cardProgress progress::-webkit-progress-bar,
 .jarInfo progress::-webkit-progress-bar {
   border-radius: 4px;
-  background: #333e59;
+  background: #e7dfef;
 }
 
 .cardProgress progress::-webkit-progress-value,
 .jarInfo progress::-webkit-progress-value {
   border-radius: 4px;
-  background: linear-gradient(90deg, #829aff, #b7aaff);
+  background: linear-gradient(90deg, #6e67b0, #9171bd);
 }
 
 .cardProgress progress::-moz-progress-bar,
 .jarInfo progress::-moz-progress-bar {
   border-radius: 4px;
-  background: linear-gradient(90deg, #829aff, #b7aaff);
+  background: linear-gradient(90deg, #6e67b0, #9171bd);
 }
 
 .empty,
@@ -597,16 +540,14 @@
   display: grid;
   gap: 6px;
   padding: 22px;
-  border: 1px solid var(--sky-border);
+  border: 1px solid var(--library-border);
   border-radius: 5px;
-  background: var(--sky-surface);
-  color: var(--sky-muted);
+  background: #fbf9fe;
   font-size: .9rem;
   overflow-wrap: anywhere;
 }
 
-.empty h3 { color: var(--sky-text); font-weight: 650; }
-.error { color: #ffc8d0; }
+.empty h3 { font-weight: 650; }
 
 .updates {
   display: grid;
@@ -618,9 +559,9 @@
 .panel,
 .starJar {
   min-width: 0;
-  border: 1px solid var(--sky-border);
+  border: 1px solid var(--library-border);
   border-radius: 7px;
-  background: #131c30;
+  box-shadow: 0 4px 18px rgb(184 164 255 / 11%);
 }
 
 .panel { padding: 15px; }
@@ -634,7 +575,7 @@
   font-weight: 650;
 }
 
-.panelHeading svg { flex: none; color: var(--sky-accent); }
+.panelHeading svg { flex: none; color: var(--library-accent); }
 
 .announcement {
   display: grid;
@@ -642,11 +583,10 @@
   padding: 10px 11px;
   border-left: 2px solid #a99de9;
   border-radius: 0 4px 4px 0;
-  background: #222340;
+  background: #f4effa;
 }
 
 .demo {
-  color: #c8bcff;
   font-size: .625rem;
   font-weight: 700;
   line-height: 1.4;
@@ -663,20 +603,16 @@
 
 .panelCopy,
 .updateDate {
-  color: var(--sky-muted);
   font-size: .75rem;
   line-height: 1.4;
   overflow-wrap: anywhere;
 }
 
-.updateDate {
-  color: #aebaff;
-  font-size: .68rem;
-}
+.updateDate { font-size: .68rem; }
 
 .lessonUpdates { list-style: none; }
 
-.lessonUpdates li + li { border-top: 1px solid #29334c; }
+.lessonUpdates li + li { border-top: 1px solid var(--library-border); }
 
 .lessonUpdates a {
   position: relative;
@@ -693,7 +629,7 @@
   position: absolute;
   top: 10px;
   right: 0;
-  color: var(--sky-accent);
+  color: var(--library-accent);
 }
 
 .lessonUpdates li:first-child svg { top: 1px; }
@@ -701,8 +637,7 @@
 .lessonUpdates a:hover .updateTitle { text-decoration: underline; }
 
 .starJar {
-  border-color: #41446c;
-  background: radial-gradient(ellipse at 13% 20%, #302c52 0%, #211f3a 45%, #1b2339 100%);
+  background-image: radial-gradient(ellipse at 13% 20%, rgb(219 207 249 / 44%), transparent 80%);
 }
 
 .starJar summary {
@@ -754,7 +689,7 @@
   position: absolute;
   left: 8px;
   bottom: 9px;
-  color: #fff0b5;
+  color: #9e670e;
   font-size: 17px;
   line-height: 1;
   text-shadow: 0 0 6px #ffdb80ad;
@@ -772,12 +707,12 @@
 }
 
 .jarTitle { font-size: 1rem; font-weight: 650; line-height: 1.25; }
-.jarCount { color: #d8d8ef; font-size: .75rem; }
+.jarCount { font-size: .75rem; }
 .jarInfo progress { max-width: 108px; margin-top: 3px; }
 
 .jarChevron {
   flex: none;
-  color: #cec6ff;
+  color: var(--library-accent);
   transition: transform 180ms ease;
 }
 
@@ -789,13 +724,12 @@
   gap: 8px;
   margin-inline: 14px;
   padding: 12px 0 14px;
-  border-top: 1px solid #484568;
-  color: #d8d8ef;
+  border-top: 1px solid var(--library-border);
   font-size: .75rem;
   line-height: 1.5;
 }
 
-.reward svg { flex: none; color: #d6c9ff; }
+.reward svg { flex: none; color: var(--library-accent); }
 
 @media (min-width: 1152px) {
   .layout {

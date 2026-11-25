@@ -68,8 +68,7 @@ export function PrismaSkyTransition({ children }: { children: React.ReactNode })
               <span />
             </div>
           </div>
-          <div className={`${styles.scene} ${styles.twilight}`} />
-          <div className={`${styles.scene} ${styles.night} ${libraryStyles.nightSurface}`}>
+          <div className={`${styles.scene} ${styles.white}`}>
             <div className={`${libraryStyles.sky} ${styles.starFade}`}>
               <span />
               <span />
