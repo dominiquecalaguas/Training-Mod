@@ -2,8 +2,10 @@
 
 import Link from "next/link";
 import { BookOpen } from "lucide-react";
+import { useId } from "react";
 import styles from "./course-library.module.css";
-import { trackCourseClicked } from "@/lib/analytics";
+import { trackCourseClicked, trackLessonClicked } from "@/lib/analytics";
+import { useSkyTransition } from "@/components/PrismaSkyTransition";
 import { KeywordHighlight } from "@/components/KeywordHighlight";
 import type { CourseListItem } from "@/lib/courses";
 import type { MatchedLessonResult } from "@/lib/search-courses";
@@ -24,6 +26,8 @@ export function CourseCard({
   /** When empty, snippets render without highlights. */
   searchKeywords?: readonly string[];
 }) {
+  const titleId = useId();
+  const transition = useSkyTransition();
   const pct =
     totalLessons > 0
       ? Math.round((completedLessons / totalLessons) * 100)
@@ -38,11 +42,14 @@ export function CourseCard({
   const kw = searchKeywords ?? [];
 
   return (
-    <Link
-      href={`/courses/${course.id}`}
-      onClick={() => trackCourseClicked(course.id)}
-      className={styles.card}
-    >
+    <article className={styles.card}>
+      <Link
+        href={`/courses/${course.id}`}
+        aria-labelledby={titleId}
+        onClick={() => trackCourseClicked(course.id)}
+        onNavigate={totalLessons > 0 ? transition?.start : undefined}
+        className={styles.cardLink}
+      />
       <div className={styles.cover}>
         {course.thumbnailUrl ? (
           // eslint-disable-next-line @next/next/no-img-element
@@ -71,7 +78,7 @@ export function CourseCard({
 
       <div className={styles.cardBody}>
         <div className={styles.cardHeader}>
-          <h3 className={styles.cardTitle}>
+          <h3 id={titleId} className={styles.cardTitle}>
             {showHighlight ? (
               <KeywordHighlight
                 text={course.title}
@@ -102,7 +109,13 @@ export function CourseCard({
         {matchedLessons && matchedLessons.length > 0 && (
           <div className={styles.matches}>
             {matchedLessons.slice(0, MATCHED_LESSON_PREVIEW).map(({ lesson, snippet }) => (
-              <div key={lesson.id}>
+              <Link
+                key={lesson.id}
+                href={`/courses/${course.id}/lessons/${lesson.id}`}
+                onClick={() => trackLessonClicked(course.id, lesson.id)}
+                onNavigate={transition?.start}
+                className={styles.matchLink}
+              >
                 <p className={styles.matchLabel}>
                   Lesson {lesson.order}
                 </p>
@@ -126,7 +139,7 @@ export function CourseCard({
                     />
                   </p>
                 ) : null}
-              </div>
+              </Link>
             ))}
             {matchedLessons.length > MATCHED_LESSON_PREVIEW && (
               <p className={styles.matchSnippet}>
@@ -150,6 +163,6 @@ export function CourseCard({
           </div>
         )}
       </div>
-    </Link>
+    </article>
   );
 }

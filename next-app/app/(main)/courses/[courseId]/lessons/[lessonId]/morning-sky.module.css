@@ -1,0 +1,106 @@
+.reader {
+  position: relative;
+  isolation: isolate;
+  padding-top: clamp(4.75rem, 6.25vw, 6rem);
+}
+
+.morningSurface {
+  background:
+    radial-gradient(ellipse 82% 42% at 98% 76%, rgb(255 206 186 / 34%), transparent 75%),
+    radial-gradient(ellipse 74% 40% at 4% 10%, rgb(211 228 255 / 44%), transparent 77%),
+    linear-gradient(180deg, #e5f0ff 0%, #e6edff 30%, #f4e1e7 58%, #ffd8c3 82%, #ffcdb4 100%);
+}
+
+.workspace {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  align-items: start;
+  gap: 24px;
+}
+
+@media (min-width: 64rem) {
+  .reader { padding-inline: 0; }
+
+  .workspace {
+    width: 95%;
+    margin-inline-start: clamp(24px, 2.1vw, 32px);
+    grid-template-columns: minmax(220px, 1fr) minmax(0, 3fr);
+  }
+
+  .reading article section > :is(p, ul, ol, blockquote),
+  .reading :global(.lesson-lexical-content .ContentEditable__root) > :is(p, ul, ol, blockquote) {
+    max-inline-size: 76ch;
+  }
+}
+
+/* Saved charcoal table cells need light inherited text in the reader. */
+.reading :global(.lesson-lexical-content :is(td, th)[style*="background-color: rgb(26, 26, 26)"]) {
+  color: #f7f9ff;
+}
+
+.clouds {
+  position: absolute;
+  z-index: -1;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.clouds span {
+  --drift: clamp(12px, 4.8vw, 70px);
+
+  position: absolute;
+  top: -2px;
+  left: 8%;
+  width: clamp(282px, 43vw, 600px);
+  aspect-ratio: 640 / 132;
+  opacity: .25;
+  background: url("./morning-cloud.svg") center / contain no-repeat;
+}
+
+.clouds span:nth-child(2) {
+  --drift: clamp(17px, 6vw, 96px);
+
+  top: 32%;
+  left: -17%;
+  width: clamp(262px, 38vw, 555px);
+  opacity: .23;
+}
+
+.clouds span:nth-child(3) {
+  --drift: clamp(16px, 5vw, 74px);
+
+  top: 21px;
+  right: 3%;
+  left: auto;
+  width: clamp(178px, 28vw, 375px);
+  opacity: .19;
+}
+
+@media (max-width: 767px) {
+  .clouds span:first-child { left: -23%; }
+  .clouds span:nth-child(3) { right: -13%; top: 12px; }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .clouds span { animation: drift 76s -22s ease-in-out infinite alternate; }
+  .clouds span:nth-child(2) { animation: drift 94s -76s ease-in-out infinite alternate-reverse; }
+  .clouds span:nth-child(3) { animation: drift 64s -30s ease-in-out infinite alternate; }
+}
+
+@keyframes drift {
+  from { transform: translate3d(calc(0px - var(--drift)), 0, 0); }
+  to { transform: translate3d(var(--drift), 0, 0); }
+}
+
+
+@media (prefers-reduced-motion: no-preference) {
+  .arriving {
+    animation: arrive 350ms var(--prisma-arrival-delay, 850ms) cubic-bezier(.22, 1, .36, 1) both;
+  }
+}
+
+@keyframes arrive {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}

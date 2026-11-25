@@ -8,6 +8,7 @@ import { LogIn, Menu, UserPlus, X } from "lucide-react";
 import { BrandMark } from "@/components/BrandMark";
 import { SearchQueryProvider } from "@/components/SearchQueryContext";
 import { TopNav } from "@/components/TopNav";
+import { PrismaSkyTransition } from "@/components/PrismaSkyTransition";
 import styles from "./library-navigation.module.css";
 
 function NavLinkLucide({
@@ -171,13 +172,13 @@ function NavLink({
   const pathname = usePathname();
   const active =
     href === "/"
-      ? pathname === "/"
+      ? pathname === "/" || pathname.startsWith("/courses/")
       : pathname === href || pathname.startsWith(`${href}/`);
   return (
     <Link
       href={href}
       onClick={onClick}
-      aria-current={active ? "page" : undefined}
+      aria-current={pathname === href ? "page" : active ? "location" : undefined}
       className={`group flex flex-col items-center gap-1.5 rounded-lg px-2 py-2.5 text-center text-xs font-medium transition ${
         active
           ? "bg-white/10 text-white"
@@ -328,7 +329,7 @@ export function AppShell({
 
   return (
     <SearchQueryProvider>
-      <div className={`flex min-h-screen bg-white text-neutral-900 ${isLibrary ? styles.shell : ""}`}>
+      <div className={`flex min-h-screen bg-white text-neutral-900 ${styles.shell}`}>
         <aside className={`hidden w-56 shrink-0 flex-col border-r border-neutral-800 bg-[#2a2a2e] md:flex ${styles.desktop}`}>
           {sidebar}
         </aside>
@@ -377,18 +378,14 @@ export function AppShell({
             >
               <Menu className="h-6 w-6" />
             </button>
-            {isLibrary ? (
-              <Link href="/" className={styles.mobileBrand}>
-                <BrandMark className="max-h-8 max-w-[7rem] shrink-0" />
-              </Link>
-            ) : (
-              <>
-                <TopNav />
-                <BrandMark variant="onLight" className="max-h-8 max-w-[7rem] shrink-0" />
-              </>
-            )}
+            {!isLibrary && <TopNav />}
+            <Link href="/" className={styles.mobileBrand}>
+              <BrandMark className="max-h-8 max-w-[7rem] shrink-0" />
+            </Link>
           </header>
-          <div className={isLibrary ? "flex flex-1 flex-col" : "flex-1"}>{children}</div>
+          <div className={isLibrary ? "flex flex-1 flex-col" : "flex-1"}>
+            <PrismaSkyTransition>{children}</PrismaSkyTransition>
+          </div>
         </div>
       </div>
     </SearchQueryProvider>

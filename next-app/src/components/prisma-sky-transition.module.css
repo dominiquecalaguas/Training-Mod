@@ -1,0 +1,58 @@
+.overlay {
+  --intro-opacity: 0;
+  position: fixed;
+  z-index: 20;
+  inset: 3.5rem 0 0;
+  overflow: hidden;
+  pointer-events: none;
+  animation: releaseSky 1200ms cubic-bezier(.22, 1, .36, 1) both;
+}
+
+/* Keep early route responses from flashing through the opening white surface. */
+.overlay[data-arriving="true"] { --intro-opacity: 1; }
+
+@media (min-width: 48rem) {
+  .overlay { inset: 0 0 0 var(--library-nav-width); }
+}
+
+.scene {
+  position: absolute;
+  inset: 0;
+  isolation: isolate;
+}
+
+.white {
+  background: #fff;
+  animation: fadeWhite 1200ms ease-in-out both;
+}
+.starFade { animation: fadeStars 300ms ease-in-out both; }
+.starFade span { animation: none; }
+
+.cloudReveal {
+  animation: revealClouds 500ms 600ms cubic-bezier(.22, 1, .36, 1) both;
+}
+
+@keyframes releaseSky {
+  0% { opacity: var(--intro-opacity); }
+  20%, 70.833% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+@keyframes fadeWhite {
+  0%, 20.833% { opacity: 1; }
+  62.5%, 100% { opacity: 0; }
+}
+
+@keyframes fadeStars {
+  from { opacity: .61; }
+  to { opacity: 0; }
+}
+
+@keyframes revealClouds {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .overlay { display: none; }
+}

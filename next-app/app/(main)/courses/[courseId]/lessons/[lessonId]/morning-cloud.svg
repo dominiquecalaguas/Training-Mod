@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 132">
+  <defs>
+    <linearGradient id="cloud" x2="0.12" y2="1" gradientUnits="objectBoundingBox">
+      <stop offset="0" stop-color="#fff"/>
+      <stop offset=".62" stop-color="#fff" stop-opacity=".96"/>
+      <stop offset="1" stop-color="#fff" stop-opacity=".08"/>
+    </linearGradient>
+    <filter id="soft" x="-.1" y="-.3" width="1.2" height="1.6">
+      <feGaussianBlur stdDeviation="3.6"/>
+    </filter>
+    <filter id="haze" x="-.1" y="-.6" width="1.2" height="2.2">
+      <feGaussianBlur stdDeviation="6"/>
+    </filter>
+  </defs>
+  <path fill="#98aed9" opacity=".5" filter="url(#haze)"
+    d="M32 96C108 84 139 88 184 82C257 70 311 74 352 75C424 76 501 70 601 88C537 97 457 93 400 102C327 111 268 105 204 109C125 114 68 105 32 96Z"/>
+  <path fill="url(#cloud)" filter="url(#soft)"
+    d="M13 88C66 84 76 70 118 69C129 59 156 50 184 57C201 35 231 29 263 39C286 16 329 14 358 32C391 26 419 34 434 54C471 49 493 66 507 72C546 67 575 79 624 82C592 90 553 96 502 95C446 94 413 104 356 97C297 91 264 100 206 97C136 93 76 99 13 88Z"/>
+  <path fill="#fff" opacity=".56" filter="url(#haze)"
+    d="M70 103C147 99 173 103 227 100C299 97 331 101 383 99C439 96 500 96 554 101C480 110 424 108 362 113C297 118 253 109 207 112C153 116 107 111 70 103Z"/>
+</svg>
